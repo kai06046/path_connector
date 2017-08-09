@@ -9,6 +9,14 @@ class Utils(object):
 
     def draw(self, tup=None):
 
+        # draw status
+        if self.stop_n_frame == self.n_frame:
+            cv2.putText(self._frame, 'Frame waiting annotation', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+        elif self.stop_n_frame > self.n_frame:
+            cv2.putText(self._frame, 'Before frame waiting annotation', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+        elif self.stop_n_frame < self.n_frame:
+            cv2.putText(self._frame, 'After frame waiting annotation', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+
         # draw connected paths
         for i, k in enumerate(self.object_name):
             if k not in self.deleted_name:
@@ -100,6 +108,7 @@ class Utils(object):
             if not (x >= (self.last_x - e) and x <= (self.last_x + e) and y >= (self.last_y - e) and  y <= (self.last_y + e)):
                 self.clear = False
 
+        # pending; label line testing
         if len(self.tmp_line) > 1:
             color = (255, 255, 255)
             for i in range(1, len(self.tmp_line)):

@@ -63,9 +63,9 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.image = None
         self.image_tracked = None
         self.clear = False
-        self.is_clear = True
+        self.is_clear = True # right mouse click for removing drawing
         self.tmp_line = []
-        
+
         # variables for recording things
         self.object_name = []
         self.deleted_name = []
@@ -81,6 +81,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.current_pts = None
         self.current_pts_n = None
         self.safe = True
+        self.is_calculate = False
 
         # tkinter widgets
         self.root = None
@@ -155,7 +156,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.update_frame()
         self.update_info()
         self.draw(tup)
-        self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
+        if not self.is_calculate:
+            self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
         self.display_label.configure(image=self.image)
 
         self.root.after(150, self.update_draw)
@@ -179,7 +181,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         root = tk.Tk()
         root.title(self.win_name)
         self.center(root)
-        label = ttk.Label(root, text='請載入埋葬蟲影像。\n* 影片路徑底下請附上包含 YOLO 結果並和影像檔名相同的 txt。', font=LARGE_FONT)
+        label = ttk.Label(root, text='請載入埋葬蟲影像。\n* 影像路徑底下請附上包含 YOLO 結果並和影像檔名相同的 txt。', font=LARGE_FONT)
         label.pack(padx=10, pady=10)
 
         label2 = ttk.Label(root, text='當下沒有影像。')
@@ -405,7 +407,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME = ttk.LabelFrame(OP_FRAME, text="需被標註的 bbox 應該是哪一個目標呢？")
         self.BUTTON_FRAME.grid(row=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
         
-        for i, k in enumerate(['誤判了', '新目標'] + self.object_name):
+        for i, k in enumerate(['誤判', '新目標'] + self.object_name):
             if i in [0, 1]:
                 bg = None
                 fg = None

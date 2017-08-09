@@ -119,7 +119,7 @@ class KeyHandler(Interface, Common):
             self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[len(self.object_name) - 1], rd['path'][-1], rd['n_frame'][-1]))
             self.root.update_idletasks()
             print('added!')
-        elif clr == '誤判了':
+        elif clr == '誤判':
             self.fp_pts.append(p)
             print('deleted!')
 

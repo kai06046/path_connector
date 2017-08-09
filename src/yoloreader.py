@@ -41,12 +41,12 @@ class YOLOReader(object):
         ind = ind if ind is not None else self.n_frame
         n_key_used = len(self.results_dict.keys())
         
-        success = True
+        self.is_calculate = True
         n_frame = ind
         undone_pts = []
         self.suggest_ind = []
 
-        while success:
+        while self.is_calculate:
             # self.root.update_idletasks()
             nframe, boxes = eval(self.__yolo_results__[n_frame - 1])
             assert nframe == n_frame
@@ -213,7 +213,7 @@ class YOLOReader(object):
                                             print(lost_box_key)
                                             if (tmp_dist_record[lost_box_key[0]]['center'][ind], n_frame) not in undone_pts:
                                                 undone_pts.append((tmp_dist_record[lost_box_key[0]]['center'][ind], n_frame))
-                                            success = False
+                                            self.is_calculate = False
                                     # if this center of bounding box is not potentially connected in next 100 frames, just ignored it.
                                     else:
                                         pass
@@ -280,7 +280,7 @@ class YOLOReader(object):
 
                         if len(set(min_key)) != len(min_key):
                             print('duplicate box and key!')
-                            success = False
+                            self.is_calculate = False
                             print(tmp_dist_record)
                             print(hit_condi)
                             undone_pts.append((tmp_dist_record[duplicate_key[0]]['center'][duplicate_ind.pop()], n_frame))
@@ -301,7 +301,7 @@ class YOLOReader(object):
 
                     # if there is any condition that wasn't considered
                     else:
-                        success = False
+                        self.is_calculate = False
                         print("A not considered case happened!")
                         print(tmp_dist_record)
                         print(hit_condi)
@@ -311,6 +311,8 @@ class YOLOReader(object):
 
             # record animation
             if n_frame % n_show == 0:
+
+                cv2.putText(self._frame, 'Calculating...', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
                 for k in self.object_name:
                     color = self.color[letter.index(k)]
                     flag = self.results_dict[k]['n_frame']
@@ -335,7 +337,7 @@ class YOLOReader(object):
                 # if not self.multi:
                     self.tracked_frames.append(ImageTk.PhotoImage(Image.fromarray(self._frame)))
 
-            if success:
+            if self.is_calculate:
                 n_frame += 1
             else:
                 print('paths connecting stops at %s' % n_frame)
