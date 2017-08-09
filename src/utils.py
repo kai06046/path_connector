@@ -53,17 +53,22 @@ class Utils(object):
                         cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
                         cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
 
-                        if self.check_show_arrow is not None and self.check_show_arrow.get() == 1:
-                            for i in range(1, len(pts), 8):
-                                p1 = pts[i-1]
-                                p2 = pts[i]
-                                dist = np.linalg.norm(p1 - p2)
-                                # print(dist)
-                                if dist > 3:
-                                    draw_arrow(self._frame, tuple(p1), tuple(p2), color, thickness=2, line_type=16)
+                        for i in range(1, len(pts)):
+                            p1 = pts[i-1]
+                            p2 = pts[i]
+                            dist = np.linalg.norm(p1 - p2)
+                            if dist < 48:
+                                cv2.line(self._frame, tuple(p1), tuple(p2), color, 1)
+                            else:
+                                drawline(self._frame, tuple(p1), tuple(p2), color, 1, style='dotted', gap=7)
 
-                        pts = pts.reshape((-1, 1, 2))
-                        cv2.polylines(self._frame, [pts], False, color)
+                            # print(dist)
+                            if i % 8 == 0:
+	                            if self.check_show_arrow is not None and self.check_show_arrow.get() == 1:
+		                            if dist > 3:
+		                                draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
+                        # pts = pts.reshape((-1, 1, 2))
+                        # cv2.polylines(self._frame, [pts], False, color)
 
         # draw coordinate that to be assigned
         if self.current_pts is not None:
@@ -205,11 +210,15 @@ def drawrect(img,pt1,pt2,color,thickness=1,style='dotted'):
     pts = [pt1,(pt2[0],pt1[1]),pt2,(pt1[0],pt2[1])] 
     drawpoly(img,pts,color,thickness,style)
 
-def draw_arrow(image, p, q, color, arrow_magnitude=9, thickness=1, line_type=8, shift=0):
+def draw_arrow(image, p, q, color, dist, arrow_magnitude=9, thickness=1, line_type=8, shift=0):
 # adapted from http://mlikihazar.blogspot.com.au/2013/02/draw-arrow-opencv.html
-
+    
+    if dist > 48:
     # draw arrow tail
-    cv2.line(image, p, q, color, thickness, line_type, shift)
+        drawline(image, p, q, color, thickness, gap=7)
+    else:
+        cv2.line(image, p, q, color, thickness, line_type, shift)
+
     # calc angle of the arrow 
     angle = np.arctan2(p[1]-q[1], p[0]-q[0])
     # starting point of first line of arrow head 
