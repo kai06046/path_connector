@@ -117,7 +117,7 @@ class KeyHandler(Interface, Common):
             # add table info
             rd = self.results_dict[new_key]
             self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[len(self.object_name) - 1], rd['path'][-1], rd['n_frame'][-1]))
-
+            self.root.update_idletasks()
             print('added!')
         elif clr == '誤判了':
             self.fp_pts.append(p)
@@ -126,7 +126,9 @@ class KeyHandler(Interface, Common):
         if run:
             if len(self.undone_pts) == 0:
                 # self.tracked_frames = []
+                self.root.update_idletasks()
                 self.calculate_path(self.stop_n_frame + 1)
+
                 # self.root.after(0, self.update_track, 0)
             else:
                 self.current_pts, self.current_pts_n = self.undone_pts.pop(0)

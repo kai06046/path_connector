@@ -10,6 +10,18 @@ from skimage.measure import compare_ssim
 letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
 N_SHOW = 15
 
+# threshold
+THRES_FORWARD_DIST = 30
+THRES_FORWARD_N_MAX = 30
+THRES_FORWARD_N = 10
+THRES_NEAR_DIST = 80 # for pass false positive
+
+THRES_NEAR_DIST_NOT_ASSIGN = 48 # for append if very near not assigned key
+THRES_NOT_ASSIGN_FORWARD_N_MAX = 100
+THRES_NOT_ASSIGN_FORWARD_DIST = 35
+THRES_NOT_ASSIGN_FORWARD_N = 10
+THRES_NOT_ASSIGN_FP_DIST = 20
+
 class YOLOReader(object):
 
     def read_yolo_result(self):
@@ -54,7 +66,7 @@ class YOLOReader(object):
                     # if there is no keys, initiate
                     if n_key_used == 0 or n_frame == 1:
                         temp = 0
-                        forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame, n_frame + 30)]
+                        forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame, n_frame + THRES_FORWARD_N_MAX)]
                         p_tmp = p
                         for i, res in enumerate(forward_points):
                             min_dist = 99999
@@ -64,14 +76,14 @@ class YOLOReader(object):
                                 y_c = int((ymin+ymax) / 2 + 0.5)
                                 p_forward = (x_c, y_c)
                                 dist = np.linalg.norm(np.array(p_forward) - np.array(p_tmp))
-                                if dist <= min(30, min_dist):
+                                if dist <= min(THRES_FORWARD_DIST, min_dist):
                                     min_dist = dist
                                     p_tmp = p_forward
-                            if min_dist < 30:
+                            if min_dist < THRES_FORWARD_DIST:
                                 temp += 1
 
                         # if was connected 10 frames in next 30 frames
-                        if temp > 10:
+                        if temp > THRES_FORWARD_N:
                             # append first point to results
                             chrac = letter[n_key_used]
                             self.results_dict[chrac] = dict()
@@ -108,14 +120,17 @@ class YOLOReader(object):
                 sorted_indexes = {k: sorted(range(len(v['dist'])), key=lambda k: v['dist'][k]) for k, v in tmp_dist_record.items()}
                 hit_condi = [(k, sorted_indexes[k][0]) for k in self.object_name if tmp_dist_record[k]['below_tol'][sorted_indexes[k][0]]]
                 
-                if n_frame > 450 and n_frame < 455:
-                    print(n_frame)
-                    print(tmp_dist_record)
+                # if n_frame > 450 and n_frame < 455:
+                #     print(n_frame)
+                #     print(tmp_dist_record)
 
                 # the easiest part: the length of hit_condi is same as the number of objects
                 if n_frame == 1:
                     pass
                 elif len(set([v[1] for v in hit_condi])) == len(self.object_name):
+
+                	# pending assessment
+
                     for k, ind in hit_condi:
                         self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
                         self.results_dict[k]['n_frame'].append(n_frame)
@@ -123,6 +138,8 @@ class YOLOReader(object):
                 elif len(set([v for k, v in hit_condi])) == len(hit_condi):
                     # if the length of the unique object also unique
                     # if len(set([k for k, v in hit_condi])) == len(hit_condi):
+
+                	# pending, assessment
                     for k, ind in hit_condi:
                         self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
                         self.results_dict[k]['n_frame'].append(n_frame)
@@ -142,7 +159,7 @@ class YOLOReader(object):
                         for ind in not_assigned_boxes:
 
                             # if the not assigned boxes are too near with assigned keys, got thres
-                            if any([v['dist'][ind] <= 32 for k, v in tmp_dist_record.items() if k in assigned_keys]):
+                            if any([v['dist'][ind] <= THRES_NEAR_DIST for k, v in tmp_dist_record.items() if k in assigned_keys]):
                                 pass
                             else:
                                 # less strict distance condition for not assigned object
@@ -151,7 +168,7 @@ class YOLOReader(object):
                                 for k in not_assigned_keys:
                                     if tmp_dist_record[k]['dist'][ind] < min_dist:
                                         min_dist = tmp_dist_record[k]['dist'][ind]
-                                        if min_dist <= 48:
+                                        if min_dist <= THRES_NEAR_DIST_NOT_ASSIGN:
                                             min_key = k
                                 # append the record if any object was found
                                 if min_key is not None:
@@ -161,7 +178,7 @@ class YOLOReader(object):
                                 else:
                                     # forward next 100 points
                                     temp = 0
-                                    forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame - 1, n_frame + 99)]
+                                    forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame - 1, n_frame + (THRES_NOT_ASSIGN_FORWARD_N_MAX - 1))]
                                     p = tmp_dist_record[self.object_name[0]]['center'][ind]
                                     for i, res in enumerate(forward_points):
                                         min_dist = 99999
@@ -171,19 +188,20 @@ class YOLOReader(object):
                                             y_c = int((ymin+ymax) / 2 + 0.5)
                                             p_forward = (x_c, y_c)
                                             dist = np.linalg.norm(np.array(p_forward) - np.array(p))
-                                            if dist <= min(30, min_dist):
+                                            if dist <= min(THRES_NOT_ASSIGN_FORWARD_DIST, min_dist):
                                                 min_dist = dist
                                                 p = p_forward
-                                        if min_dist < 30:
+                                        if min_dist < THRES_NOT_ASSIGN_FORWARD_DIST:
                                             temp += 1
 
                                     # if this center is potential, compare it with false positive point.
-                                    if temp > 30:
+                                    if temp > THRES_NOT_ASSIGN_FORWARD_N:
                                         compare = False
                                         for fp in self.fp_pts:
                                             fp_dist = np.linalg.norm(np.array(fp) - np.array(tmp_dist_record[self.object_name[0]]['center'][ind]))
-                                            if fp_dist < 20:
+                                            if fp_dist < THRES_NOT_ASSIGN_FP_DIST:
                                                 compare = True
+                                        # stop the function and ask user only if this center is not near with false positive points
                                         if not compare:
                                             undone_pts.append((tmp_dist_record[self.object_name[0]]['center'][ind], n_frame))
 
@@ -257,8 +275,9 @@ class YOLOReader(object):
                             compare_diff[ind]['nearest_key'] = sim[sorted(range(len(sim)), key=lambda i: sim[i][1], reverse=True)[0]][0]
                             min_key.append(compare_diff[ind]['nearest_key'])
 
-                        if n_frame > 450 and n_frame < 455:
-                            print(n_frame, compare_diff)
+                        # if n_frame > 450 and n_frame < 455:
+                        #     print(n_frame, compare_diff)
+
                         if len(set(min_key)) != len(min_key):
                             print('duplicate box and key!')
                             success = False
@@ -266,6 +285,7 @@ class YOLOReader(object):
                             print(hit_condi)
                             undone_pts.append((tmp_dist_record[duplicate_key[0]]['center'][duplicate_ind.pop()], n_frame))
 
+                        # just use nearest distance
                         # for ind in duplicate_ind:
                         #     duplicate_key = [k for k, v in hit_condi if v == ind]
                         #     sorted_keys_by_dist = sorted(range(len(duplicate_key)), key=lambda k: tmp_dist_record[duplicate_key[k]]['dist'][ind])
@@ -276,6 +296,9 @@ class YOLOReader(object):
                         for k, ind in hit_condi_reduced:
                             self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
                             self.results_dict[k]['n_frame'].append(n_frame)
+
+                        # pending, not assigned key
+
                     # if there is any condition that wasn't considered
                     else:
                         success = False
