@@ -63,7 +63,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.image = None
         self.image_tracked = None
         self.clear = False
-        self.is_clear = True # right mouse click for removing drawing
+        self.is_clear = 1 # right mouse click for removing drawing
         self.tmp_line = []
 
         # variables for recording things
@@ -72,6 +72,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.last_object_name = []
         self.results_dict = dict()
         self.dist_records = dict()
+        self.label_dict = dict()
         self.undone_pts = None
         self.fp_pts = []
         self.undo_records = []
@@ -83,6 +84,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.safe = True
         self.is_calculate = False
         self.is_manual = False
+        self.label_ind = 1
 
         # tkinter widgets
         self.root = None
@@ -280,6 +282,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.check_show_drawing.set(1)
         self.check_show_arrow = tk.IntVar()
         self.check_show_arrow.set(1)
+        self.check_is_clear = tk.IntVar()
+        self.check_is_clear.set(1)
 
 
         text_nframe = '當前幀數: '
@@ -304,6 +308,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.display_label.bind('<Double-Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
         self.display_label.bind('<Button-1>', self.on_mouse_manual_label)
+        self.display_label.bind('<MouseWheel>', self.on_mouse_wheel)
         self.display_label.bind('<ButtonRelease-1>', self.reset)
         self.display_label.bind('<Motion>', self.on_mouse_mv)
         
@@ -446,13 +451,16 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         scale_max.grid(row=6, column=1)
 
         button_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
-        button_show_box.grid(row=8, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_show_box.grid(row=8, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+
+        button_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='Eraser')
+        button_is_clear.grid(row=10, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        
+        button_show_arrow = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_arrow, onvalue=1, offvalue=0, text='顯示路徑方向')
+        button_show_arrow.grid(row=8, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         button_show_drawing = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_drawing, onvalue=1, offvalue=0, text='顯示已追踪路徑')
-        button_show_drawing.grid(row=10, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
-
-        button_show_arrow = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_arrow, onvalue=1, offvalue=0, text='顯示路徑方向')
-        button_show_arrow.grid(row=12, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_show_drawing.grid(row=10, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         # update changes
         if self.multi:

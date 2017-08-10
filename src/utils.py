@@ -91,7 +91,7 @@ class Utils(object):
         # remove drawing on specific region
         n = 60
         e = 100
-        if self.clear and self.is_clear:
+        if self.clear and self.check_is_clear.get() == 1:
             x, y = self.mv_x, self.mv_y
             xmin, xmax = max(0, (x-n)), min((x+n), self.width)
             ymin, ymax = max(0, (y-n)), min((y+n), self.height)
@@ -109,7 +109,18 @@ class Utils(object):
             elif self.stop_n_frame < self.n_frame:
                 cv2.putText(self._frame, 'Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
         else:
-            cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+            color = self.color[self.label_ind - 1]
+            cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
+
+            for k, v in self.label_dict.items():
+                color = self.color[self.object_name.index(k)]
+                try:
+                    ind = v['n_frame'].index(self.n_frame)
+                except:
+                    ind = None
+                if ind is not None:
+                    p = v['path'][ind]
+                    cv2.circle(self._frame, p, 2, color, 2)
 
         # pending; label line testing
         if len(self.tmp_line) > 1:

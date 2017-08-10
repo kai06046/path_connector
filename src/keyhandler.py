@@ -54,12 +54,24 @@ class KeyHandler(Interface, Common):
             for b in self.all_buttons:
                 b['state'] = 'disabled' if self.is_manual else 'normal'
 
+            self.label_dict = {k: {'path': [], 'n_frame': []} for k in self.object_name}
+
         elif n == 3:
-            self.is_clear = not self.is_clear            
+            # if right click
+            if self.is_manual:
+                k = self.object_name[self.label_ind - 1]
+                try:
+                    ind = self.label_dict[k]['n_frame'].index(self.n_frame)
+                    self.label_dict[k]['n_frame'].pop(ind)
+                    self.label_dict[k]['path'].pop(ind)
+                except:
+                    pass
+            # self.is_clear = not self.is_clear
 
     def on_mouse_draw(self, event):
-        cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
-        self.tmp_line.append((event.x, event.y))
+        if not self.is_manual:
+            cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
+            self.tmp_line.append((event.x, event.y))
 
     def reset(self, event):
         self.tmp_line = []
@@ -74,9 +86,24 @@ class KeyHandler(Interface, Common):
     def on_mouse_manual_label(self, event):
         # execute only if it is manual label mode
         if self.is_manual:
-            print(event)
+            k = self.object_name[self.label_ind - 1]
+            if self.n_frame not in self.label_dict[k]['n_frame']:
+                self.label_dict[k]['n_frame'].append(self.n_frame)
+                self.label_dict[k]['path'].append((event.x, event.y))
+            else:
+                self.label_dict[k]['path'][self.label_dict[k]['n_frame'].index(self.n_frame)] = (event.x, event.y)
+
+    def on_mouse_wheel(self, event):
+
+        if self.is_manual:
+
+            if event.delta == -120:
+                self.label_ind = max(1, self.label_ind - 1)
+            elif event.delta == 120:
+                self.label_ind = min(len(self.object_name), self.label_ind + 1)
+            print(self.label_ind)
+
     def on_click(self, clr):
-        # TODO: multi undone?
         self.n_frame = self.stop_n_frame
         p, n = self.current_pts, self.current_pts_n
         run = True
