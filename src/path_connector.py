@@ -82,6 +82,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.current_pts_n = None
         self.safe = True
         self.is_calculate = False
+        self.is_manual = False
 
         # tkinter widgets
         self.root = None
@@ -300,7 +301,9 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.display_label.grid(row=0, column=0, columnspan=2)
         # self.display_label.bind('<Double-Button-1>', self.on_mouse)
         self.display_label.bind('<B1-Motion>', self.on_mouse_draw)
+        self.display_label.bind('<Double-Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
+        self.display_label.bind('<Button-1>', self.on_mouse_manual_label)
         self.display_label.bind('<ButtonRelease-1>', self.reset)
         self.display_label.bind('<Motion>', self.on_mouse_mv)
         
@@ -359,11 +362,11 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.tv.heading('#0', text='名稱', anchor='center')
         self.tv.column('#0', anchor='w', width=50)
         self.tv.heading('color', text='顏色')
-        self.tv.column('color', anchor='center', width=50)
+        self.tv.column('color', anchor='center', width=60)
         self.tv.heading('lastpoint', text='在本幀是否有被偵測到')
-        self.tv.column('lastpoint', anchor='center', width=150)
+        self.tv.column('lastpoint', anchor='center', width=140)
         self.tv.heading('lastdetectedframe', text='最後被偵測到的幀數')
-        self.tv.column('lastdetectedframe', anchor='center', width=150)
+        self.tv.column('lastdetectedframe', anchor='center', width=140)
         self.tv.grid()
 
         for i, n in enumerate(self.object_name):
@@ -434,7 +437,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         button_replay = ttk.Button(self.BUTTON_FRAME_2, text='播放當前為止的追踪結果', command=self.on_view_results)
         button_replay.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        label_max = ttk.Label(self.BUTTON_FRAME_2, text='追踪路徑長度: ')
+        label_max = ttk.Label(self.BUTTON_FRAME_2, text='顯示路徑的長度: ')
         label_max.grid(row=6, column=0, rowspan=2, sticky=tk.W)
         label_max_v = ttk.Label(self.BUTTON_FRAME_2, textvariable=self.maximum_var)
         label_max_v.grid(row=6, column=1)

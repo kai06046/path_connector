@@ -8,7 +8,7 @@ from PIL import Image, ImageTk
 from skimage.measure import compare_ssim
 
 letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
-N_SHOW = 15
+N_SHOW = 20
 
 # threshold
 THRES_FORWARD_DIST = 30

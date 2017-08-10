@@ -9,14 +9,6 @@ class Utils(object):
 
     def draw(self, tup=None):
 
-        # draw status
-        if self.stop_n_frame == self.n_frame:
-            cv2.putText(self._frame, 'Frame waiting annotation', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
-        elif self.stop_n_frame > self.n_frame:
-            cv2.putText(self._frame, 'Before frame waiting annotation', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
-        elif self.stop_n_frame < self.n_frame:
-            cv2.putText(self._frame, 'After frame waiting annotation', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
-
         # draw connected paths
         for i, k in enumerate(self.object_name):
             if k not in self.deleted_name:
@@ -71,10 +63,10 @@ class Utils(object):
                                 drawline(self._frame, tuple(p1), tuple(p2), color, 1, style='dotted', gap=7)
 
                             # print(dist)
-                            if i % 8 == 0:
-	                            if self.check_show_arrow is not None and self.check_show_arrow.get() == 1:
-		                            if dist > 3:
-		                                draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
+                            if i % 6 == 0:
+                                if self.check_show_arrow is not None and self.check_show_arrow.get() == 1:
+                                    if dist > 3:
+                                        draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
                         # pts = pts.reshape((-1, 1, 2))
                         # cv2.polylines(self._frame, [pts], False, color)
 
@@ -107,6 +99,17 @@ class Utils(object):
             drawrect(self._frame, (xmin, ymin), (xmax, ymax), (0, 255, 255), 1, style='dotted')
             if not (x >= (self.last_x - e) and x <= (self.last_x + e) and y >= (self.last_y - e) and  y <= (self.last_y + e)):
                 self.clear = False
+
+        # draw status
+        if not self.is_manual:
+            if self.stop_n_frame == self.n_frame:
+                cv2.putText(self._frame, 'Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+            elif self.stop_n_frame > self.n_frame:
+                cv2.putText(self._frame, 'Pre-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+            elif self.stop_n_frame < self.n_frame:
+                cv2.putText(self._frame, 'Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+        else:
+            cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
 
         # pending; label line testing
         if len(self.tmp_line) > 1:

@@ -23,8 +23,6 @@ class KeyHandler(Interface, Common):
         tk.Grid.rowconfigure(settings_root, 0, weight=1)
         tk.Grid.columnconfigure(settings_root, 0, weight=1)
 
-        # center(settings_root) # center the widget
-        # settings_root.geometry('380x240')
         def exit(event):
             settings_root.destroy()
 
@@ -32,7 +30,7 @@ class KeyHandler(Interface, Common):
         settings_root.focus_force()
         settings_root.title('設定')
 
-        ACTION = ['標註對應的目標 (a/b/c/d)', '誤判', '新目標', '回到上一步', '前一幀', '後一幀', '前五幀', '後五幀', '回到需被標註的幀數', '設定']
+        ACTION = ['標註對應的目標 (a/b/c/d)', '誤判', '新目標', '返回', '前一幀', '後一幀', '前五幀', '後五幀', '回到需被標註的幀數', '設定']
         HOTKEY = ['1/2/3/4', 'd/DELETE', 'n', 'u/BACKSPACE', 'LEFT', 'RIGHT', 'PAGE DOWN', 'PAGE UP', 'ENTER', 'h']
 
         hotkey = ttk.LabelFrame(settings_root, text="快捷鍵")
@@ -50,16 +48,18 @@ class KeyHandler(Interface, Common):
         settings_root.mainloop()
 
     def on_mouse(self, event):
-        self.is_clear = not self.is_clear
-        # cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
-        # self.tmp_line.append((event.x, event.y))
-        print(event.x, event.y)
+        n = event.num
+        if n == 1:
+            self.is_manual = not self.is_manual
+            for b in self.all_buttons:
+                b['state'] = 'disabled' if self.is_manual else 'normal'
+
+        elif n == 3:
+            self.is_clear = not self.is_clear            
 
     def on_mouse_draw(self, event):
-        # self.is_clear = not self.is_clear
         cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
         self.tmp_line.append((event.x, event.y))
-        # print(event.x, event.y)
 
     def reset(self, event):
         self.tmp_line = []
@@ -71,9 +71,13 @@ class KeyHandler(Interface, Common):
         self.mv_x = event.x
         self.mv_y = event.y
 
+    def on_mouse_manual_label(self, event):
+        # execute only if it is manual label mode
+        if self.is_manual:
+            print(event)
     def on_click(self, clr):
         # TODO: multi undone?
-        print(self.undone_pts)
+        self.n_frame = self.stop_n_frame
         p, n = self.current_pts, self.current_pts_n
         run = True
         replace = False
@@ -117,7 +121,6 @@ class KeyHandler(Interface, Common):
             # add table info
             rd = self.results_dict[new_key]
             self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[len(self.object_name) - 1], rd['path'][-1], rd['n_frame'][-1]))
-            self.root.update_idletasks()
             print('added!')
         elif clr == '誤判':
             self.fp_pts.append(p)
@@ -126,9 +129,8 @@ class KeyHandler(Interface, Common):
         if run:
             if len(self.undone_pts) == 0:
                 # self.tracked_frames = []
-                self.root.update_idletasks()
+                self.root.update()
                 self.calculate_path(self.stop_n_frame + 1)
-
                 # self.root.after(0, self.update_track, 0)
             else:
                 self.current_pts, self.current_pts_n = self.undone_pts.pop(0)
@@ -143,7 +145,6 @@ class KeyHandler(Interface, Common):
                         self.all_buttons[self.object_name.index(self.suggest_ind[0][0]) + 2].focus_force()
                 else:
                     self.all_buttons[0].focus_force()
-                    # self.root.focus_force()
 
                 print('just pass')
 
@@ -180,19 +181,22 @@ class KeyHandler(Interface, Common):
             self.n_frame += 1
 
     def on_key(self, event):
-        if event.keysym not in ['n', 'Delete', 'd']:
-            try:
+        if not self.is_manual:
+            if event.keysym not in ['n', 'Delete', 'd']:
+                try:
 
-                i = int(event.char)
-                self.on_click(self.object_name[i-1])
-            except Exception as e:
-                print(e)
-                print(event.keysym)
-                pass
-        elif event.keysym == 'n':
-            self.on_click('New object, add one.')
-        elif event.keysym in ['Delete', 'd']:
-            self.on_click('False positive, delete it')
+                    i = int(event.char)
+                    self.on_click(self.object_name[i-1])
+                except Exception as e:
+                    print(e)
+                    print(event.keysym)
+                    pass
+            elif event.keysym == 'n':
+                self.on_click('New object, add one.')
+            elif event.keysym in ['Delete', 'd']:
+                self.on_click('False positive, delete it')
+        else:
+            print(event.keysym)
     def set_max(self, s):
         v = int(float(s))
         self.maximum_var.set(v)
@@ -295,6 +299,7 @@ class KeyHandler(Interface, Common):
                     label.configure(image=image)
                     label.image = image
                 if i == break_pt:
+                    master.destroy()
                     temp_root.destroy()
                     break
         def exit(event):
@@ -313,7 +318,7 @@ class KeyHandler(Interface, Common):
         thread.daemon = 1
         thread.start()
         master.bind('<Escape>', exit)
-        temp_root.destroy()
+        # temp_root.destroy()
         temp_root.mainloop()
 
     def undo(self, event=None):

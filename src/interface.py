@@ -17,7 +17,7 @@ class Interface(object):
     # confirm leave
     def on_close(self, event=None):
         if askokcancel('離開', '你確定要關閉程式了嗎？'):
-            if askyesno('存檔', '你要把操作結果存檔嗎？'):
+            if askyesno('存檔', '你要把操作結果存檔嗎？') and len(self.undo_records) > 1:
                 pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
                 print('file saved.')
             self.root.destroy()
