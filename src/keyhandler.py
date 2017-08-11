@@ -19,33 +19,7 @@ class KeyHandler(Interface, Common):
         # self.__init__(self.maximum, self.tol)
 
     def on_settings(self, event=None):
-        settings_root = tk.Tk()
-        tk.Grid.rowconfigure(settings_root, 0, weight=1)
-        tk.Grid.columnconfigure(settings_root, 0, weight=1)
-
-        def exit(event):
-            settings_root.destroy()
-
-        self.center(settings_root)
-        settings_root.focus_force()
-        settings_root.title('設定')
-
-        ACTION = ['標註對應的目標 (a/b/c/d)', '誤判', '新目標', '返回', '前一幀', '後一幀', '前五幀', '後五幀', '回到需被標註的幀數', '設定']
-        HOTKEY = ['1/2/3/4', 'd/DELETE', 'n', 'u/BACKSPACE', 'LEFT', 'RIGHT', 'PAGE DOWN', 'PAGE UP', 'ENTER', 'h']
-
-        hotkey = ttk.LabelFrame(settings_root, text="快捷鍵")
-        action = ttk.LabelFrame(settings_root, text="操作")
-        hotkey.grid(row=0, column=0, padx=5, pady=5)
-        action.grid(row=0, column=1, padx=5, pady=5)
-
-        # action description section
-        for i, a in enumerate(ACTION):
-            ttk.Label(action, text=a).grid(column=0, row=i, sticky=tk.W, padx=5, pady=5)
-            ttk.Label(hotkey, text=HOTKEY[i]).grid(column=0, row=i, padx=5, pady=5)
-
-        settings_root.bind('<Escape>', exit)
-        settings_root.bind('<h>', exit)
-        settings_root.mainloop()
+        self.setting()
 
     def reset(self, event):
         self.tmp_line = []
@@ -57,23 +31,26 @@ class KeyHandler(Interface, Common):
         self.mv_x = event.x
         self.mv_y = event.y
 
+    def chg_mode(self):
+        self.is_manual = not self.is_manual
+        for b in self.all_buttons:
+            b['state'] = 'disabled' if self.is_manual else 'normal'
+
+        if self.is_manual:
+            self.label_dict = {k: {'path': [], 'n_frame': []} for k in [k for k, v in self.object_name.items() if v['on']]}
+            # temporally results for manual label
+            self.tmp_results_dict = copy.deepcopy(self.results_dict)
+
     def on_mouse(self, event):
         n = event.num
         # if double click, enter manual label mdoe
         if n == 1 and not self.is_manual:
-            self.is_manual = not self.is_manual
-            for b in self.all_buttons:
-                b['state'] = 'disabled' if self.is_manual else 'normal'
-
-            self.label_dict = {k: {'path': [], 'n_frame': []} for k in self.object_name}
-
-            # temporally results for manual label
-            self.tmp_results_dict = copy.deepcopy(self.results_dict)
+            self.chg_mode()
 
         # if right click
         elif n == 3:
             if self.is_manual:
-                k = self.object_name[self.label_ind - 1]
+                k = [k for k, v in self.object_name.items() if v['ind'] == self.label_ind - 1][0]
                 # remove current label if any exists
                 try:
                     ind = self.label_dict[k]['n_frame'].index(self.n_frame)
@@ -81,6 +58,17 @@ class KeyHandler(Interface, Common):
                     self.label_dict[k]['path'].pop(ind)
                 except:
                     pass
+
+                try:
+                    ind = self.results_dict[k]['n_frame'].index(self.n_frame)
+                    self.tmp_results_dict[k]['path'][ind] = self.results_dict[k]['path'][ind]
+                except Exception as e:
+                    try:
+                        ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
+                        self.tmp_results_dict[k]['n_frame'].pop(ind)
+                        self.tmp_results_dict[k]['path'].pop(ind)
+                    except Exception as e:
+                        print(e)
             # self.is_clear = not self.is_clear
 
     def on_mouse_draw(self, event):
@@ -91,7 +79,7 @@ class KeyHandler(Interface, Common):
     def on_mouse_manual_label(self, event):
         # execute only if it is manual label mode
         if self.is_manual:
-            k = self.object_name[self.label_ind - 1]
+            k = [k for k, v in self.object_name.items() if v['ind'] == self.label_ind - 1][0]
             p = (event.x, event.y)
             # record label points
             if self.n_frame not in self.label_dict[k]['n_frame']:
@@ -113,9 +101,9 @@ class KeyHandler(Interface, Common):
 
         if self.is_manual:
             if event.delta == -120:
-                self.label_ind = max(1, self.label_ind - 1)
+                self.label_ind = max(1 + min([v['ind'] for k, v in self.object_name.items() if v['on']]), self.label_ind - 1)
             elif event.delta == 120:
-                self.label_ind = min(len(self.object_name), self.label_ind + 1)
+                self.label_ind = min(len([k for k, v in self.object_name.items() if v['on']]), self.label_ind + 1)
             print(self.label_ind)
 
     # button event
@@ -125,7 +113,7 @@ class KeyHandler(Interface, Common):
         run = True
         replace = False
 
-        if clr in self.object_name:
+        if clr in [k for k, v in self.object_name.items() if v['on']]:
             is_assigned = self.results_dict[clr]['n_frame'][-1] == self.stop_n_frame
             if not is_assigned:
                 self.results_dict[clr]['path'].append(p)
@@ -146,7 +134,9 @@ class KeyHandler(Interface, Common):
             # append results
             new_key = letter[len(self.object_name)]
             self.results_dict[new_key] = {'path': [p, p], 'n_frame': [n, n]}
-            self.object_name.append(new_key)
+            print(len(self.object_name), self.object_name)
+            self.object_name[new_key] = {'ind': len(self.object_name), 'on': True}
+            print(len(self.object_name))
             try:
                 self.dist_records[n][new_key] = dict()
             except:
@@ -157,13 +147,13 @@ class KeyHandler(Interface, Common):
             self.dist_records[n][new_key]['below_tol'] = [True]
 
             # add buttons
-            bg = self.color_name[len(self.object_name) - 1].lower()
+            bg = self.color_name[self.object_name[new_key]['ind']].lower()
             b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_click(clr), bg=bg, fg='white')
-            b.grid(row=len(self.all_buttons) + 1, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+            b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
             self.all_buttons.append(b)
             # add table info
             rd = self.results_dict[new_key]
-            self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[len(self.object_name) - 1], rd['path'][-1], rd['n_frame'][-1]))
+            self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[self.object_name[new_key]['ind']], rd['path'][-1], rd['n_frame'][-1]))
             print('added!')
         elif clr == '誤判':
             self.fp_pts.append(p)
@@ -185,11 +175,9 @@ class KeyHandler(Interface, Common):
                     elif self.suggest_ind[0][0] == 'new':
                         self.all_buttons[1].focus_force()
                     else:
-                        self.all_buttons[self.object_name.index(self.suggest_ind[0][0]) + 2].focus_force()
+                        self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind']].focus_force()
                 else:
                     self.all_buttons[0].focus_force()
-
-                print('just pass')
 
     # move to previous frame
     def on_left(self, event):
@@ -229,28 +217,28 @@ class KeyHandler(Interface, Common):
 
     # on some key pressed event
     def on_key(self, event):
+        sym = event.keysym
         if not self.is_manual:
-            if event.keysym not in ['n', 'Delete', 'd']:
+            if sym not in ['n', 'Delete', 'd', 'l']:
                 try:
-
                     i = int(event.char)
-                    self.on_click(self.object_name[i-1])
+                    self.on_click([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
                 except Exception as e:
                     print(e)
-                    print(event.keysym)
-                    pass
-            elif event.keysym == 'n':
+
+            elif sym == 'n':
                 if not self.is_manual:
                     self.on_click('New object, add one.')
                 else:
                     # pending; add new object while manual label mode.
                     pass
-            elif event.keysym in ['Delete', 'd']:
+            elif sym in ['Delete', 'd']:
                 self.on_click('False positive, delete it')
+            elif sym == 'l':
+                self.chg_mode()
         else:
-            if event.keysym not in ['n', 'Delete', 'd']:
-                self.label_ind = int(event.keysym)
-            print(event.keysym)
+            if sym not in ['n', 'Delete', 'd', 'l']:
+                self.label_ind = int(sym)
 
     def set_max(self, s):
         v = int(float(s))
@@ -272,19 +260,21 @@ class KeyHandler(Interface, Common):
 
         if self.is_manual:
             # pending; a confirm UI
-            self.is_manual = not self.is_manual
+            self.chg_mode()
 
-            for b in self.all_buttons:
-                b['state'] = 'disabled' if self.is_manual else 'normal'
+            string = '是否把以上標註加入目前的目標路徑？'
+            result = askyesno('確認', string, icon='warning')
+            if result:
+                self.results_dict = copy.deepcopy(self.tmp_results_dict)
 
-            self.label_dict = {k: {'path': [], 'n_frame': []} for k in self.object_name}
+            self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name if v['on']]}
 
     def on_remove(self):
         # pending; a better workflow for undo
         def destroy(i):
             # root.grab_release()
-            k = self.object_name[i]
-            result = askyesno('Are you sure?', 'Do you really want to remove %s?' %k, icon='warning')
+            k = [k for k, v in self.object_name.items() if v['ind'] == i][0]
+            result = askyesno('確認', '確定要刪除 %s 嗎？' %k, icon='warning')
             if result:
                 button = self.all_buttons[i+2]
                 button.grid_forget()
@@ -293,11 +283,11 @@ class KeyHandler(Interface, Common):
 
                 # delete all info
                 self.tv.delete(k)
-                self.deleted_name.append(k)
-                # self.object_name.pop(i)
+                self.object_name[k]['on'] = False
 
                 del self.results_dict[k]
-                del self.dist_records[k]
+                if k in self.dist_records.keys():
+                    del self.dist_records[k]
             else:
                 pass
         def close():
@@ -311,8 +301,8 @@ class KeyHandler(Interface, Common):
         ## Display the window and wait for it to close
         root.title('Remove object')
         self.center(top)
-        for i, k in enumerate(self.object_name):
-            b = ttk.Button(top, text=k, command=lambda i = i: destroy(i))
+        for k in sorted([k for k, v in self.object_name.items() if v['on']]):
+            b = ttk.Button(top, text=k, command=lambda i = self.object_name[k]['ind']: destroy(i))
             b.pack(expand=True, fill=tk.BOTH)
         self.root.wait_window(top)
         root.mainloop()
@@ -341,9 +331,9 @@ class KeyHandler(Interface, Common):
                 if i % 20 == 0:
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
-                    for j, k in enumerate(object_name):
+                    for k in sorted([k for k, v in object_name.items() if v['on']]):
                         flag = results_dict[k]['n_frame']
-                        color = COLOR[j]
+                        color = self.color[object_name[k]['ind']]
                         try:
                             ind = np.where(np.array(flag) > i)[0][0]
                         except Exception as e:
@@ -384,7 +374,7 @@ class KeyHandler(Interface, Common):
 
     def undo(self, event=None):
         if len(self.undo_records) > 1:
-            self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name, self.deleted_name = self.undo_records[-2]
+            self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2]
             print(self.object_name)
             self.undo_records = self.undo_records[:-1]
             self.n_frame = self.stop_n_frame
@@ -394,6 +384,22 @@ class KeyHandler(Interface, Common):
                 elif self.suggest_ind[0][0] == 'new':
                     self.all_buttons[1].focus_force()
                 else:
-                    self.all_buttons[self.object_name.index(self.suggest_ind[0][0]) + 2].focus_force()
+                    self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind']].focus_force()
+
+            # update buttons number
+            on_ind = [v['ind'] for k, v in self.object_name.items()]
+            for i, b in enumerate(self.all_buttons):
+                if i in [0, 1]:
+                    pass
+                elif i - 2 in on_ind:
+                    b.grid(row=i + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                else:
+                    try:
+                        self.tv.delete(letter[i-2])
+                    except:
+                        print(letter[i-2])
+                        
+                    b.grid_forget()
+
         else:
             self.msg('Nothing can undo.')

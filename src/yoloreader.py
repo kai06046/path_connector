@@ -39,7 +39,7 @@ class YOLOReader(object):
         n_show: records every n_show for displaying tracked results
         """
         ind = ind if ind is not None else self.n_frame
-        n_key_used = len(self.results_dict.keys())
+        n_key_used = len(self.object_name.keys())
         
         self.is_calculate = True
         n_frame = ind
@@ -58,6 +58,7 @@ class YOLOReader(object):
             if len(boxes) > 0:
                 self.dist_records[n_frame] = dict()
 
+                on_keys = [k for k, v in self.object_name.items() if v['on']]
                 for i, box in enumerate(boxes):
                     ymin, xmin, ymax, xmax, score = box
                     x_c = int((xmin+xmax) / 2 + 0.5)
@@ -89,7 +90,8 @@ class YOLOReader(object):
                             self.results_dict[chrac] = dict()
                             self.results_dict[chrac]['path'] = [p]
                             self.results_dict[chrac]['n_frame'] = [n_frame]
-                            self.object_name.append(chrac)
+
+                            self.object_name[chrac] = {'ind': n_key_used, 'on': True}
                             n_key_used += 1
 
                             # record distance history
@@ -100,7 +102,7 @@ class YOLOReader(object):
 
                     else:
                         # record all distance history first
-                        for i, k in enumerate(self.object_name):
+                        for i, k in enumerate(on_keys):
                             v = self.results_dict[k]['path']
                             dist = np.linalg.norm(np.array(v[-1]) - np.array(p))
 
@@ -118,7 +120,7 @@ class YOLOReader(object):
                 tmp_dist_record = copy.deepcopy(self.dist_records[n_frame])
                 # sorted dist index by dist
                 sorted_indexes = {k: sorted(range(len(v['dist'])), key=lambda k: v['dist'][k]) for k, v in tmp_dist_record.items()}
-                hit_condi = [(k, sorted_indexes[k][0]) for k in self.object_name if tmp_dist_record[k]['below_tol'][sorted_indexes[k][0]]]
+                hit_condi = [(k, sorted_indexes[k][0]) for k in on_keys if tmp_dist_record[k]['below_tol'][sorted_indexes[k][0]]]
                 
                 # if n_frame > 450 and n_frame < 455:
                 #     print(n_frame)
@@ -127,7 +129,7 @@ class YOLOReader(object):
                 # the easiest part: the length of hit_condi is same as the number of objects
                 if n_frame == 1:
                     pass
-                elif len(set([v[1] for v in hit_condi])) == len(self.object_name):
+                elif len(set([v[1] for v in hit_condi])) == len(on_keys):
 
                 	# pending assessment
 
@@ -154,7 +156,7 @@ class YOLOReader(object):
                         assigned_boxes = [ind for k, ind in hit_condi]
                         assigned_keys = [k for k, ind in hit_condi]
                         not_assigned_boxes = set([i for i in range(len(boxes))]).difference(assigned_boxes)
-                        not_assigned_keys = [k for k in self.object_name if k not in assigned_keys]                        
+                        not_assigned_keys = [k for k in on_keys if k not in assigned_keys]                        
 
                         for ind in not_assigned_boxes:
 
@@ -179,7 +181,7 @@ class YOLOReader(object):
                                     # forward next 100 points
                                     temp = 0
                                     forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame - 1, n_frame + (THRES_NOT_ASSIGN_FORWARD_N_MAX - 1))]
-                                    p = tmp_dist_record[self.object_name[0]]['center'][ind]
+                                    p = tmp_dist_record[on_keys[0]]['center'][ind]
                                     for i, res in enumerate(forward_points):
                                         min_dist = 99999
                                         for b in res:
@@ -198,18 +200,18 @@ class YOLOReader(object):
                                     if temp > THRES_NOT_ASSIGN_FORWARD_N:
                                         compare = False
                                         for fp in self.fp_pts:
-                                            fp_dist = np.linalg.norm(np.array(fp) - np.array(tmp_dist_record[self.object_name[0]]['center'][ind]))
+                                            fp_dist = np.linalg.norm(np.array(fp) - np.array(tmp_dist_record[on_keys[0]]['center'][ind]))
                                             if fp_dist < THRES_NOT_ASSIGN_FP_DIST:
                                                 compare = True
                                         # stop the function and ask user only if this center is not near with false positive points
                                         if not compare:
-                                            undone_pts.append((tmp_dist_record[self.object_name[0]]['center'][ind], n_frame))
+                                            undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind], n_frame))
 
                                             print('not assigned boxes')
                                             print(tmp_dist_record)
                                             print(hit_condi)
                                             print('index of not assigned bounding boxes: %s' % ind)
-                                            lost_box_key = [k for k in self.object_name if k not in [j for j, _ in hit_condi]]
+                                            lost_box_key = [k for k in on_keys if k not in [j for j, _ in hit_condi]]
                                             print(lost_box_key)
                                             if (tmp_dist_record[lost_box_key[0]]['center'][ind], n_frame) not in undone_pts:
                                                 undone_pts.append((tmp_dist_record[lost_box_key[0]]['center'][ind], n_frame))
@@ -236,7 +238,7 @@ class YOLOReader(object):
                             tmp_keys = [k for k, v in hit_condi if v == ind]
                             compare_diff[ind] = dict()
                             compare_diff[ind]['similarity'] = []
-                            p = tmp_dist_record[self.object_name[0]]['center'][ind]
+                            p = tmp_dist_record[on_keys[0]]['center'][ind]
                             
                             # get current bounding box
                             _, boxes = eval(self.__yolo_results__[n_frame- 1])
@@ -307,14 +309,15 @@ class YOLOReader(object):
                         print(hit_condi)
             # just ignored if there is no bounding box in this frame
             else:
+                on_keys = [k for k, v in self.object_name.items() if v['on']]
                 pass
 
             # record animation
             if n_frame % n_show == 0:
 
                 cv2.putText(self._frame, 'Calculating...', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
-                for k in self.object_name:
-                    color = self.color[letter.index(k)]
+                for k in on_keys:
+                    color = self.color[self.object_name[k]['ind']]
                     flag = self.results_dict[k]['n_frame']
                     try:
                         last = np.where(np.array(flag) > (n_frame - 300))[0][0]
@@ -354,7 +357,7 @@ class YOLOReader(object):
             min_key_not_assigned = None
             # compare with not assigned key
             for k, v in tmp_record.items():
-                if k in [tmp for tmp in self.object_name if tmp not in [j for j, _ in hit_condi]]:
+                if k in [tmp for tmp in on_keys if tmp not in [j for j, _ in hit_condi]]:
                     ind = tmp_record[k]['center'].index(p)
                     if tmp_record[k]['dist'][ind] < min_dist_not_assigned:
                         min_dist_not_assigned = tmp_record[k]['dist'][ind]
@@ -363,7 +366,7 @@ class YOLOReader(object):
             min_dist_assigned = 9999
             min_key_assigned = None
             for k, v in tmp_record.items():
-                if k in [tmp for tmp in self.object_name if tmp in [j for j, _ in hit_condi]]:
+                if k in [tmp for tmp in on_keys if tmp in [j for j, _ in hit_condi]]:
                     ind = tmp_record[k]['center'].index(p)
                     if tmp_record[k]['dist'][ind] < min_dist_assigned:
                         min_dist_assigned = tmp_record[k]['dist'][ind]
@@ -388,7 +391,7 @@ class YOLOReader(object):
             elif self.suggest_ind[0][0] == 'new':
                 self.all_buttons[1].focus_force()
             else:
-                self.all_buttons[self.object_name.index(self.suggest_ind[0][0]) + 2].focus_force()
+                self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind'] + 2].focus_force()
 
         # update new value
         self.n_frame = n_frame
@@ -397,7 +400,7 @@ class YOLOReader(object):
         self.undone_pts = undone_pts
         
         # record value for undoing
-        records = (copy.deepcopy(self.results_dict), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name), self.deleted_name)
+        records = (copy.deepcopy(self.results_dict), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
         if len(self.undo_records) > 0:
             if self.stop_n_frame != self.undo_records[-1][1]:
                 self.undo_records.append(records)

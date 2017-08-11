@@ -67,9 +67,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.tmp_line = []
 
         # variables for recording things
-        self.object_name = []
-        self.deleted_name = []
-        self.last_object_name = []
+        self.object_name = dict()
         self.results_dict = dict()
         self.dist_records = dict()
         self.label_dict = dict()
@@ -125,15 +123,14 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
     def update_info(self):
         # update object information table
         if self.tv is not None:
-            for i, n in enumerate(self.object_name):
-                if n not in self.deleted_name:
-                    rd = self.results_dict[n]
-                    try:
-                        is_detected = rd['n_frame'].index(self.n_frame)
-                        is_detected = True
-                    except:
-                        is_detected = False
-                    self.tv.item(n, text=n, values=(self.color_name[i], is_detected, rd['n_frame'][-1]))
+            for n in sorted([k for k, v in self.object_name.items() if v['on']]):
+                rd = self.results_dict[n]
+                try:
+                    is_detected = rd['n_frame'].index(self.n_frame)
+                    is_detected = True
+                except:
+                    is_detected = False
+                self.tv.item(n, text=n, values=(self.color_name[self.object_name[n]['ind']], is_detected, rd['n_frame'][-1]))
 
     def update_label(self):
         # text_nframe = 'Current Frame: '
@@ -247,7 +244,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         file = self.video_path.split('.avi')[0] + '.dat'
         if os.path.isfile(file):
-            self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name, self.deleted_name = pickle.load(open(file, "rb" ))[-1]
+            self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
             self.n_frame = self.stop_n_frame
         else:
             self.calculate_path()
@@ -375,14 +372,14 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.tv.column('lastdetectedframe', anchor='center', width=140)
         self.tv.grid()
 
-        for i, n in enumerate(self.object_name):
+        for n in sorted(self.object_name.keys()):
             rd = self.results_dict[n]
             try:
                 is_detected = rd['n_frame'].index(self.n_frame)
                 is_detected = True
             except:
                 is_detected = False
-            self.tv.insert('', 'end', n, text=n, values=(self.color_name[i], is_detected, rd['n_frame'][-1]))
+            self.tv.insert('', 'end', n, text=n, values=(self.color_name[self.object_name[n]['ind']], is_detected, rd['n_frame'][-1]))
 
         # frame for legend
         LEGENG_FRAME = ttk.LabelFrame(STATE_FRAME, text='圖例說明')
@@ -416,18 +413,18 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME = ttk.LabelFrame(OP_FRAME, text="需被標註的 bbox 應該是哪一個目標呢？")
         self.BUTTON_FRAME.grid(row=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
         
-        for i, k in enumerate(['誤判', '新目標'] + self.object_name):
+        for i, k in enumerate(['誤判', '新目標'] + sorted(self.object_name.keys())):
             if i in [0, 1]:
                 bg = None
                 fg = None
                 b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_click(clr), bg=bg, fg=fg, width=40)
-                b.grid(row=i+1, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             else:
-                bg = self.color_name[i - 2].lower()
+                bg = self.color_name[self.object_name[k]['ind']].lower()
                 fg = 'white'
                 b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_click(clr), bg=bg, fg=fg)
-                b.grid(row=i+1, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             self.all_buttons.append(b)
 
@@ -478,7 +475,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         elif self.suggest_ind[0][0] == 'new':
             self.all_buttons[1].focus_force()
         else:
-            self.all_buttons[self.object_name.index(self.suggest_ind[0][0]) + 2].focus_force()
+            self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind'] + 2].focus_force()
 
         self.update_label()
         self.update_draw()
@@ -496,5 +493,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('<Delete>', self.on_key)
         self.root.bind('d', self.on_key)
         self.root.bind('n', self.on_key)
+        self.root.bind('l', self.on_key)
         self.root.bind('s', self.break_loop)
         self.root.mainloop()

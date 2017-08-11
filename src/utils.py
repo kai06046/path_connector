@@ -10,71 +10,69 @@ class Utils(object):
     def draw(self, tup=None):
 
         # draw connected paths
-        for i, k in enumerate(self.object_name):
-            if k not in self.deleted_name:
-                # 
-                if not self.is_manual:
-                    pts = np.array(self.results_dict[k]['path'])
-                    flag = self.results_dict[k]['n_frame']
+        for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
+            if not self.is_manual:
+                pts = np.array(self.results_dict[k]['path'])
+                flag = self.results_dict[k]['n_frame']
+            else:
+                pts = np.array(self.tmp_results_dict[k]['path'])
+                flag = self.tmp_results_dict[k]['n_frame']
+
+            color = self.color[self.object_name[k]['ind']]
+
+            try:
+                ind = flag.index(self.n_frame)
+            except:
+                ind = None
+
+            if ind:
+                width = 5
+                last_pt = tuple(pts[ind - 1])
+                pt = tuple(pts[ind])
+                tri_pts = tri(pt)
+                # draw path end point triangle
+                cv2.polylines(self._frame, tri_pts, True, color, 4)
+                # position of text info
+                if last_pt[1] > pt[1]:
+                    cv2.putText(self._frame, k, (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
                 else:
-                    pts = np.array(self.tmp_results_dict[k]['path'])
-                    flag = self.tmp_results_dict[k]['n_frame']
-
-                color = self.color[i]
-
-                try:
-                    ind = flag.index(self.n_frame)
-                except:
-                    ind = None
-
-                if ind:
-                    width = 5
-                    last_pt = tuple(pts[ind - 1])
-                    pt = tuple(pts[ind])
-                    tri_pts = tri(pt)
-                    # draw path end point triangle
-                    cv2.polylines(self._frame, tri_pts, True, color, 4)
-                    # position of text info
-                    if last_pt[1] > pt[1]:
-                        cv2.putText(self._frame, k, (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
-                    else:
-                        cv2.putText(self._frame, k, (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    cv2.putText(self._frame, k, (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+            else:
+                last_pt = tuple(pts[-2])
+                pt = tuple(pts[-1])
+                tri_pts = tri(pt)
+                # draw path end point triangle
+                cv2.polylines(self._frame, tri_pts, True, color, 1)
+                # position of text info
+                if last_pt[1] > pt[1]:
+                    cv2.putText(self._frame, k, (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
                 else:
-                    last_pt = tuple(pts[-2])
-                    pt = tuple(pts[-1])
-                    tri_pts = tri(pt)
-                    # draw path end point triangle
-                    cv2.polylines(self._frame, tri_pts, True, color, 1)
-                    # position of text info
-                    if last_pt[1] > pt[1]:
-                        cv2.putText(self._frame, k, (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
-                    else:
-                        cv2.putText(self._frame, k, (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    cv2.putText(self._frame, k, (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
 
-                if self.check_show_drawing is None or self.check_show_drawing.get() == 1:
-                    # show until current if ind is not None
-                    pts = pts[-self.maximum:ind]
-                    if len(pts) > 0:
-                        # start point
-                        cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
-                        cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
+            if self.check_show_drawing is None or self.check_show_drawing.get() == 1:
+                # show until current if ind is not None
+                pts = pts[-self.maximum:ind]
+                if len(pts) > 0:
+                    # start point
+                    cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
+                    cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
 
-                        for i in range(1, len(pts)):
-                            p1 = pts[i-1]
-                            p2 = pts[i]
-                            dist = np.linalg.norm(p1 - p2)
-                            if dist < 48:
-                                cv2.line(self._frame, tuple(p1), tuple(p2), color, 1)
-                            else:
-                                drawline(self._frame, tuple(p1), tuple(p2), color, 1, style='dotted', gap=7)
+                    for i in range(1, len(pts)):
+                        p1 = pts[i-1]
+                        p2 = pts[i]
+                        dist = np.linalg.norm(p1 - p2)
+                        if dist < 48:
+                            cv2.line(self._frame, tuple(p1), tuple(p2), color, 1)
+                        else:
+                            drawline(self._frame, tuple(p1), tuple(p2), color, 1, style='dotted', gap=7)
 
-                            # print(dist)
-                            if i % 6 == 0:
-                                if self.check_show_arrow is not None and self.check_show_arrow.get() == 1:
-                                    if dist > 3:
-                                        draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
-                        # pts = pts.reshape((-1, 1, 2))
-                        # cv2.polylines(self._frame, [pts], False, color)
+                        # print(dist)
+                        if i % 6 == 0:
+                            if self.check_show_arrow is not None and self.check_show_arrow.get() == 1:
+                                if dist > 3:
+                                    draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
+                    # pts = pts.reshape((-1, 1, 2))
+                    # cv2.polylines(self._frame, [pts], False, color)
 
         # draw coordinate that to be assigned
         if self.current_pts is not None:
@@ -123,9 +121,11 @@ class Utils(object):
             elif self.stop_n_frame < self.n_frame:
                 cv2.putText(self._frame, 'Manual Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
 
+
+
             # draw label results
             for k, v in self.label_dict.items():
-                color = self.color[self.object_name.index(k)]
+                color = self.color[self.object_name[k]['ind']]
                 flag = v['n_frame']
                 pts = v['path']
 
