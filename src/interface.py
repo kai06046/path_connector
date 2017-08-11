@@ -72,3 +72,33 @@ class Interface(object):
         settings_root.bind('<Escape>', exit)
         settings_root.bind('<h>', exit)
         settings_root.mainloop()
+
+    class popupEntry(object):
+
+        def __init__(self,master):
+            top=self.top= tk.Toplevel(master)
+            top.title('Change name')
+            # tk.Grid.rowconfigure(top, 0, weight=1)
+            # tk.Grid.columnconfigure(top, 0, weight=1)
+
+            top.update_idletasks()
+            width = top.winfo_reqwidth()
+            height = top.winfo_reqheight()
+            x = (top.winfo_screenwidth() // 2.25) - (width // 2)
+            y = (top.winfo_screenheight() // 2) - (height // 2)
+            top.geometry('+%d+%d' % (x, y))
+
+            self.l=tk.Label(top,text="Please enter a new object name.", font=("Verdana", 12))
+            self.l.pack(expand=tk.YES, fill=tk.BOTH, padx=5, pady=5)
+            self.e=ttk.Entry(top)
+            self.e.config(width=9)
+            self.e.pack(expand=tk.YES, padx=5, pady=5)
+            self.e.focus_force()
+            self.b=ttk.Button(top,text='Ok',command=self.cleanup, width=5)
+            self.b.pack(expand=tk.YES, padx=5, pady=5)
+
+            # pending; bind return, a decent name judge
+        def cleanup(self):
+            self.value=self.e.get()
+            self.top.destroy()
+

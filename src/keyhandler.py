@@ -135,7 +135,7 @@ class KeyHandler(Interface, Common):
             new_key = letter[len(self.object_name)]
             self.results_dict[new_key] = {'path': [p, p], 'n_frame': [n, n]}
             print(len(self.object_name), self.object_name)
-            self.object_name[new_key] = {'ind': len(self.object_name), 'on': True}
+            self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
             print(len(self.object_name))
             try:
                 self.dist_records[n][new_key] = dict()
@@ -372,9 +372,28 @@ class KeyHandler(Interface, Common):
         # temp_root.destroy()
         temp_root.mainloop()
 
+    def tvitem_click(self, event):
+        sel_items = self.tv.selection()
+        if sel_items:
+            popup = Interface.popupEntry(self.root)
+            self.root.wait_window(popup.top)
+            sel_item = sel_items[0]
+
+            try:
+                new_key = popup.value
+                if new_key in [v['display_name'] for k, v in self.object_name.items()]:
+                    self.msg('%s 已經被使用了。' % new_key)
+                elif new_key in [" " * i for i in range(10)]:
+                    self.msg('請輸入空白鍵以外的字串。')
+                else:
+                    self.object_name[sel_item]['display_name'] = new_key
+                    self.all_buttons[self.object_name[sel_item]['ind'] + 2].config(text=new_key)
+            except:
+                pass
+
     def undo(self, event=None):
-        if len(self.undo_records) > 1:
-            self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2]
+        if len(self.undo_records) > 0:
+            self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if len(self.undo_records) > 1 else -1]
             print(self.object_name)
             self.undo_records = self.undo_records[:-1]
             self.n_frame = self.stop_n_frame
@@ -398,7 +417,7 @@ class KeyHandler(Interface, Common):
                         self.tv.delete(letter[i-2])
                     except:
                         print(letter[i-2])
-                        
+
                     b.grid_forget()
 
         else:

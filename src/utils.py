@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 from PIL import Image, ImageTk
 
-BAR_HEIGHT = 130
 LENGTH_ARROW = 20
 
 class Utils(object):
@@ -34,9 +33,9 @@ class Utils(object):
                 cv2.polylines(self._frame, tri_pts, True, color, 4)
                 # position of text info
                 if last_pt[1] > pt[1]:
-                    cv2.putText(self._frame, k, (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
                 else:
-                    cv2.putText(self._frame, k, (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
             else:
                 last_pt = tuple(pts[-2])
                 pt = tuple(pts[-1])
@@ -45,9 +44,9 @@ class Utils(object):
                 cv2.polylines(self._frame, tri_pts, True, color, 1)
                 # position of text info
                 if last_pt[1] > pt[1]:
-                    cv2.putText(self._frame, k, (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
                 else:
-                    cv2.putText(self._frame, k, (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
 
             if self.check_show_drawing is None or self.check_show_drawing.get() == 1:
                 # show until current if ind is not None
