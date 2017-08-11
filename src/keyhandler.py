@@ -8,7 +8,7 @@ from tkinter import ttk
 import imageio
 from tkinter.messagebox import askyesno
 import numpy as np
-
+import copy
 
 letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
 
@@ -47,19 +47,34 @@ class KeyHandler(Interface, Common):
         settings_root.bind('<h>', exit)
         settings_root.mainloop()
 
+    def reset(self, event):
+        self.tmp_line = []
+
+    def on_mouse_mv(self, event):
+        self.clear = True
+        self.last_x = self.mv_x
+        self.last_y = self.mv_y
+        self.mv_x = event.x
+        self.mv_y = event.y
+
     def on_mouse(self, event):
         n = event.num
-        if n == 1:
+        # if double click, enter manual label mdoe
+        if n == 1 and not self.is_manual:
             self.is_manual = not self.is_manual
             for b in self.all_buttons:
                 b['state'] = 'disabled' if self.is_manual else 'normal'
 
             self.label_dict = {k: {'path': [], 'n_frame': []} for k in self.object_name}
 
+            # temporally results for manual label
+            self.tmp_results_dict = copy.deepcopy(self.results_dict)
+
+        # if right click
         elif n == 3:
-            # if right click
             if self.is_manual:
                 k = self.object_name[self.label_ind - 1]
+                # remove current label if any exists
                 try:
                     ind = self.label_dict[k]['n_frame'].index(self.n_frame)
                     self.label_dict[k]['n_frame'].pop(ind)
@@ -73,36 +88,37 @@ class KeyHandler(Interface, Common):
             cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
             self.tmp_line.append((event.x, event.y))
 
-    def reset(self, event):
-        self.tmp_line = []
-
-    def on_mouse_mv(self, event):
-        self.clear = True
-        self.last_x = self.mv_x
-        self.last_y = self.mv_y
-        self.mv_x = event.x
-        self.mv_y = event.y
-
     def on_mouse_manual_label(self, event):
         # execute only if it is manual label mode
         if self.is_manual:
             k = self.object_name[self.label_ind - 1]
+            p = (event.x, event.y)
+            # record label points
             if self.n_frame not in self.label_dict[k]['n_frame']:
                 self.label_dict[k]['n_frame'].append(self.n_frame)
-                self.label_dict[k]['path'].append((event.x, event.y))
+                self.label_dict[k]['path'].append(p)
             else:
-                self.label_dict[k]['path'][self.label_dict[k]['n_frame'].index(self.n_frame)] = (event.x, event.y)
+                self.label_dict[k]['path'][self.label_dict[k]['n_frame'].index(self.n_frame)] = p
 
+            # modify label point if it conflicts with original result dicts
+            try:
+                ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
+                self.tmp_results_dict[k]['path'][ind] = p
+            except:
+                self.tmp_results_dict[k]['n_frame'].append(self.n_frame)
+                self.tmp_results_dict[k]['path'].append(p)
+
+    # mouse wheel event
     def on_mouse_wheel(self, event):
 
         if self.is_manual:
-
             if event.delta == -120:
                 self.label_ind = max(1, self.label_ind - 1)
             elif event.delta == 120:
                 self.label_ind = min(len(self.object_name), self.label_ind + 1)
             print(self.label_ind)
 
+    # button event
     def on_click(self, clr):
         self.n_frame = self.stop_n_frame
         p, n = self.current_pts, self.current_pts_n
@@ -175,6 +191,21 @@ class KeyHandler(Interface, Common):
 
                 print('just pass')
 
+    # move to previous frame
+    def on_left(self, event):
+        if self.n_frame > 1:
+            self.n_frame -= 1
+        else:
+            self.msg('Already the first frame!')
+    
+    # move to next frame
+    def on_right(self, event):
+        if self.n_frame == self.total_frame:
+            self.msg('Already the last frame!')
+        else:
+            self.n_frame += 1
+
+    # move to previous 5 frames
     def on_page_up(self, event):
         if self.n_frame > 1:
             self.n_frame -= 5
@@ -182,6 +213,7 @@ class KeyHandler(Interface, Common):
         else:
             self.msg('Already the first frame!')
 
+    # move to next 5 frames
     def on_page_down(self, event):
         if self.n_frame == self.total_frame:
             self.msg('Already the last frame!')
@@ -194,19 +226,8 @@ class KeyHandler(Interface, Common):
 
     def on_down(self, event):
         print('down')
-    
-    def on_left(self, event):
-        if self.n_frame > 1:
-            self.n_frame -= 1
-        else:
-            self.msg('Already the first frame!')
-        
-    def on_right(self, event):
-        if self.n_frame == self.total_frame:
-            self.msg('Already the last frame!')
-        else:
-            self.n_frame += 1
 
+    # on some key pressed event
     def on_key(self, event):
         if not self.is_manual:
             if event.keysym not in ['n', 'Delete', 'd']:
@@ -219,11 +240,18 @@ class KeyHandler(Interface, Common):
                     print(event.keysym)
                     pass
             elif event.keysym == 'n':
-                self.on_click('New object, add one.')
+                if not self.is_manual:
+                    self.on_click('New object, add one.')
+                else:
+                    # pending; add new object while manual label mode.
+                    pass
             elif event.keysym in ['Delete', 'd']:
                 self.on_click('False positive, delete it')
         else:
+            if event.keysym not in ['n', 'Delete', 'd']:
+                self.label_ind = int(event.keysym)
             print(event.keysym)
+
     def set_max(self, s):
         v = int(float(s))
         self.maximum_var.set(v)
@@ -239,10 +267,20 @@ class KeyHandler(Interface, Common):
         self.n_frame_var.set(v)
         self.n_frame = v
 
-    def on_last_detected(self, event=None):
+    def on_return(self, event=None):
         self.n_frame = self.stop_n_frame
 
+        if self.is_manual:
+            # pending; a confirm UI
+            self.is_manual = not self.is_manual
+
+            for b in self.all_buttons:
+                b['state'] = 'disabled' if self.is_manual else 'normal'
+
+            self.label_dict = {k: {'path': [], 'n_frame': []} for k in self.object_name}
+
     def on_remove(self):
+        # pending; a better workflow for undo
         def destroy(i):
             # root.grab_release()
             k = self.object_name[i]
@@ -261,9 +299,7 @@ class KeyHandler(Interface, Common):
                 del self.results_dict[k]
                 del self.dist_records[k]
             else:
-                # root.grab_set_global()
                 pass
-                # root.grab_set()
         def close():
             root.destroy()
 
@@ -280,14 +316,12 @@ class KeyHandler(Interface, Common):
             b.pack(expand=True, fill=tk.BOTH)
         self.root.wait_window(top)
         root.mainloop()
-        # root.grab_release()
 
     def on_show_boxes(self):
         self.is_show_boxes = not self.is_show_boxes
 
     def break_loop(self, event=None):
         self.safe = False
-        # pass
 
     def on_view_results(self):
         """
@@ -361,6 +395,5 @@ class KeyHandler(Interface, Common):
                     self.all_buttons[1].focus_force()
                 else:
                     self.all_buttons[self.object_name.index(self.suggest_ind[0][0]) + 2].focus_force()
-
         else:
             self.msg('Nothing can undo.')

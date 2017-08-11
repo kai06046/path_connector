@@ -12,8 +12,14 @@ class Utils(object):
         # draw connected paths
         for i, k in enumerate(self.object_name):
             if k not in self.deleted_name:
-                pts = np.array(self.results_dict[k]['path'])
-                flag = self.results_dict[k]['n_frame']
+                # 
+                if not self.is_manual:
+                    pts = np.array(self.results_dict[k]['path'])
+                    flag = self.results_dict[k]['n_frame']
+                else:
+                    pts = np.array(self.tmp_results_dict[k]['path'])
+                    flag = self.tmp_results_dict[k]['n_frame']
+
                 color = self.color[i]
 
                 try:
@@ -110,17 +116,31 @@ class Utils(object):
                 cv2.putText(self._frame, 'Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
         else:
             color = self.color[self.label_ind - 1]
-            cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
+            if self.stop_n_frame == self.n_frame:
+                cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
+            elif self.stop_n_frame > self.n_frame:
+                cv2.putText(self._frame, 'Manual Pre-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
+            elif self.stop_n_frame < self.n_frame:
+                cv2.putText(self._frame, 'Manual Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
 
+            # draw label results
             for k, v in self.label_dict.items():
                 color = self.color[self.object_name.index(k)]
+                flag = v['n_frame']
+                pts = v['path']
+
+                # current frame label
                 try:
-                    ind = v['n_frame'].index(self.n_frame)
+                    ind = flag.index(self.n_frame)
+                    p = pts[ind]
+                    cv2.circle(self._frame, p, 3, color, 2)
                 except:
                     ind = None
-                if ind is not None:
-                    p = v['path'][ind]
-                    cv2.circle(self._frame, p, 2, color, 2)
+
+                # label history
+                for i, p in enumerate(pts):
+                    if i != ind:
+                        cv2.circle(self._frame, p, 3, color, 1)
 
         # pending; label line testing
         if len(self.tmp_line) > 1:
