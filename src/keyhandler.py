@@ -267,7 +267,7 @@ class KeyHandler(Interface, Common):
             if result:
                 self.results_dict = copy.deepcopy(self.tmp_results_dict)
 
-            self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name if v['on']]}
+            self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name.items() if v['on']]}
 
     def on_remove(self):
         # pending; a better workflow for undo

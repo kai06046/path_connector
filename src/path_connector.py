@@ -130,7 +130,11 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
                     is_detected = True
                 except:
                     is_detected = False
-                self.tv.item(n, text=self.object_name[n]['display_name'], values=(self.color_name[self.object_name[n]['ind']], is_detected, rd['n_frame'][-1]))
+                try:
+                    self.tv.item(n, text=self.object_name[n]['display_name'], values=(self.color_name[self.object_name[n]['ind']], is_detected, rd['n_frame'][-1]))
+                except:
+                    self.object_name[n]['on'] = True
+                    self.tv.insert('', 'end', n, text=n, values=(self.color_name[self.object_name[n]['ind']], is_detected, rd['n_frame'][-1]))
 
     def update_label(self):
         # text_nframe = 'Current Frame: '

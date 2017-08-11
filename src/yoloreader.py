@@ -91,7 +91,7 @@ class YOLOReader(object):
                             self.results_dict[chrac]['path'] = [p]
                             self.results_dict[chrac]['n_frame'] = [n_frame]
 
-                            self.object_name[chrac] = {'ind': n_key_used, 'on': True}
+                            self.object_name[chrac] = {'ind': n_key_used, 'on': True, 'display_name': chrac}
                             n_key_used += 1
 
                             # record distance history
