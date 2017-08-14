@@ -25,7 +25,7 @@ THRES_NOT_ASSIGN_FP_DIST = 20
 class YOLOReader(object):
 
     def read_yolo_result(self):
-        yolo_results_path = 'testing_0928.txt'
+        # yolo_results_path = 'testing_0928.txt'
         yolo_results_path = self.video_path.split('.avi')[0] + '.txt'
         with open(yolo_results_path, 'r') as f:
             lines = f.readlines()
@@ -59,6 +59,7 @@ class YOLOReader(object):
                 self.dist_records[n_frame] = dict()
 
                 on_keys = [k for k, v in self.object_name.items() if v['on']]
+
                 for i, box in enumerate(boxes):
                     ymin, xmin, ymax, xmax, score = box
                     x_c = int((xmin+xmax) / 2 + 0.5)
@@ -400,9 +401,4 @@ class YOLOReader(object):
         self.undone_pts = undone_pts
         
         # record value for undoing
-        records = (copy.deepcopy(self.results_dict), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
-        if len(self.undo_records) > 0:
-            if self.stop_n_frame != self.undo_records[-1][1]:
-                self.undo_records.append(records)
-        else:
-            self.undo_records.append(records)
+        self.save_records()

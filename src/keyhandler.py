@@ -16,7 +16,39 @@ class KeyHandler(Interface, Common):
 
     def on_load(self):
         print('load')
-        # self.__init__(self.maximum, self.tol)
+        self.get_path()
+        self.video.release()
+        self.init_video()
+        self.object_name = dict()
+        self.results_dict = dict()
+        self.dist_records = dict()
+        self.label_dict = dict()
+        self.undo_records = []
+        self.all_buttons = []
+
+        self.n_frame = 1
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.n_frame - 1)
+        ok, self._frame = self.video.read()
+        self._orig_frame = self._frame.copy()
+        
+        self.calculate_path(self.n_frame)
+        
+        # reset button
+        on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
+        for i, k in enumerate(['誤判', '新目標'] + sorted(self.object_name.keys())):
+            if i in [0, 1]:
+                bg = None
+                fg = None
+                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_click(clr), bg=bg, fg=fg, width=40)
+                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+
+            else:
+                bg = self.color_name[self.object_name[k]['ind']].lower()
+                fg = 'white'
+                b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_click(clr), bg=bg, fg=fg)
+                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+
+            self.all_buttons.append(b)
 
     def on_settings(self, event=None):
         self.setting()
@@ -104,10 +136,11 @@ class KeyHandler(Interface, Common):
                 self.label_ind = max(1 + min([v['ind'] for k, v in self.object_name.items() if v['on']]), self.label_ind - 1)
             elif event.delta == 120:
                 self.label_ind = min(len([k for k, v in self.object_name.items() if v['on']]), self.label_ind + 1)
-            print(self.label_ind)
 
     # button event
     def on_click(self, clr):
+        
+        self.save_records()
         self.n_frame = self.stop_n_frame
         p, n = self.current_pts, self.current_pts_n
         run = True
@@ -158,13 +191,11 @@ class KeyHandler(Interface, Common):
         elif clr == '誤判':
             self.fp_pts.append(p)
             print('deleted!')
-
+                
         if run:
             if len(self.undone_pts) == 0:
-                # self.tracked_frames = []
                 self.root.update()
                 self.calculate_path(self.stop_n_frame + 1)
-                # self.root.after(0, self.update_track, 0)
             else:
                 self.current_pts, self.current_pts_n = self.undone_pts.pop(0)
                 self.suggest_ind.pop(0)
@@ -256,9 +287,11 @@ class KeyHandler(Interface, Common):
         self.n_frame = v
 
     def on_return(self, event=None):
+        
         self.n_frame = self.stop_n_frame
 
         if self.is_manual:
+            self.save_records()
             # pending; a confirm UI
             self.chg_mode()
 
@@ -270,8 +303,10 @@ class KeyHandler(Interface, Common):
             self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name.items() if v['on']]}
 
     def on_remove(self):
+        
         # pending; a better workflow for undo
         def destroy(i):
+            self.save_records()
             # root.grab_release()
             k = [k for k, v in self.object_name.items() if v['ind'] == i][0]
             result = askyesno('確認', '確定要刪除 %s 嗎？' %k, icon='warning')
@@ -372,7 +407,10 @@ class KeyHandler(Interface, Common):
         # temp_root.destroy()
         temp_root.mainloop()
 
+    # for changing name
     def tvitem_click(self, event):
+        self.save_records()
+
         sel_items = self.tv.selection()
         if sel_items:
             popup = Interface.popupEntry(self.root)
@@ -391,7 +429,9 @@ class KeyHandler(Interface, Common):
             except:
                 pass
 
+    # undo method
     def undo(self, event=None):
+
         if len(self.undo_records) > 0:
             self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if len(self.undo_records) > 1 else -1]
             print(self.object_name)
@@ -406,12 +446,13 @@ class KeyHandler(Interface, Common):
                     self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind']].focus_force()
 
             # update buttons number
-            on_ind = [v['ind'] for k, v in self.object_name.items()]
+            on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
             for i, b in enumerate(self.all_buttons):
                 if i in [0, 1]:
                     pass
                 elif i - 2 in on_ind:
                     b.grid(row=i + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                    b.config(text=self.object_name[letter[i-2]]['display_name'])
                 else:
                     try:
                         self.tv.delete(letter[i-2])

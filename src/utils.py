@@ -50,7 +50,8 @@ class Utils(object):
 
             if self.check_show_drawing is None or self.check_show_drawing.get() == 1:
                 # show until current if ind is not None
-                pts = pts[-self.maximum:ind]
+                # pts = pts[-self.maximum:ind]
+                pts = pts[-self.maximum:(ind + 1) if ind is not None else None]
                 if len(pts) > 0:
                     # start point
                     cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
@@ -60,16 +61,18 @@ class Utils(object):
                         p1 = pts[i-1]
                         p2 = pts[i]
                         dist = np.linalg.norm(p1 - p2)
+                        # draw dotted line
                         if dist < 48:
                             cv2.line(self._frame, tuple(p1), tuple(p2), color, 1)
                         else:
                             drawline(self._frame, tuple(p1), tuple(p2), color, 1, style='dotted', gap=7)
-
-                        # print(dist)
+                        # draw arrow
                         if i % 6 == 0:
                             if self.check_show_arrow is not None and self.check_show_arrow.get() == 1:
                                 if dist > 3:
                                     draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
+                else:
+                    print(ind)
                     # pts = pts.reshape((-1, 1, 2))
                     # cv2.polylines(self._frame, [pts], False, color)
 
@@ -99,7 +102,7 @@ class Utils(object):
             xmin, xmax = max(0, (x-n)), min((x+n), self.width)
             ymin, ymax = max(0, (y-n)), min((y+n), self.height)
             self._frame[ymin:ymax, xmin:xmax] = self._orig_frame[ymin:ymax, xmin:xmax].copy()
-            drawrect(self._frame, (xmin, ymin), (xmax, ymax), (0, 255, 255), 1, style='dotted')
+            drawrect(self._frame, (xmin, ymin), (xmax, ymax), (0, 255, 255), 1, style='dashed')
             if not (x >= (self.last_x - e) and x <= (self.last_x + e) and y >= (self.last_y - e) and  y <= (self.last_y + e)):
                 self.clear = False
 
@@ -215,7 +218,7 @@ def tri(pt):
     y1 = 13
     return [np.array([(x-x1, y+y1), (x+x1, y+y1), (x, y-y1)]).reshape((-1, 1, 2))]
 
-def drawline(img,pt1,pt2,color,thickness=1,style='dotted',gap=15):
+def drawline(img,pt1,pt2,color,thickness=1,style='dashed',gap=15):
     dist =((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)**.5
     pts= []
     for i in  np.arange(0,dist,gap):

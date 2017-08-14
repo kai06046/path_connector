@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import cv2
-import time, os, pickle
+import time, os, pickle, copy
 import numpy as np
 from PIL import Image, ImageTk
 import threading
@@ -35,6 +35,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # basic setup
         self.win_name = WIN_NAME
         self.video_path = None
+        self.video = None
         self.video = None
         self.width = None
         self.height = None
@@ -208,7 +209,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.fps = int(self.video.get(5))
         self.resolution = (self.width, self.height)
         self.total_frame = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.__yolo_results__ = self.read_yolo_result()        
+        self.__yolo_results__ = self.read_yolo_result()
 
     def ready(self, r):
         if self.video_path is not None:
@@ -218,6 +219,15 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             self.run()
         else:
             self.msg('Please load a video first.')
+
+    def save_records(self):
+        
+        records = (copy.deepcopy(self.results_dict), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
+        if len(self.undo_records) > 0:
+            if self.stop_n_frame != self.undo_records[-1][1]:
+                self.undo_records.append(records)
+        else:
+            self.undo_records.append(records)
 
     # main logic for runing UI
     def run(self):
@@ -262,9 +272,9 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.config(menu=menu)
 
         # create the file object
-        # file = tk.Menu(menu)
-        # file.add_command(label='Load', command=self.on_load)
-        # menu.add_cascade(label='File', menu=file)
+        file = tk.Menu(menu)
+        file.add_command(label='Load', command=self.on_load)
+        menu.add_cascade(label='File', menu=file)
 
         # create the help object
         help = tk.Menu(menu)
