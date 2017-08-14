@@ -76,7 +76,7 @@ class Utils(object):
                     # pts = pts.reshape((-1, 1, 2))
                     # cv2.polylines(self._frame, [pts], False, color)
 
-        # draw coordinate that to be assigned
+        # draw coordinate (stop point) that needed to be assigned
         if self.current_pts is not None:
             p, nframe = self.current_pts, self.current_pts_n
             color = (50, 50, 255)
@@ -91,8 +91,30 @@ class Utils(object):
 
             for b in boxes:
                 ymin, xmin, ymax, xmax, score = b
+                x_c = int((xmin+xmax) / 2 + 0.5)
+                y_c = int((ymin+ymax) / 2 + 0.5)
+
                 p1, p2 = (int(xmin), int(ymin)), (int(xmax), int(ymax))
-                cv2.rectangle(self._frame, p1, p2, (0, 255, 255), 1)
+
+                color = None
+                # find corresponding color of YOLO bounding boxes
+                for k in sorted([k for k, v in self.object_name.items() if v['on']]):
+                    pts = self.results_dict[k]['path']
+                    flag = self.results_dict[k]['n_frame']
+                    ind = None                    
+                    try:
+                        ind = flag.index(self.n_frame)
+                    except:
+                        pass
+
+                    if ind is not None:
+                        if pts[ind] == (x_c, y_c):
+                            color = self.color[self.object_name[k]['ind']]
+                            break
+                if color:
+                    cv2.rectangle(self._frame, p1, p2, color, 1)
+                else:
+                    cv2.rectangle(self._frame, p1, p2, (0, 255, 255), 1)
 
         # remove drawing on specific region
         n = 60
@@ -102,7 +124,7 @@ class Utils(object):
             xmin, xmax = max(0, (x-n)), min((x+n), self.width)
             ymin, ymax = max(0, (y-n)), min((y+n), self.height)
             self._frame[ymin:ymax, xmin:xmax] = self._orig_frame[ymin:ymax, xmin:xmax].copy()
-            drawrect(self._frame, (xmin, ymin), (xmax, ymax), (0, 255, 255), 1, style='dashed')
+            drawrect(self._frame, (xmin, ymin), (xmax, ymax), (0, 255, 255), 1, style='dotted')
             if not (x >= (self.last_x - e) and x <= (self.last_x + e) and y >= (self.last_y - e) and  y <= (self.last_y + e)):
                 self.clear = False
 
@@ -123,8 +145,6 @@ class Utils(object):
             elif self.stop_n_frame < self.n_frame:
                 cv2.putText(self._frame, 'Manual Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
 
-
-
             # draw label results
             for k, v in self.label_dict.items():
                 color = self.color[self.object_name[k]['ind']]
@@ -144,7 +164,7 @@ class Utils(object):
                     if i != ind:
                         cv2.circle(self._frame, p, 3, color, 1)
 
-        # pending; label line testing
+        # draw manual label paths
         if len(self.tmp_line) > 1:
             color = (255, 255, 255)
             for i in range(1, len(self.tmp_line)):
@@ -218,7 +238,7 @@ def tri(pt):
     y1 = 13
     return [np.array([(x-x1, y+y1), (x+x1, y+y1), (x, y-y1)]).reshape((-1, 1, 2))]
 
-def drawline(img,pt1,pt2,color,thickness=1,style='dashed',gap=15):
+def drawline(img,pt1,pt2,color,thickness=1,style='dotted',gap=15):
     dist =((pt1[0]-pt2[0])**2+(pt1[1]-pt2[1])**2)**.5
     pts= []
     for i in  np.arange(0,dist,gap):

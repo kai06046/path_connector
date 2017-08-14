@@ -432,13 +432,13 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             if i in [0, 1]:
                 bg = None
                 fg = None
-                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_click(clr), bg=bg, fg=fg, width=40)
+                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg, width=40)
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             else:
                 bg = self.color_name[self.object_name[k]['ind']].lower()
                 fg = 'white'
-                b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_click(clr), bg=bg, fg=fg)
+                b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg)
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             self.all_buttons.append(b)
@@ -463,17 +463,17 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         scale_max.set(self.maximum)
         scale_max.grid(row=6, column=1)
 
-        button_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
-        button_show_box.grid(row=8, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
+        check_show_box.grid(row=8, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        button_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='Eraser')
-        button_is_clear.grid(row=10, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='Eraser')
+        check_is_clear.grid(row=10, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
-        button_show_arrow = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_arrow, onvalue=1, offvalue=0, text='顯示路徑方向')
-        button_show_arrow.grid(row=8, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_arrow = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_arrow, onvalue=1, offvalue=0, text='顯示路徑方向')
+        check_show_arrow.grid(row=8, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        button_show_drawing = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_drawing, onvalue=1, offvalue=0, text='顯示已追踪路徑')
-        button_show_drawing.grid(row=10, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_drawing = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_drawing, onvalue=1, offvalue=0, text='顯示已追踪路徑')
+        check_show_drawing.grid(row=10, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         # update changes
         if self.multi:

@@ -39,13 +39,13 @@ class KeyHandler(Interface, Common):
             if i in [0, 1]:
                 bg = None
                 fg = None
-                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_click(clr), bg=bg, fg=fg, width=40)
+                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg, width=40)
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             else:
                 bg = self.color_name[self.object_name[k]['ind']].lower()
                 fg = 'white'
-                b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_click(clr), bg=bg, fg=fg)
+                b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg)
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             self.all_buttons.append(b)
@@ -72,7 +72,11 @@ class KeyHandler(Interface, Common):
             self.label_dict = {k: {'path': [], 'n_frame': []} for k in [k for k, v in self.object_name.items() if v['on']]}
             # temporally results for manual label
             self.tmp_results_dict = copy.deepcopy(self.results_dict)
+            self.check_is_clear.set(0)
+        else:
+            self.check_is_clear.set(1)
 
+    # left click enter manual label mode, right click remove label
     def on_mouse(self, event):
         n = event.num
         # if double click, enter manual label mdoe
@@ -103,11 +107,13 @@ class KeyHandler(Interface, Common):
                         print(e)
             # self.is_clear = not self.is_clear
 
+    # testing function
     def on_mouse_draw(self, event):
         if not self.is_manual:
             cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
             self.tmp_line.append((event.x, event.y))
 
+    # left click append label record
     def on_mouse_manual_label(self, event):
         # execute only if it is manual label mode
         if self.is_manual:
@@ -128,7 +134,7 @@ class KeyHandler(Interface, Common):
                 self.tmp_results_dict[k]['n_frame'].append(self.n_frame)
                 self.tmp_results_dict[k]['path'].append(p)
 
-    # mouse wheel event
+    # mouse wheel event for changing object index of manual label
     def on_mouse_wheel(self, event):
 
         if self.is_manual:
@@ -138,7 +144,7 @@ class KeyHandler(Interface, Common):
                 self.label_ind = min(len([k for k, v in self.object_name.items() if v['on']]), self.label_ind + 1)
 
     # button event
-    def on_click(self, clr):
+    def on_button(self, clr):
         
         self.save_records()
         self.n_frame = self.stop_n_frame
@@ -181,7 +187,7 @@ class KeyHandler(Interface, Common):
 
             # add buttons
             bg = self.color_name[self.object_name[new_key]['ind']].lower()
-            b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_click(clr), bg=bg, fg='white')
+            b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
             b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
             self.all_buttons.append(b)
             # add table info
@@ -253,18 +259,18 @@ class KeyHandler(Interface, Common):
             if sym not in ['n', 'Delete', 'd', 'l']:
                 try:
                     i = int(event.char)
-                    self.on_click([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
+                    self.on_button([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
                 except Exception as e:
                     print(e)
 
             elif sym == 'n':
                 if not self.is_manual:
-                    self.on_click('New object, add one.')
+                    self.on_button('New object, add one.')
                 else:
                     # pending; add new object while manual label mode.
                     pass
             elif sym in ['Delete', 'd']:
-                self.on_click('False positive, delete it')
+                self.on_button('False positive, delete it')
             elif sym == 'l':
                 self.chg_mode()
         else:
@@ -292,13 +298,14 @@ class KeyHandler(Interface, Common):
 
         if self.is_manual:
             self.save_records()
-            # pending; a confirm UI
             self.chg_mode()
 
-            string = '是否把以上標註加入目前的目標路徑？'
-            result = askyesno('確認', string, icon='warning')
-            if result:
-                self.results_dict = copy.deepcopy(self.tmp_results_dict)
+            # if exists label record
+            if sum([len(v['path']) for k, v in self.label_dict.items()]) != 0:
+                string = '是否把以上標註加入目前的目標路徑？'
+                result = askyesno('確認', string, icon='warning')
+                if result:
+                    self.results_dict = copy.deepcopy(self.tmp_results_dict)
 
             self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name.items() if v['on']]}
 
