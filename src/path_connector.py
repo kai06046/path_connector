@@ -13,8 +13,8 @@ from src.utils import Utils
 # basic setup variables
 WIN_NAME = 'Path Connector'
 VIDEO_PATH = 'videos/[CH04] 2016-09-28 20.20.00_x264.avi'
-COLOR_NAME = ['GREEN', 'BLUE', 'PURPLE', 'ORANGE', 'PINK', 'YELLOW', 'CYAN', 'WHITE', 'BLACK', 'RED']
-COLOR = [(0, 255, 0), (255, 100, 10), (245, 10, 180), (0, 122, 255), (255, 102, 255), (0, 255, 255), (255, 255, 0), (255, 255, 255), (0, 0, 0), (100, 10, 255)]
+COLOR_NAME = ['GREEN', 'BLUE', 'PURPLE', 'ORANGE', 'PINK', 'YELLOW', 'CYAN', 'BLACK', 'RED', 'WHITE']
+COLOR = [(0, 255, 0), (255, 100, 10), (245, 10, 180), (0, 122, 255), (255, 102, 255), (0, 255, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
 
 # UI required variables
 letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
@@ -49,8 +49,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.color_name = COLOR_NAME
         self.maximum = maximum
         self.tol = tol
-        self.near_tol = 32
-        self.start_time = 0
 
         # variables for displaying in canvas
         self._frame = None
@@ -66,6 +64,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.clear = False
         self.is_clear = 1 # right mouse click for removing drawing
         self.tmp_line = []
+        self.drag_flag = None
 
         # variables for recording things
         self.object_name = dict()
@@ -125,7 +124,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # update object information table
         if self.tv is not None:
             for n in sorted([k for k, v in self.object_name.items() if v['on']]):
-                rd = self.results_dict[n]
+                if self.is_manual:
+                    rd = self.tmp_results_dict[n]
+                else:
+                    rd = self.results_dict[n]
                 try:
                     is_detected = rd['n_frame'].index(self.n_frame)
                     is_detected = True
@@ -139,21 +141,14 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
     def update_label(self):
         # text_nframe = 'Current Frame: '
-        # text_video_name = self.video_path.split('/')[-1]
+        text_video_name = self.video_path.split('/')[-1]
         sec = round(self.n_frame / self.fps, 2)
         m, s = divmod(sec, 60)
         h, m = divmod(m, 60)
         text_time = "%d:%02d:%02d" % (h, m, s)
-
-        # text_fps = round(self.stop_n_frame / (time.clock() - self.start_time), 3)
-        # text_elapsed = round(time.clock() - self.start_time)
-        # text_mvpts = 'x: %s    y: %s' % (self.mv_x, self.mv_y)
         
-        # self.label_video_name.configure(text=text_video_name)
-        # self.label_nframe.configure(text=text_nframe)
+        self.label_video_name.configure(text=text_video_name)
         self.label_time.configure(text=text_time)
-        # self.label_elapsed.configure(text=text_elapsed)
-        # self.label_mvpts.configure(text=text_mvpts)
         self.scale_nframe.set(self.n_frame)
 
         self.root.after(200, self.update_label)
@@ -297,15 +292,12 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.check_is_clear = tk.IntVar()
         self.check_is_clear.set(1)
 
-
         text_nframe = '當前幀數: '
         text_video_name =self.video_path.split('/')[-1]
         sec = round(self.n_frame / self.fps, 2)
         m, s = divmod(sec, 60)
         h, m = divmod(m, 60)
         text_time = "%d:%02d:%02d" % (h, m, s)
-        # text_elapsed = round(time.clock() - self.start_time)
-        # text_mvpts = 'x: %s    y: %s' % (self.mv_x, self.mv_y)
 
         # convert to format that ImageTk require
         self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))

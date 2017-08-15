@@ -8,11 +8,12 @@ class Utils(object):
 
     def draw(self, tup=None):
 
+        results_dict = self.results_dict if not self.is_manual else self.tmp_results_dict
         # draw connected paths
         for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
             if not self.is_manual:
-                pts = np.array(self.results_dict[k]['path'])
-                flag = self.results_dict[k]['n_frame']
+                pts = np.array(results_dict[k]['path'])
+                flag = results_dict[k]['n_frame']
             else:
                 pts = np.array(self.tmp_results_dict[k]['path'])
                 flag = self.tmp_results_dict[k]['n_frame']
@@ -72,7 +73,8 @@ class Utils(object):
                                 if dist > 3:
                                     draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
                 else:
-                    print(ind)
+                    pass
+                    # print(ind)
                     # pts = pts.reshape((-1, 1, 2))
                     # cv2.polylines(self._frame, [pts], False, color)
 
@@ -99,8 +101,8 @@ class Utils(object):
                 color = None
                 # find corresponding color of YOLO bounding boxes
                 for k in sorted([k for k, v in self.object_name.items() if v['on']]):
-                    pts = self.results_dict[k]['path']
-                    flag = self.results_dict[k]['n_frame']
+                    pts = results_dict[k]['path']
+                    flag = results_dict[k]['n_frame']
                     ind = None                    
                     try:
                         ind = flag.index(self.n_frame)
@@ -147,7 +149,11 @@ class Utils(object):
 
             # draw label results
             for k, v in self.label_dict.items():
-                color = self.color[self.object_name[k]['ind']]
+                try:
+                    color = self.color[self.object_name[k]['ind']]
+                except:
+                    color = self.color[-1]
+
                 flag = v['n_frame']
                 pts = v['path']
 

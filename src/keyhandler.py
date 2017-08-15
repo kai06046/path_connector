@@ -24,8 +24,10 @@ class KeyHandler(Interface, Common):
         self.dist_records = dict()
         self.label_dict = dict()
         self.undo_records = []
-        self.all_buttons = []
-
+        self.label_ind = 1
+        if self.is_manual:
+            self.chg_mode()
+        
         self.n_frame = 1
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.n_frame - 1)
         ok, self._frame = self.video.read()
@@ -34,6 +36,10 @@ class KeyHandler(Interface, Common):
         self.calculate_path(self.n_frame)
         
         # reset button
+        for b in self.all_buttons:
+            b.grid_forget()
+        self.all_buttons = []
+
         on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
         for i, k in enumerate(['誤判', '新目標'] + sorted(self.object_name.keys())):
             if i in [0, 1]:
@@ -63,6 +69,26 @@ class KeyHandler(Interface, Common):
         self.mv_x = event.x
         self.mv_y = event.y
 
+        # update cursor
+        if self.is_manual:
+            self.drag_flag = None
+            for k, v in self.tmp_results_dict.items():
+                path = v['path']
+                flag = v['n_frame']
+                try:
+                    ind = flag.index(self.n_frame)
+                except:
+                    ind = -1
+                if self.in_circle((self.mv_x, self.mv_y), path[ind], 15):
+                    self.drag_flag = k
+                    break
+
+            if self.drag_flag is not None:
+                print(self.drag_flag)
+                self.root.config(cursor='hand2')
+            else:
+                self.root.config(cursor='arrow')
+
     def chg_mode(self):
         self.is_manual = not self.is_manual
         for b in self.all_buttons:
@@ -70,6 +96,7 @@ class KeyHandler(Interface, Common):
 
         if self.is_manual:
             self.label_dict = {k: {'path': [], 'n_frame': []} for k in [k for k, v in self.object_name.items() if v['on']]}
+            self.label_ind = 1
             # temporally results for manual label
             self.tmp_results_dict = copy.deepcopy(self.results_dict)
             self.check_is_clear.set(0)
@@ -104,8 +131,8 @@ class KeyHandler(Interface, Common):
                         self.tmp_results_dict[k]['n_frame'].pop(ind)
                         self.tmp_results_dict[k]['path'].pop(ind)
                     except Exception as e:
-                        print(e)
-            # self.is_clear = not self.is_clear
+                        pass
+                        # print(e)
 
     # testing function
     def on_mouse_draw(self, event):
@@ -117,22 +144,51 @@ class KeyHandler(Interface, Common):
     def on_mouse_manual_label(self, event):
         # execute only if it is manual label mode
         if self.is_manual:
-            k = [k for k, v in self.object_name.items() if v['ind'] == self.label_ind - 1][0]
+            # manual label for new object
             p = (event.x, event.y)
-            # record label points
-            if self.n_frame not in self.label_dict[k]['n_frame']:
-                self.label_dict[k]['n_frame'].append(self.n_frame)
-                self.label_dict[k]['path'].append(p)
-            else:
-                self.label_dict[k]['path'][self.label_dict[k]['n_frame'].index(self.n_frame)] = p
+            if self.label_ind == 0:
+                # pending; ask new object UI
+                new_key = letter[len(self.object_name)]
+                self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
+                self.tmp_results_dict[new_key] = {'path': [p, p], 'n_frame': [self.n_frame, self.n_frame]}
+                self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
 
-            # modify label point if it conflicts with original result dicts
-            try:
-                ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
-                self.tmp_results_dict[k]['path'][ind] = p
-            except:
-                self.tmp_results_dict[k]['n_frame'].append(self.n_frame)
-                self.tmp_results_dict[k]['path'].append(p)
+                # self.results_dict[new_key] = {'path': [p, p], 'n_frame': [n, n]}
+                try:
+                    self.dist_records[self.n_frame][new_key] = dict()
+                except:
+                    self.dist_records[self.n_frame] = dict()
+                    self.dist_records[self.n_frame][new_key] = dict()
+                self.dist_records[self.n_frame][new_key]['dist'] = [0]
+                self.dist_records[self.n_frame][new_key]['center'] = [p]
+                self.dist_records[self.n_frame][new_key]['below_tol'] = [True]
+
+                # add buttons
+                bg = self.color_name[self.object_name[new_key]['ind']].lower()
+                b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
+                b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                b.config(state='disabled')
+                self.all_buttons.append(b)
+                self.label_ind = 1 + max([v['ind'] for k, v in self.object_name.items() if v['on']])
+
+            # manual label for existing object
+            else:
+                k = [k for k, v in self.object_name.items() if v['ind'] == self.label_ind - 1][0]
+                # record label points
+                if self.n_frame not in self.label_dict[k]['n_frame']:
+                    self.label_dict[k]['n_frame'].append(self.n_frame)
+                    self.label_dict[k]['path'].append(p)
+                else:
+                    self.label_dict[k]['path'][self.label_dict[k]['n_frame'].index(self.n_frame)] = p
+
+                # modify label point if it conflicts with original result dicts
+                try:
+                    ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
+                    # pending; conflict with existing path, ask reassign UI?
+                    self.tmp_results_dict[k]['path'][ind] = p
+                except:
+                    self.tmp_results_dict[k]['n_frame'].append(self.n_frame)
+                    self.tmp_results_dict[k]['path'].append(p)
 
     # mouse wheel event for changing object index of manual label
     def on_mouse_wheel(self, event):
@@ -172,7 +228,7 @@ class KeyHandler(Interface, Common):
         elif clr == '新目標':
             # append results
             new_key = letter[len(self.object_name)]
-            self.results_dict[new_key] = {'path': [p, p], 'n_frame': [n, n]}
+            self.results_dict[new_key] = {'path': [p], 'n_frame': [n]}
             print(len(self.object_name), self.object_name)
             self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
             print(len(self.object_name))
@@ -265,17 +321,23 @@ class KeyHandler(Interface, Common):
 
             elif sym == 'n':
                 if not self.is_manual:
-                    self.on_button('New object, add one.')
+                    self.on_button('新目標')
                 else:
                     # pending; add new object while manual label mode.
+                    self.label_ind = 0
                     pass
             elif sym in ['Delete', 'd']:
-                self.on_button('False positive, delete it')
+                self.on_button('誤判')
             elif sym == 'l':
                 self.chg_mode()
         else:
-            if sym not in ['n', 'Delete', 'd', 'l']:
-                self.label_ind = int(sym)
+            if sym in ['1', '2', '3', '4']:
+                self.label_ind = max(1, min(int(sym), 1 + max([v['ind'] for k, v in self.object_name.items() if v['on']])))
+            elif sym == 'n':
+                self.label_ind = 0
+            else:
+                print('on_key error %' % type(sym))
+
 
     def set_max(self, s):
         v = int(float(s))
@@ -297,17 +359,19 @@ class KeyHandler(Interface, Common):
         self.n_frame = self.stop_n_frame
 
         if self.is_manual:
-            self.save_records()
-            self.chg_mode()
-
             # if exists label record
             if sum([len(v['path']) for k, v in self.label_dict.items()]) != 0:
                 string = '是否把以上標註加入目前的目標路徑？'
                 result = askyesno('確認', string, icon='warning')
                 if result:
-                    self.results_dict = copy.deepcopy(self.tmp_results_dict)
+                    self.results_dict = self.tmp_results_dict
+                    print('replace')
+                    # self.results_dict = copy.deepcopy(self.tmp_results_dict)
+                else:
+                    self.object_name = self.undo_records[-1][-1]
 
             self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name.items() if v['on']]}
+            self.chg_mode()
 
     def on_remove(self):
         
