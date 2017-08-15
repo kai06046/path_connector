@@ -161,7 +161,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
         self.display_label.configure(image=self.image)
 
-        self.root.after(150, self.update_draw)
+        self.root.after(100, self.update_draw)
 
     def update_track(self, ind):
         if len(self.tracked_frames) > 0 and ind < (len(self.tracked_frames) - 1) and self.safe:
@@ -308,10 +308,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.display_label = ttk.Label(IMAGE_FRAME, image=self.image)
         self.display_label.grid(row=0, column=0, columnspan=2)
         # self.display_label.bind('<Double-Button-1>', self.on_mouse)
-        self.display_label.bind('<B1-Motion>', self.on_mouse_draw)
+        self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
         self.display_label.bind('<Double-Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
-        self.display_label.bind('<Button-1>', self.on_mouse_manual_label)
+        # self.display_label.bind('<Button-1>', self.on_mouse_manual_label)
         self.display_label.bind('<MouseWheel>', self.on_mouse_wheel)
         self.display_label.bind('<ButtonRelease-1>', self.reset)
         self.display_label.bind('<Motion>', self.on_mouse_mv)

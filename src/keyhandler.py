@@ -84,7 +84,6 @@ class KeyHandler(Interface, Common):
                     break
 
             if self.drag_flag is not None:
-                print(self.drag_flag)
                 self.root.config(cursor='hand2')
             else:
                 self.root.config(cursor='arrow')
@@ -134,11 +133,27 @@ class KeyHandler(Interface, Common):
                         pass
                         # print(e)
 
-    # testing function
-    def on_mouse_draw(self, event):
-        if not self.is_manual:
-            cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
-            self.tmp_line.append((event.x, event.y))
+    # drag feature for manual label mdoe
+    def on_mouse_drag(self, event):
+        # if not self.is_manual:
+        #     cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
+        #     self.tmp_line.append((event.x, event.y))
+        if self.is_manual and self.drag_flag is not None:
+            flags = self.tmp_results_dict[self.drag_flag]['n_frame']
+            path = self.tmp_results_dict[self.drag_flag]['path']
+            try:
+                ind = flags.index(self.n_frame)
+                self.tmp_results_dict[self.drag_flag]['path'][ind] = (event.x, event.y)
+            except:
+                tmp = [flags.index(v) for v in flags if v >= self.n_frame]
+                
+                if len(tmp) > 0:
+                    ind = min(tmp)
+                    self.tmp_results_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
+                    self.tmp_results_dict[self.drag_flag]['path'] = path[:ind] + [(event.x, event.y)] + path[ind:]
+                else:
+                    self.tmp_results_dict[self.drag_flag]['n_frame'].append(self.n_frame)
+                    self.tmp_results_dict[self.drag_flag]['path'].append((event.x, event.y))
 
     # left click append label record
     def on_mouse_manual_label(self, event):
