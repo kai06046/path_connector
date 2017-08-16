@@ -447,7 +447,11 @@ class KeyHandler(Interface, Common):
                         for k, v in self.results_dict.items():
                             v['path'] = v['path'][:(self.min_label_ind + 1)]
                             v['n_frame'] = v['n_frame'][:(self.min_label_ind + 1)]
-                    self.calculate_path(self.min_label_ind + 1)
+                        print(min([max(v['n_frame']) for k, v in self.results_dict.items()]), 'hihihihihi')
+                        self.calculate_path(min([max(v['n_frame']) for k, v in self.label_dict.items()]))
+                    else:
+                        pass
+                        # self.calculate_path(self.stop_n_frame + 1)
                     # self.results_dict = copy.deepcopy(self.tmp_results_dict)
                 else:
                     self.object_name = self.undo_records[-1][-1]
@@ -586,8 +590,21 @@ class KeyHandler(Interface, Common):
     def undo(self, event=None):
 
         if len(self.undo_records) > 0:
+            old_name = self.object_name
+
             self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if len(self.undo_records) > 1 else -1]
-            print(self.object_name)
+
+            if old_name != self.object_name:
+                keys = set(self.object_name.keys()).difference(set(old_name.keys()))
+                for k in keys:
+                    self.object_name.pop(k)
+                    self.tmp_results_dict.pop(k)
+                    self.dist_records[self.n_frame].pop(k)
+
+                    self.tv.delete(k)
+                    self.all_buttons[-1].grid_forget()
+                    self.all_buttons.pop()
+
             self.undo_records = self.undo_records[:-1]
             self.n_frame = self.stop_n_frame
             if len(self.suggest_ind) > 0:

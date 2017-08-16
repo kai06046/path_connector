@@ -41,7 +41,7 @@ class Utils(object):
                 try:
                     last_pt = tuple(pts[-2])
                 except:
-                    last_pt = (0, 0)
+                    last_pt = tuple(pts[-1])
                 pt = tuple(pts[-1])
                 tri_pts = tri(pt)
                 # draw path end point triangle

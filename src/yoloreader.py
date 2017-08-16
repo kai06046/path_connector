@@ -412,4 +412,4 @@ class YOLOReader(object):
 
         # ensure don't enter manual mode and reset variable
         # self.is_manual = False
-        # self.min_label_ind = None
+        self.min_label_ind = None
