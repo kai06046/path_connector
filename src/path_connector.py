@@ -159,19 +159,20 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.draw(tup)
         if not self.is_calculate:
             self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
-        self.display_label.configure(image=self.image)
+        if not self.safe:
+            self.display_label.configure(image=self.image)
 
         self.root.after(100, self.update_draw)
 
     def update_track(self, ind):
-        if len(self.tracked_frames) > 0 and ind < (len(self.tracked_frames) - 1) and self.safe:
+        if len(self.tracked_frames) > 0 and ind < (len(self.tracked_frames) - 1) and self.safe: #  and self.safe:
             frame = self.tracked_frames[ind] 
             if ind < (len(self.tracked_frames) - 1):
                 ind += 1
                 self.display_label.configure(image=frame)
                 self.root.after(200, self.update_track, ind)
         else:
-            self.safe = True
+            self.safe = False
             self.display_label.configure(image=self.image)
 
     def update_image(self):
