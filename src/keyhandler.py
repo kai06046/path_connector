@@ -119,6 +119,12 @@ class KeyHandler(Interface, Common):
             # switch on drawing removal
             self.check_is_clear.set(1)
 
+    def on_manual_label(self):
+        if self.is_manual:
+            self.on_return()
+        else:
+            self.chg_mode()
+
     # left click enter manual label mode, right click remove label
     def on_mouse(self, event):
         n = event.num
@@ -201,9 +207,6 @@ class KeyHandler(Interface, Common):
                 else:
                     self.label_dict[self.drag_flag]['n_frame'].append(self.n_frame)
                     self.label_dict[self.drag_flag]['path'].append((event.x, event.y))
-
-        elif self.is_manual and self.drag_flag == 'new':
-            pass
 
     # left click append label record; not used anymore
     def on_mouse_manual_label(self, event):
@@ -391,7 +394,7 @@ class KeyHandler(Interface, Common):
             if sym == 'n':
                 self.drag_flag = 'new' if self.drag_flag is None else None
             else:
-                print('on_key error %' % type(sym))
+                print('on_key error %s' % type(sym))
 
 
     def set_max(self, s):
@@ -413,7 +416,6 @@ class KeyHandler(Interface, Common):
         
         if self.is_manual:
             # if exists label record
-            # if sum([len(v['path']) for k, v in self.label_dict.items()]) != 0:
             if self.tmp_results_dict != self.results_dict:
                 string = '是否把以上標註加入目前的目標路徑？'
                 result = askyesno('確認', string, icon='warning')
@@ -429,16 +431,12 @@ class KeyHandler(Interface, Common):
                             except:
                                 pass
 
-                        print(self.min_label_ind, 'hihihihihi')
                         self.calculate_path(self.min_label_ind)
                     else:
                         pass
-                        # self.calculate_path(self.stop_n_frame + 1)
-                    # self.results_dict = copy.deepcopy(self.tmp_results_dict)
                 else:
                     self.object_name = self.undo_records[-1][-1]
 
-            # self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name.items() if v['on']]}
             self.chg_mode()
         else:
             self.n_frame = self.stop_n_frame
@@ -498,13 +496,14 @@ class KeyHandler(Interface, Common):
         video = imageio.get_reader(self.video_path)
         COLOR = self.color
         object_name = self.object_name
+        start_pt = self.n_frame
         break_pt = max([max(v['n_frame']) for k, v in results_dict.items()])
 
         # nested function
         def stream(label):
 
             for i, frame in enumerate(video.iter_data()):
-                if i % 20 == 0:
+                if i % 20 == 0 and (i+1) >= start_pt:
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
                     for k in sorted([k for k, v in object_name.items() if v['on']]):

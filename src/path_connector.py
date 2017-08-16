@@ -209,12 +209,20 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
     def ready(self, r):
         if self.video_path is not None:
+            yolo_results_path = self.video_path.split('.avi')[0] + '.txt'
+            res = os.path.isfile(yolo_results_path)
+        else:
+            res = True
+
+        if not res:
+            self.msg('路徑底下沒有對應的 YOLO txt。')
+        elif self.video_path is None:
+            self.msg('請載入影像檔案。')
+        else:
             r.destroy()
             self.init_video()
             # start
             self.run()
-        else:
-            self.msg('Please load a video first.')
 
     def save_records(self):
         
@@ -310,6 +318,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.display_label.grid(row=0, column=0, columnspan=2)
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
         self.display_label.bind('<Double-Button-1>', self.on_mouse)
+        self.display_label.bind('<Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
         self.display_label.bind('<ButtonRelease-1>', self.reset)
         self.display_label.bind('<Motion>', self.on_mouse_mv)
@@ -436,13 +445,13 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME_2 = ttk.LabelFrame(OP_FRAME, text='操作')
         self.BUTTON_FRAME_2.grid(row=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
-        button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數 / 離開 Manual Label', command=self.on_return)
+        button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數', command=self.on_return)
         button_go.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
         button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove)
         button_remove.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        button_replay = ttk.Button(self.BUTTON_FRAME_2, text='播放當前為止的追踪結果', command=self.on_view_results)
+        button_replay = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label', command=self.on_manual_label)
         button_replay.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         label_max = ttk.Label(self.BUTTON_FRAME_2, text='顯示路徑的長度: ')
