@@ -16,51 +16,53 @@ class KeyHandler(Interface, Common):
 
     # reload the interface after reloading a new video; pending, add judgement for new video (like if a YOLO txt file existed)
     def on_load(self):
-        self.get_path()
-        self.video.release()
-        self.init_video()
-        self.object_name = dict()
-        self.results_dict = dict()
-        self.tmp_results_dict = None
-        self.dist_records = dict()
-        self.label_dict = dict()
-        self.undo_records = []
-        self.drag_flag = None
-        if self.is_manual:
-            self.chg_mode()
-        
-        self.n_frame = 1
-        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.n_frame - 1)
-        ok, self._frame = self.video.read()
-        self._orig_frame = self._frame.copy()
-        
-        self.calculate_path(self.n_frame)
-        
-        # reset button
-        for b in self.all_buttons:
-            b.grid_forget()
-        self.all_buttons = []
+        path = self.get_path(res=True)
+        if path not in  ["", None]:
+            self.video_path = path
+            self.video.release()
+            self.init_video()
+            self.object_name = dict()
+            self.results_dict = dict()
+            self.tmp_results_dict = None
+            self.dist_records = dict()
+            self.label_dict = dict()
+            self.undo_records = []
+            self.drag_flag = None
+            if self.is_manual:
+                self.chg_mode()
+            
+            self.n_frame = 1
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, self.n_frame - 1)
+            ok, self._frame = self.video.read()
+            self._orig_frame = self._frame.copy()
+            
+            self.calculate_path(self.n_frame)
+            
+            # reset button
+            for b in self.all_buttons:
+                b.grid_forget()
+            self.all_buttons = []
 
-        on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
-        for i, k in enumerate(['誤判', '新目標'] + sorted(self.object_name.keys())):
-            if i in [0, 1]:
-                bg = None
-                fg = None
-                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg, width=40)
-                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+            on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
+            for i, k in enumerate(['誤判', '新目標'] + sorted(self.object_name.keys())):
+                if i in [0, 1]:
+                    bg = None
+                    fg = None
+                    b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg, width=40)
+                    b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
-            else:
-                bg = self.color_name[self.object_name[k]['ind']].lower()
-                fg = 'white'
-                b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg)
-                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                else:
+                    bg = self.color_name[self.object_name[k]['ind']].lower()
+                    fg = 'white'
+                    b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg)
+                    b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
-            self.all_buttons.append(b)
+                self.all_buttons.append(b)
 
-        # reset table information
-        x = self.tv.get_children()
-        for item in x:
-            self.tv.delete(item)
+            # reset table information
+            x = self.tv.get_children()
+            for item in x:
+                self.tv.delete(item)
 
     # popup a description widget
     def on_settings(self, event=None):
@@ -155,7 +157,7 @@ class KeyHandler(Interface, Common):
                         pass
         # if double click while manual label mode
         elif self.is_manual and self.drag_flag == 'new':
-            # pending; add new object while manual label mode
+            # pending; add a UI to confirm adding object
             p = (event.x, event.y)
             new_key = letter[len(self.object_name)]
             self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}

@@ -30,11 +30,14 @@ class Interface(object):
         return result
 
     # ask for desired file name
-    def get_path(self, label=None):
+    def get_path(self, label=None, res=False):
         path = askopenfilename(title='請選擇影像路徑', filetypes=[('video file (*.avi;*.mp4)','*.avi;*.mp4')])
 
         if path != "":
-            self.video_path = path
+            if not res:
+                self.video_path = path
+            else:
+                return path
             if label is not None:
                 label.configure(text='%s' % self.video_path.split('/')[-1])
 
