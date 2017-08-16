@@ -155,11 +155,12 @@ class KeyHandler(Interface, Common):
                     except Exception as e:
                         print(e)
                         pass
-        # if double click while manual label mode
+        # if double left click while manual label mode
         elif self.is_manual and self.drag_flag == 'new':
             # pending; add a UI to confirm adding object
             p = (event.x, event.y)
             new_key = letter[len(self.object_name)]
+            self.min_label_ind = self.n_frame if self.min_label_ind is None else min(self.n_frame, self.min_label_ind)
             self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
             self.tmp_results_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
             self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
@@ -446,7 +447,7 @@ class KeyHandler(Interface, Common):
                         for k, v in self.results_dict.items():
                             v['path'] = v['path'][:(self.min_label_ind + 1)]
                             v['n_frame'] = v['n_frame'][:(self.min_label_ind + 1)]
-                    self.calculate_path(self.min_label_ind + 2)
+                    self.calculate_path(self.min_label_ind + 1)
                     # self.results_dict = copy.deepcopy(self.tmp_results_dict)
                 else:
                     self.object_name = self.undo_records[-1][-1]
