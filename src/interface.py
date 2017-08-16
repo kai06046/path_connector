@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno, askokcancel, showerror, showwarning, showinfo
 from tkinter.filedialog import askopenfilename
-import pickle
+import pickle, os, json
 
 class Interface(object):
 
@@ -17,10 +17,23 @@ class Interface(object):
     # confirm leave
     def on_close(self, event=None):
         if askokcancel('離開', '你確定要關閉程式了嗎？'):
-            if askyesno('存檔', '你要把操作結果存檔嗎？') and len(self.undo_records) > 1:
-                pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
-                print('file saved.')
+            if len(self.undo_records) > 1:
+                self.ask_save(style='confirm')
+            # if askyesno('存檔', '你要把操作結果存檔嗎？') and len(self.undo_records) > 1:
+            #     pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
             self.root.destroy()
+
+    def ask_save(self, style='replace'):
+        filename = "%s.dat" % self.video_path.split('.avi')[0]
+        if style == 'replace':
+            if os.path.isfile(filename):
+                if askyesno('存檔', '檔案已存在, 是否要覆蓋原本的檔案?'):
+                    pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
+            else:
+                pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
+        elif style == 'confirm':
+            if askyesno('存檔', '要把操作結果存檔嗎?'):
+                pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
 
     # confirm for replacement
     def ask_yes_no(self, clr, title='確認', icontype='warning'):
@@ -75,6 +88,11 @@ class Interface(object):
         settings_root.bind('<Escape>', exit)
         settings_root.bind('<h>', exit)
         settings_root.mainloop()
+
+    def export(self):
+        filename = "%s.json" % self.video_path.split('.avi')[0]
+        with open(filename, 'a') as f:
+            json.dump(self.results_dict, f)
 
     class popupEntry(object):
 

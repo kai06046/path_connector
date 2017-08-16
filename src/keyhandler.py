@@ -130,7 +130,8 @@ class KeyHandler(Interface, Common):
         n = event.num
         # if double click while normal mode, enter manual label mdoe
         if n == 1 and not self.is_manual:
-            self.chg_mode()
+            pass
+            # self.chg_mode()
         # if right click while manual label mode
         elif n == 3 and self.is_manual:
             self.undo_manual()
@@ -649,4 +650,4 @@ class KeyHandler(Interface, Common):
                         self.all_buttons.pop()
                 except Exception as e:
                     # print('undo_manual', e)
-                    pass        
+                    pass

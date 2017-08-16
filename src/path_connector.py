@@ -170,6 +170,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             if ind < (len(self.tracked_frames) - 1):
                 ind += 1
                 self.display_label.configure(image=frame)
+                self.scale_nframe.set(ind)
                 self.root.after(200, self.update_track, ind)
         else:
             self.safe = False
@@ -278,6 +279,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # create the file object
         file = tk.Menu(menu)
         file.add_command(label='載入', command=self.on_load)
+        file.add_command(label='儲存', command=self.ask_save)
+        file.add_command(label='匯出資料', command=self.export)
         menu.add_cascade(label='File', menu=file)
 
         # create the help object
@@ -317,7 +320,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.display_label = ttk.Label(IMAGE_FRAME, image=self.image)
         self.display_label.grid(row=0, column=0, columnspan=2)
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
-        self.display_label.bind('<Double-Button-1>', self.on_mouse)
+        # self.display_label.bind('<Double-Button-1>', self.on_mouse)
         self.display_label.bind('<Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
         self.display_label.bind('<ButtonRelease-1>', self.reset)
