@@ -42,6 +42,7 @@ class YOLOReader(object):
         
         self.is_calculate = True
         n_frame = ind if ind is not None else self.n_frame
+        print('calculate_path %s' % n_frame)
         undone_pts = []
         self.suggest_ind = []
 
@@ -240,66 +241,66 @@ class YOLOReader(object):
                         """
                         # print('frame: %s\nDuplicated index: %s\nDuplicated key: %s' % (n_frame, duplicate_ind, duplicate_key) )
                         min_key = []
-                        compare_diff = {}
-                        for ind in duplicate_ind:
-                            tmp_keys = [k for k, v in hit_condi if v == ind]
-                            compare_diff[ind] = dict()
-                            compare_diff[ind]['similarity'] = []
-                            p = tmp_dist_record[on_keys[0]]['center'][ind]
+                        # compare_diff = {}
+                        # for ind in duplicate_ind:
+                        #     tmp_keys = [k for k, v in hit_condi if v == ind]
+                        #     compare_diff[ind] = dict()
+                        #     compare_diff[ind]['similarity'] = []
+                        #     p = tmp_dist_record[on_keys[0]]['center'][ind]
                             
-                            # get current bounding box
-                            _, boxes = eval(self.__yolo_results__[n_frame- 1])
-                            for b in boxes:
-                                ymin, xmin, ymax, xmax, score = b
-                                x_c = int((xmin+xmax) / 2 + 0.5)
-                                y_c = int((ymin+ymax) / 2 + 0.5)
-                                if p == (x_c, y_c):
-                                    xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
-                                    img = self._orig_frame[ymin:ymax, xmin:xmax].copy()
-                                    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                                    img = cv2.resize(img, (64, 64))
-                                    break
+                        #     # get current bounding box
+                        #     _, boxes = eval(self.__yolo_results__[n_frame- 1])
+                        #     for b in boxes:
+                        #         ymin, xmin, ymax, xmax, score = b
+                        #         x_c = int((xmin+xmax) / 2 + 0.5)
+                        #         y_c = int((ymin+ymax) / 2 + 0.5)
+                        #         if p == (x_c, y_c):
+                        #             xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
+                        #             img = self._orig_frame[ymin:ymax, xmin:xmax].copy()
+                        #             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                        #             img = cv2.resize(img, (64, 64))
+                        #             break
 
-                            # compare nearest keys
-                            for key in tmp_keys:
-                                last_p = self.results_dict[key]['path'][-1]
-                                last_n = self.results_dict[key]['n_frame'][-1]
-                                _, boxes = eval(self.__yolo_results__[last_n - 1])
+                        #     # compare nearest keys
+                        #     for key in tmp_keys:
+                        #         last_p = self.results_dict[key]['path'][-1]
+                        #         last_n = self.results_dict[key]['n_frame'][-1]
+                        #         _, boxes = eval(self.__yolo_results__[last_n - 1])
                                 
-                                # get this key's last bounding box
-                                for b in boxes:
-                                    ymin, xmin, ymax, xmax, score = b
-                                    x_c = int((xmin+xmax) / 2 + 0.5)
-                                    y_c = int((ymin+ymax) / 2 + 0.5)
-                                    if last_p == (x_c, y_c):
-                                        xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
-                                        last_img = self._orig_frame[ymin:ymax, xmin:xmax].copy()
-                                        last_img = cv2.cvtColor(last_img, cv2.COLOR_BGR2GRAY)
-                                        last_img = cv2.resize(last_img, (64, 64))
-                                        break
-                                diff = compare_ssim(img, last_img)
-                                compare_diff[ind]['similarity'].append((key, diff))
-                                # Haralick = haralick(img).mean(axis=0)
-                            sim = compare_diff[ind]['similarity']
-                            compare_diff[ind]['nearest_key'] = sim[sorted(range(len(sim)), key=lambda i: sim[i][1], reverse=True)[0]][0]
-                            min_key.append(compare_diff[ind]['nearest_key'])
+                        #         # get this key's last bounding box
+                        #         for b in boxes:
+                        #             ymin, xmin, ymax, xmax, score = b
+                        #             x_c = int((xmin+xmax) / 2 + 0.5)
+                        #             y_c = int((ymin+ymax) / 2 + 0.5)
+                        #             if last_p == (x_c, y_c):
+                        #                 xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
+                        #                 last_img = self._orig_frame[ymin:ymax, xmin:xmax].copy()
+                        #                 last_img = cv2.cvtColor(last_img, cv2.COLOR_BGR2GRAY)
+                        #                 last_img = cv2.resize(last_img, (64, 64))
+                        #                 break
+                        #         diff = compare_ssim(img, last_img)
+                        #         compare_diff[ind]['similarity'].append((key, diff))
+                        #         # Haralick = haralick(img).mean(axis=0)
+                        #     sim = compare_diff[ind]['similarity']
+                        #     compare_diff[ind]['nearest_key'] = sim[sorted(range(len(sim)), key=lambda i: sim[i][1], reverse=True)[0]][0]
+                        #     min_key.append(compare_diff[ind]['nearest_key'])
 
-                        # if n_frame > 450 and n_frame < 455:
-                        #     print(n_frame, compare_diff)
+                        # # if n_frame > 450 and n_frame < 455:
+                        # #     print(n_frame, compare_diff)
 
-                        if len(set(min_key)) != len(min_key):
-                            print('duplicate box and key!')
-                            self.is_calculate = False
-                            print(tmp_dist_record)
-                            print(hit_condi)
-                            undone_pts.append((tmp_dist_record[duplicate_key[0]]['center'][duplicate_ind.pop()], n_frame))
+                        # if len(set(min_key)) != len(min_key):
+                        #     print('duplicate box and key!')
+                        #     self.is_calculate = False
+                        #     print(tmp_dist_record)
+                        #     print(hit_condi)
+                        #     undone_pts.append((tmp_dist_record[duplicate_key[0]]['center'][duplicate_ind.pop()], n_frame))
 
                         # just use nearest distance
-                        # for ind in duplicate_ind:
-                        #     duplicate_key = [k for k, v in hit_condi if v == ind]
-                        #     sorted_keys_by_dist = sorted(range(len(duplicate_key)), key=lambda k: tmp_dist_record[duplicate_key[k]]['dist'][ind])
-                        #     min_dist_key = sorted_keys_by_dist[0]
-                        #     min_key.append(duplicate_key[min_dist_key])
+                        for ind in duplicate_ind:
+                            duplicate_key = [k for k, v in hit_condi if v == ind]
+                            sorted_keys_by_dist = sorted(range(len(duplicate_key)), key=lambda k: tmp_dist_record[duplicate_key[k]]['dist'][ind])
+                            min_dist_key = sorted_keys_by_dist[0]
+                            min_key.append(duplicate_key[min_dist_key])
 
                         hit_condi_reduced = [(k, v) for k, v in hit_condi if k in non_duplicate_key + min_key]
                         for k, ind in hit_condi_reduced:

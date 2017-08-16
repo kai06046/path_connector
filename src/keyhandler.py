@@ -194,7 +194,7 @@ class KeyHandler(Interface, Common):
             try:
                 ind = flags.index(self.n_frame)
                 self.tmp_results_dict[self.drag_flag]['path'][ind] = (event.x, event.y)
-                self.min_label_ind = ind if self.min_label_ind is None else min(self.min_label_ind, ind)
+                self.min_label_ind = self.n_frame if self.min_label_ind is None else min(self.min_label_ind, self.n_frame)
 
             # otherwise, find the minimum index that are bigger than self.frame
             except:
@@ -204,7 +204,7 @@ class KeyHandler(Interface, Common):
                     ind = min(tmp)
                     self.tmp_results_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
                     self.tmp_results_dict[self.drag_flag]['path'] = path[:ind] + [(event.x, event.y)] + path[ind:]
-                    self.min_label_ind = ind if self.min_label_ind is None else min(self.min_label_ind, ind)
+                    self.min_label_ind = self.n_frame if self.min_label_ind is None else min(self.min_label_ind, self.n_frame)
                 # otherwise, append the coordinate on the end of the path
                 else:
                     self.tmp_results_dict[self.drag_flag]['n_frame'].append(self.n_frame)
@@ -433,7 +433,7 @@ class KeyHandler(Interface, Common):
 
     def on_return(self, event=None):
         
-        self.n_frame = self.stop_n_frame
+        # self.n_frame = self.stop_n_frame
 
         if self.is_manual:
             # if exists label record
@@ -444,11 +444,14 @@ class KeyHandler(Interface, Common):
                 if result:
                     self.results_dict = self.tmp_results_dict
                     if self.min_label_ind is not None:
+                        
                         for k, v in self.results_dict.items():
-                            v['path'] = v['path'][:(self.min_label_ind + 1)]
-                            v['n_frame'] = v['n_frame'][:(self.min_label_ind + 1)]
-                        print(min([max(v['n_frame']) for k, v in self.results_dict.items()]), 'hihihihihi')
-                        self.calculate_path(min([max(v['n_frame']) for k, v in self.label_dict.items()]))
+                            flag = min([v['n_frame'].index(f) for f in v['n_frame'] if f >= self.min_label_ind])
+                            v['path'] = v['path'][:(flag + 1)]
+                            v['n_frame'] = v['n_frame'][:(flag + 1)]
+
+                        print(self.min_label_ind, 'hihihihihi')
+                        self.calculate_path(self.min_label_ind)
                     else:
                         pass
                         # self.calculate_path(self.stop_n_frame + 1)
