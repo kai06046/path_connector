@@ -124,7 +124,7 @@ class KeyHandler(Interface, Common):
             self.chg_mode()
         # if right click while manual label mode
         elif n == 3 and self.is_manual:
-            for k in self.object_name.keys():
+            for k in sorted(self.object_name.keys()):
                 # remove current label if any exists
                 try:
                     ind = self.label_dict[k]['n_frame'].index(self.n_frame)
@@ -141,8 +141,17 @@ class KeyHandler(Interface, Common):
                         ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
                         self.tmp_results_dict[k]['n_frame'].pop(ind)
                         self.tmp_results_dict[k]['path'].pop(ind)
+
+                        if len(self.tmp_results_dict[k]['path']) == 0:
+                            self.object_name.pop(k)
+                            self.tmp_results_dict.pop(k)
+                            self.dist_records[self.n_frame].pop(k)
+
+                            self.tv.delete(k)
+                            self.all_buttons[-1].grid_forget()
+                            self.all_buttons.pop()
                     except Exception as e:
-                        # print(e)
+                        print(e)
                         pass
         # if double click while manual label mode
         elif self.is_manual and self.drag_flag == 'new':
