@@ -14,17 +14,18 @@ letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
 
 class KeyHandler(Interface, Common):
 
+    # reload the interface after reloading a new video; pending, add judgement for new video (like if a YOLO txt file existed)
     def on_load(self):
-        print('load')
         self.get_path()
         self.video.release()
         self.init_video()
         self.object_name = dict()
         self.results_dict = dict()
+        self.tmp_results_dict = None
         self.dist_records = dict()
         self.label_dict = dict()
         self.undo_records = []
-        self.label_ind = 1
+        self.drag_flag = None
         if self.is_manual:
             self.chg_mode()
         
@@ -56,12 +57,19 @@ class KeyHandler(Interface, Common):
 
             self.all_buttons.append(b)
 
+        # reset table information
+        x = self.tv.get_children()
+        for item in x:
+            self.tv.delete(item)
+
+    # popup a description widget
     def on_settings(self, event=None):
         self.setting()
 
     def reset(self, event):
         self.tmp_line = []
 
+    # record position of current mosue cursor and cursor's type while it's on any object
     def on_mouse_mv(self, event):
         self.clear = True
         self.last_x = self.mv_x
@@ -71,48 +79,52 @@ class KeyHandler(Interface, Common):
 
         # update cursor
         if self.is_manual:
-            self.drag_flag = None
-            for k, v in self.tmp_results_dict.items():
-                path = v['path']
-                flag = v['n_frame']
-                try:
-                    ind = flag.index(self.n_frame)
-                except:
-                    ind = -1
-                if self.in_circle((self.mv_x, self.mv_y), path[ind], 15):
-                    self.drag_flag = k
-                    break
+            if self.drag_flag != 'new':
+                self.drag_flag = None
+                for k, v in self.tmp_results_dict.items():
+                    path = v['path']
+                    flag = v['n_frame']
+                    try:
+                        ind = flag.index(self.n_frame)
+                    except:
+                        ind = -1
+                    if self.in_circle((self.mv_x, self.mv_y), path[ind], 15):
+                        self.drag_flag = k
+                        break
 
-            if self.drag_flag is not None:
-                self.root.config(cursor='hand2')
+                if self.drag_flag is not None:
+                    self.display_label.config(cursor='hand2')
+                else:
+                    self.display_label.config(cursor='arrow')
             else:
-                self.root.config(cursor='arrow')
+                self.display_label.config(cursor='hand2')
 
+    # switch between normal mode and manual label mode
     def chg_mode(self):
         self.is_manual = not self.is_manual
+        # modify state of buttons for object index assignment
         for b in self.all_buttons:
             b['state'] = 'disabled' if self.is_manual else 'normal'
 
         if self.is_manual:
-            self.label_dict = {k: {'path': [], 'n_frame': []} for k in [k for k, v in self.object_name.items() if v['on']]}
-            self.label_ind = 1
             # temporally results for manual label
             self.tmp_results_dict = copy.deepcopy(self.results_dict)
+            self.save_records()
+            # switch off drawing removal
             self.check_is_clear.set(0)
         else:
+            # switch on drawing removal
             self.check_is_clear.set(1)
 
     # left click enter manual label mode, right click remove label
     def on_mouse(self, event):
         n = event.num
-        # if double click, enter manual label mdoe
+        # if double click while normal mode, enter manual label mdoe
         if n == 1 and not self.is_manual:
             self.chg_mode()
-
-        # if right click
-        elif n == 3:
-            if self.is_manual:
-                k = [k for k, v in self.object_name.items() if v['ind'] == self.label_ind - 1][0]
+        # if right click while manual label mode
+        elif n == 3 and self.is_manual:
+            for k in self.object_name.keys():
                 # remove current label if any exists
                 try:
                     ind = self.label_dict[k]['n_frame'].index(self.n_frame)
@@ -124,38 +136,91 @@ class KeyHandler(Interface, Common):
                 try:
                     ind = self.results_dict[k]['n_frame'].index(self.n_frame)
                     self.tmp_results_dict[k]['path'][ind] = self.results_dict[k]['path'][ind]
-                except Exception as e:
+                except:
                     try:
                         ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
                         self.tmp_results_dict[k]['n_frame'].pop(ind)
                         self.tmp_results_dict[k]['path'].pop(ind)
                     except Exception as e:
-                        pass
                         # print(e)
+                        pass
+        # if double click while manual label mode
+        elif self.is_manual and self.drag_flag == 'new':
+            # pending; add new object while manual label mode
+            p = (event.x, event.y)
+            new_key = letter[len(self.object_name)]
+            self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
+            self.tmp_results_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
+            self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
 
-    # drag feature for manual label mdoe
+            try:
+                self.dist_records[self.n_frame][new_key] = dict()
+            except:
+                self.dist_records[self.n_frame] = dict()
+                self.dist_records[self.n_frame][new_key] = dict()
+            self.dist_records[self.n_frame][new_key]['dist'] = [0]
+            self.dist_records[self.n_frame][new_key]['center'] = [p]
+            self.dist_records[self.n_frame][new_key]['below_tol'] = [True]
+
+            # add buttons
+            bg = self.color_name[self.object_name[new_key]['ind']].lower()
+            b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
+            b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+            b.config(state='disabled')
+            self.all_buttons.append(b)
+
+            self.display_label.config(cursor='arrow')
+            self.drag_flag = None
+
+    # drag method for manual label mode
     def on_mouse_drag(self, event):
-        # if not self.is_manual:
-        #     cv2.circle(self._frame, (event.x, event.y), 10, (255, 255, 255), 1)
-        #     self.tmp_line.append((event.x, event.y))
-        if self.is_manual and self.drag_flag is not None:
+        # drag is available while the cursor changed
+        if self.is_manual and self.drag_flag not in [None, 'new']:
             flags = self.tmp_results_dict[self.drag_flag]['n_frame']
             path = self.tmp_results_dict[self.drag_flag]['path']
+            # get index of path if existed and then update with new coordinate
             try:
                 ind = flags.index(self.n_frame)
                 self.tmp_results_dict[self.drag_flag]['path'][ind] = (event.x, event.y)
+                self.min_label_ind = ind if self.min_label_ind is None else min(self.min_label_ind, ind)
+
+            # otherwise, find the minimum index that are bigger than self.frame
             except:
                 tmp = [flags.index(v) for v in flags if v >= self.n_frame]
-                
+                # concatenate the coordinate among corresponding index if the minimum exists
                 if len(tmp) > 0:
                     ind = min(tmp)
                     self.tmp_results_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
                     self.tmp_results_dict[self.drag_flag]['path'] = path[:ind] + [(event.x, event.y)] + path[ind:]
+                    self.min_label_ind = ind if self.min_label_ind is None else min(self.min_label_ind, ind)
+                # otherwise, append the coordinate on the end of the path
                 else:
                     self.tmp_results_dict[self.drag_flag]['n_frame'].append(self.n_frame)
                     self.tmp_results_dict[self.drag_flag]['path'].append((event.x, event.y))
 
-    # left click append label record
+            # record for label
+            if self.drag_flag not in self.label_dict.keys():
+                self.label_dict[self.drag_flag] = {'path': [], 'n_frame': []}
+            flags = self.label_dict[self.drag_flag]['n_frame']
+            path = self.label_dict[self.drag_flag]['path']
+            try:
+                ind = flags.index(self.n_frame)
+                self.label_dict[self.drag_flag]['path'][ind] = (event.x, event.y)
+            except:
+                tmp = [flags.index(v) for v in flags if v >= self.n_frame]
+                if len(tmp) > 0:
+                    ind = min(tmp)
+                    self.label_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
+                    self.label_dict[self.drag_flag]['path'] = path[:ind] + [(event.x, event.y)] + path[ind:]
+                # otherwise, append the coordinate on the end of the path
+                else:
+                    self.label_dict[self.drag_flag]['n_frame'].append(self.n_frame)
+                    self.label_dict[self.drag_flag]['path'].append((event.x, event.y))
+
+        elif self.is_manual and self.drag_flag == 'new':
+            pass
+
+    # left click append label record; not used anymore
     def on_mouse_manual_label(self, event):
         # execute only if it is manual label mode
         if self.is_manual:
@@ -204,15 +269,6 @@ class KeyHandler(Interface, Common):
                 except:
                     self.tmp_results_dict[k]['n_frame'].append(self.n_frame)
                     self.tmp_results_dict[k]['path'].append(p)
-
-    # mouse wheel event for changing object index of manual label
-    def on_mouse_wheel(self, event):
-
-        if self.is_manual:
-            if event.delta == -120:
-                self.label_ind = max(1 + min([v['ind'] for k, v in self.object_name.items() if v['on']]), self.label_ind - 1)
-            elif event.delta == 120:
-                self.label_ind = min(len([k for k, v in self.object_name.items() if v['on']]), self.label_ind + 1)
 
     # button event
     def on_button(self, clr):
@@ -335,21 +391,15 @@ class KeyHandler(Interface, Common):
                     print(e)
 
             elif sym == 'n':
-                if not self.is_manual:
-                    self.on_button('新目標')
-                else:
-                    # pending; add new object while manual label mode.
-                    self.label_ind = 0
-                    pass
+                self.on_button('新目標')
             elif sym in ['Delete', 'd']:
                 self.on_button('誤判')
+            # enter manual label mode
             elif sym == 'l':
                 self.chg_mode()
         else:
-            if sym in ['1', '2', '3', '4']:
-                self.label_ind = max(1, min(int(sym), 1 + max([v['ind'] for k, v in self.object_name.items() if v['on']])))
-            elif sym == 'n':
-                self.label_ind = 0
+            if sym == 'n':
+                self.drag_flag = 'new' if self.drag_flag is None else None
             else:
                 print('on_key error %' % type(sym))
 
@@ -375,17 +425,22 @@ class KeyHandler(Interface, Common):
 
         if self.is_manual:
             # if exists label record
-            if sum([len(v['path']) for k, v in self.label_dict.items()]) != 0:
+            # if sum([len(v['path']) for k, v in self.label_dict.items()]) != 0:
+            if self.tmp_results_dict != self.results_dict:
                 string = '是否把以上標註加入目前的目標路徑？'
                 result = askyesno('確認', string, icon='warning')
                 if result:
                     self.results_dict = self.tmp_results_dict
-                    print('replace')
+                    if self.min_label_ind is not None:
+                        for k, v in self.results_dict.items():
+                            v['path'] = v['path'][:(self.min_label_ind + 1)]
+                            v['n_frame'] = v['n_frame'][:(self.min_label_ind + 1)]
+                    self.calculate_path(self.min_label_ind + 2)
                     # self.results_dict = copy.deepcopy(self.tmp_results_dict)
                 else:
                     self.object_name = self.undo_records[-1][-1]
 
-            self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name.items() if v['on']]}
+            # self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name.items() if v['on']]}
             self.chg_mode()
 
     def on_remove(self):
@@ -519,7 +574,7 @@ class KeyHandler(Interface, Common):
     def undo(self, event=None):
 
         if len(self.undo_records) > 0:
-            self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if len(self.undo_records) > 1 else -1]
+            self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if len(self.undo_records) > 1 else -1]
             print(self.object_name)
             self.undo_records = self.undo_records[:-1]
             self.n_frame = self.stop_n_frame

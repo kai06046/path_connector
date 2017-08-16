@@ -72,6 +72,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.dist_records = dict()
         self.label_dict = dict()
         self.tmp_results_dict = None
+        self.min_label_ind = None
         self.undone_pts = None
         self.fp_pts = []
         self.undo_records = []
@@ -83,7 +84,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.safe = True
         self.is_calculate = False
         self.is_manual = False
-        self.label_ind = 1
 
         # tkinter widgets
         self.root = None
@@ -217,7 +217,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
     def save_records(self):
         
-        records = (copy.deepcopy(self.results_dict), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
+        records = (copy.deepcopy(self.results_dict), copy.deepcopy(self.tmp_results_dict), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
         if len(self.undo_records) > 0:
             if self.stop_n_frame != self.undo_records[-1][1]:
                 self.undo_records.append(records)
@@ -253,7 +253,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         file = self.video_path.split('.avi')[0] + '.dat'
         if os.path.isfile(file):
-            self.results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
+            self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
             self.n_frame = self.stop_n_frame
         else:
             self.calculate_path()
@@ -268,7 +268,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         # create the file object
         file = tk.Menu(menu)
-        file.add_command(label='Load', command=self.on_load)
+        file.add_command(label='載入', command=self.on_load)
         menu.add_cascade(label='File', menu=file)
 
         # create the help object
@@ -307,12 +307,9 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         IMAGE_FRAME.grid(row=0, column=0)
         self.display_label = ttk.Label(IMAGE_FRAME, image=self.image)
         self.display_label.grid(row=0, column=0, columnspan=2)
-        # self.display_label.bind('<Double-Button-1>', self.on_mouse)
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
         self.display_label.bind('<Double-Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
-        # self.display_label.bind('<Button-1>', self.on_mouse_manual_label)
-        self.display_label.bind('<MouseWheel>', self.on_mouse_wheel)
         self.display_label.bind('<ButtonRelease-1>', self.reset)
         self.display_label.bind('<Motion>', self.on_mouse_mv)
         

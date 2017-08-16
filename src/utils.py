@@ -38,7 +38,10 @@ class Utils(object):
                 else:
                     cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
             else:
-                last_pt = tuple(pts[-2])
+                try:
+                    last_pt = tuple(pts[-2])
+                except:
+                    last_pt = (0, 0)
                 pt = tuple(pts[-1])
                 tri_pts = tri(pt)
                 # draw path end point triangle
@@ -139,36 +142,37 @@ class Utils(object):
             elif self.stop_n_frame < self.n_frame:
                 cv2.putText(self._frame, 'Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
         else:
-            color = self.color[self.label_ind - 1]
-            if self.stop_n_frame == self.n_frame:
-                cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
-            elif self.stop_n_frame > self.n_frame:
-                cv2.putText(self._frame, 'Manual Pre-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
-            elif self.stop_n_frame < self.n_frame:
-                cv2.putText(self._frame, 'Manual Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
+            cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+            # color = self.color[self.label_ind - 1]
+            # if self.stop_n_frame == self.n_frame:
+            #     cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
+            # elif self.stop_n_frame > self.n_frame:
+            #     cv2.putText(self._frame, 'Manual Pre-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
+            # elif self.stop_n_frame < self.n_frame:
+            #     cv2.putText(self._frame, 'Manual Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
 
-            # draw label results
-            for k, v in self.label_dict.items():
-                try:
-                    color = self.color[self.object_name[k]['ind']]
-                except:
-                    color = self.color[-1]
+            # # draw label results
+            # for k, v in self.label_dict.items():
+            #     try:
+            #         color = self.color[self.object_name[k]['ind']]
+            #     except:
+            #         color = self.color[-1]
 
-                flag = v['n_frame']
-                pts = v['path']
+            #     flag = v['n_frame']
+            #     pts = v['path']
 
-                # current frame label
-                try:
-                    ind = flag.index(self.n_frame)
-                    p = pts[ind]
-                    cv2.circle(self._frame, p, 3, color, 2)
-                except:
-                    ind = None
+            #     # current frame label
+            #     try:
+            #         ind = flag.index(self.n_frame)
+            #         p = pts[ind]
+            #         cv2.circle(self._frame, p, 3, color, 2)
+            #     except:
+            #         ind = None
 
-                # label history
-                for i, p in enumerate(pts):
-                    if i != ind:
-                        cv2.circle(self._frame, p, 3, color, 1)
+            #     # label history
+            #     for i, p in enumerate(pts):
+            #         if i != ind:
+            #             cv2.circle(self._frame, p, 3, color, 1)
 
         # draw manual label paths
         if len(self.tmp_line) > 1:

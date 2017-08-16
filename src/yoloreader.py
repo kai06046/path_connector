@@ -38,11 +38,10 @@ class YOLOReader(object):
         ind: run this function start from ind-th frames
         n_show: records every n_show for displaying tracked results
         """
-        ind = ind if ind is not None else self.n_frame
         n_key_used = len(self.object_name.keys())
         
         self.is_calculate = True
-        n_frame = ind
+        n_frame = ind if ind is not None else self.n_frame
         undone_pts = []
         self.suggest_ind = []
 
@@ -51,6 +50,13 @@ class YOLOReader(object):
             nframe, boxes = eval(self.__yolo_results__[n_frame - 1])
             assert nframe == n_frame
             boxes = np.array(boxes)
+
+            # append history manual label result
+            label_ind = [k for k, v in self.label_dict.items() if n_frame in v['n_frame']]
+            for k in label_ind:
+                i = self.label_dict[k]['n_frame'].index(n_frame)
+                self.results_dict[k]['n_frame'].append(n_frame)
+                self.results_dict[k]['path'].append(self.label_dict[k]['path'][i])
 
             # initiate frame for recording animation
             if n_frame % n_show == 0:
@@ -133,19 +139,18 @@ class YOLOReader(object):
                 elif len(set([v[1] for v in hit_condi])) == len(on_keys):
 
                 	# pending assessment
-
                     for k, ind in hit_condi:
-                        self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
-                        self.results_dict[k]['n_frame'].append(n_frame)
+                        if k not in label_ind:
+                            self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
+                            self.results_dict[k]['n_frame'].append(n_frame)
                 # the length of hit_condi is same as the number of nearest indexes
                 elif len(set([v for k, v in hit_condi])) == len(hit_condi):
-                    # if the length of the unique object also unique
-                    # if len(set([k for k, v in hit_condi])) == len(hit_condi):
 
                 	# pending, assessment
                     for k, ind in hit_condi:
-                        self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
-                        self.results_dict[k]['n_frame'].append(n_frame)
+                        if k not in label_ind:
+                            self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
+                            self.results_dict[k]['n_frame'].append(n_frame)
                     # a boxes was assigned to multi object, choose the nearest one
                     # else:
                     #     print('multi')
@@ -175,9 +180,10 @@ class YOLOReader(object):
                                             min_key = k
                                 # append the record if any object was found
                                 if min_key is not None:
-                                    self.results_dict[min_key]['path'].append(tmp_dist_record[min_key]['center'][ind])
-                                    self.results_dict[min_key]['n_frame'].append(n_frame)
-                                    not_assigned_keys.pop(-1)
+                                    if min_key not in label_ind:
+                                        self.results_dict[min_key]['path'].append(tmp_dist_record[min_key]['center'][ind])
+                                        self.results_dict[min_key]['n_frame'].append(n_frame)
+                                        not_assigned_keys.pop(-1)
                                 else:
                                     # forward next 100 points
                                     temp = 0
@@ -297,8 +303,9 @@ class YOLOReader(object):
 
                         hit_condi_reduced = [(k, v) for k, v in hit_condi if k in non_duplicate_key + min_key]
                         for k, ind in hit_condi_reduced:
-                            self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
-                            self.results_dict[k]['n_frame'].append(n_frame)
+                            if k not in label_ind:
+                                self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
+                                self.results_dict[k]['n_frame'].append(n_frame)
 
                         # pending, not assigned key
 
@@ -402,3 +409,7 @@ class YOLOReader(object):
         
         # record value for undoing
         self.save_records()
+
+        # ensure don't enter manual mode and reset variable
+        # self.is_manual = False
+        # self.min_label_ind = None
