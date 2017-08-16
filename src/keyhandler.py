@@ -105,8 +105,9 @@ class KeyHandler(Interface, Common):
     def chg_mode(self):
         self.is_manual = not self.is_manual
         # modify state of buttons for object index assignment
-        for b in self.all_buttons:
-            b['state'] = 'disabled' if self.is_manual else 'normal'
+        for i, b in enumerate(self.all_buttons):
+            if i != 1:
+                b['state'] = 'disabled' if self.is_manual else 'normal'
 
         if self.is_manual:
             # temporally results for manual label
@@ -126,35 +127,7 @@ class KeyHandler(Interface, Common):
             self.chg_mode()
         # if right click while manual label mode
         elif n == 3 and self.is_manual:
-            for k in sorted(self.object_name.keys()):
-                # remove current label if any exists
-                try:
-                    ind = self.label_dict[k]['n_frame'].index(self.n_frame)
-                    self.label_dict[k]['n_frame'].pop(ind)
-                    self.label_dict[k]['path'].pop(ind)
-                except:
-                    pass
-
-                try:
-                    ind = self.results_dict[k]['n_frame'].index(self.n_frame)
-                    self.tmp_results_dict[k]['path'][ind] = self.results_dict[k]['path'][ind]
-                except:
-                    try:
-                        ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
-                        self.tmp_results_dict[k]['n_frame'].pop(ind)
-                        self.tmp_results_dict[k]['path'].pop(ind)
-
-                        if len(self.tmp_results_dict[k]['path']) == 0:
-                            self.object_name.pop(k)
-                            self.tmp_results_dict.pop(k)
-                            self.dist_records[self.n_frame].pop(k)
-
-                            self.tv.delete(k)
-                            self.all_buttons[-1].grid_forget()
-                            self.all_buttons.pop()
-                    except Exception as e:
-                        print(e)
-                        pass
+            self.undo_manual()
         # if double left click while manual label mode
         elif self.is_manual and self.drag_flag == 'new':
             # pending; add a UI to confirm adding object
@@ -309,30 +282,34 @@ class KeyHandler(Interface, Common):
                 else:
                     run = False
         elif clr == '新目標':
-            # append results
-            new_key = letter[len(self.object_name)]
-            self.results_dict[new_key] = {'path': [p], 'n_frame': [n]}
-            print(len(self.object_name), self.object_name)
-            self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
-            print(len(self.object_name))
-            try:
-                self.dist_records[n][new_key] = dict()
-            except:
-                self.dist_records[n] = dict()
-                self.dist_records[n][new_key] = dict()
-            self.dist_records[n][new_key]['dist'] = [0]
-            self.dist_records[n][new_key]['center'] = [p]
-            self.dist_records[n][new_key]['below_tol'] = [True]
+            if not self.is_manual:
+                # append results
+                new_key = letter[len(self.object_name)]
+                self.results_dict[new_key] = {'path': [p], 'n_frame': [n]}
+                print(len(self.object_name), self.object_name)
+                self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
+                print(len(self.object_name))
+                try:
+                    self.dist_records[n][new_key] = dict()
+                except:
+                    self.dist_records[n] = dict()
+                    self.dist_records[n][new_key] = dict()
+                self.dist_records[n][new_key]['dist'] = [0]
+                self.dist_records[n][new_key]['center'] = [p]
+                self.dist_records[n][new_key]['below_tol'] = [True]
 
-            # add buttons
-            bg = self.color_name[self.object_name[new_key]['ind']].lower()
-            b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
-            b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
-            self.all_buttons.append(b)
-            # add table info
-            rd = self.results_dict[new_key]
-            self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[self.object_name[new_key]['ind']], rd['path'][-1], rd['n_frame'][-1]))
-            print('added!')
+                # add buttons
+                bg = self.color_name[self.object_name[new_key]['ind']].lower()
+                b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
+                b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                self.all_buttons.append(b)
+                # add table info
+                rd = self.results_dict[new_key]
+                self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[self.object_name[new_key]['ind']], rd['path'][-1], rd['n_frame'][-1]))
+                print('added!')
+            else:
+                self.drag_flag = 'new'
+                run = False
         elif clr == '誤判':
             self.fp_pts.append(p)
             print('deleted!')
@@ -400,7 +377,7 @@ class KeyHandler(Interface, Common):
                     i = int(event.char)
                     self.on_button([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
                 except Exception as e:
-                    print(e)
+                    print('on_key', e)
 
             elif sym == 'n':
                 self.on_button('新目標')
@@ -446,11 +423,14 @@ class KeyHandler(Interface, Common):
                     if self.min_label_ind is not None:
                         
                         for k, v in self.results_dict.items():
-                            flag = min([v['n_frame'].index(f) for f in v['n_frame'] if f >= self.min_label_ind])
-                            v['path'] = v['path'][:(flag + 1)]
-                            v['n_frame'] = v['n_frame'][:(flag + 1)]
+                            try:
+                                flag = min([v['n_frame'].index(f) for f in v['n_frame'] if f >= self.min_label_ind])
+                                v['path'] = v['path'][:(flag + 1)]
+                                v['n_frame'] = v['n_frame'][:(flag + 1)]
+                            except:
+                                pass
 
-                        print(self.min_label_ind, 'hihihihihi')
+                        # print(self.min_label_ind, 'hihihihihi')
                         self.calculate_path(self.min_label_ind)
                     else:
                         pass
@@ -592,7 +572,11 @@ class KeyHandler(Interface, Common):
     # undo method
     def undo(self, event=None):
 
-        if len(self.undo_records) > 0:
+        if len(self.undo_records)  == 0:
+            self.msg('Nothing can undo.')
+        elif self.is_manual:
+            self.undo_manual()
+        else:
             old_name = self.object_name
 
             self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if len(self.undo_records) > 1 else -1]
@@ -634,5 +618,34 @@ class KeyHandler(Interface, Common):
 
                     b.grid_forget()
 
-        else:
-            self.msg('Nothing can undo.')
+    def undo_manual(self):
+        self.drag_flag = None
+        for k in sorted(self.object_name.keys()):
+            # remove current label if any exists
+            try:
+                ind = self.label_dict[k]['n_frame'].index(self.n_frame)
+                self.label_dict[k]['n_frame'].pop(ind)
+                self.label_dict[k]['path'].pop(ind)
+            except:
+                pass
+
+            try:
+                ind = self.results_dict[k]['n_frame'].index(self.n_frame)
+                self.tmp_results_dict[k]['path'][ind] = self.results_dict[k]['path'][ind]
+            except:
+                try:
+                    ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
+                    self.tmp_results_dict[k]['n_frame'].pop(ind)
+                    self.tmp_results_dict[k]['path'].pop(ind)
+
+                    if len(self.tmp_results_dict[k]['path']) == 0:
+                        self.object_name.pop(k)
+                        self.tmp_results_dict.pop(k)
+                        self.dist_records[self.n_frame].pop(k)
+
+                        self.tv.delete(k)
+                        self.all_buttons[-1].grid_forget()
+                        self.all_buttons.pop()
+                except Exception as e:
+                    # print('undo_manual', e)
+                    pass        
