@@ -436,7 +436,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME_2 = ttk.LabelFrame(OP_FRAME, text='操作')
         self.BUTTON_FRAME_2.grid(row=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
-        button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數', command=self.on_return)
+        button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數 / 離開 Manual Label', command=self.on_return)
         button_go.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
         button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove)

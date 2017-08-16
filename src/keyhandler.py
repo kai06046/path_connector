@@ -258,9 +258,10 @@ class KeyHandler(Interface, Common):
     # button event
     def on_button(self, clr):
         
-        self.save_records()
-        self.n_frame = self.stop_n_frame
-        p, n = self.current_pts, self.current_pts_n
+        if not self.is_manual:
+            self.save_records()
+            self.n_frame = self.stop_n_frame
+            p, n = self.current_pts, self.current_pts_n
         run = True
         replace = False
 
@@ -410,8 +411,6 @@ class KeyHandler(Interface, Common):
 
     def on_return(self, event=None):
         
-        # self.n_frame = self.stop_n_frame
-
         if self.is_manual:
             # if exists label record
             # if sum([len(v['path']) for k, v in self.label_dict.items()]) != 0:
@@ -430,7 +429,7 @@ class KeyHandler(Interface, Common):
                             except:
                                 pass
 
-                        # print(self.min_label_ind, 'hihihihihi')
+                        print(self.min_label_ind, 'hihihihihi')
                         self.calculate_path(self.min_label_ind)
                     else:
                         pass
@@ -441,6 +440,8 @@ class KeyHandler(Interface, Common):
 
             # self.label_dict = {k: {'path': [], 'n_frame': []} for k in [v['ind'] for k, v in self.object_name.items() if v['on']]}
             self.chg_mode()
+        else:
+            self.n_frame = self.stop_n_frame
 
     def on_remove(self):
         
@@ -586,6 +587,7 @@ class KeyHandler(Interface, Common):
                 for k in keys:
                     self.object_name.pop(k)
                     self.tmp_results_dict.pop(k)
+                    self.results_dict.pop(k)
                     self.dist_records[self.n_frame].pop(k)
 
                     self.tv.delete(k)

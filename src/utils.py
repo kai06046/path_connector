@@ -11,12 +11,12 @@ class Utils(object):
         results_dict = self.results_dict if not self.is_manual else self.tmp_results_dict
         # draw connected paths
         for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
-            if not self.is_manual:
-                pts = np.array(results_dict[k]['path'])
-                flag = results_dict[k]['n_frame']
-            else:
-                pts = np.array(self.tmp_results_dict[k]['path'])
-                flag = self.tmp_results_dict[k]['n_frame']
+            # if not self.is_manual:
+            pts = np.array(results_dict[k]['path'])
+            flag = results_dict[k]['n_frame']
+            # else:
+            #     pts = np.array(results_dict[k]['path'])
+            #     flag = results_dict[k]['n_frame']
 
             color = self.color[self.object_name[k]['ind']]
 
@@ -25,9 +25,12 @@ class Utils(object):
             except:
                 ind = None
 
-            if ind:
+            if ind is not None:
                 width = 5
-                last_pt = tuple(pts[ind - 1])
+                if ind != 0:
+                    last_pt = tuple(pts[ind - 1])
+                else:
+                    last_pt = tuple(pts[ind])
                 pt = tuple(pts[ind])
                 tri_pts = tri(pt)
                 # draw path end point triangle

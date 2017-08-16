@@ -73,7 +73,7 @@ class YOLOReader(object):
                     y_c = int((ymin+ymax) / 2 + 0.5)
                     p = (x_c, y_c)
                     # if there is no keys, initiate
-                    if n_key_used == 0 or n_frame == 1:
+                    if (n_key_used == 0 or n_frame == 1) and not self.is_manual:
                         temp = 0
                         forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame, n_frame + THRES_FORWARD_N_MAX)]
                         p_tmp = p
