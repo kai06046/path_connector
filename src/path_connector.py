@@ -183,6 +183,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
     def start(self):
         root = tk.Tk()
+        root.iconbitmap('beetle.ico')
         root.title(self.win_name)
         label = ttk.Label(root, text='請載入埋葬蟲影像。\n* 影像路徑底下請附上包含 YOLO 結果並和影像檔名相同的 txt。', font=LARGE_FONT)
         label.pack(padx=10, pady=10)
@@ -248,8 +249,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             self.msg("Can't open the video")
 
         self.root = tk.Tk()
-        # self.root.eval('tk::PlaceWindow %s center' % self.root.winfo_pathname(self.root.winfo_id()))
-
+        self.root.iconbitmap('beetle.ico')
         self.root.title(self.win_name)
         self.root.protocol('WM_DELETE_WINDOW', self.on_close)
         self.root.bind('<Left>', self.on_left)
