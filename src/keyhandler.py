@@ -480,6 +480,7 @@ class KeyHandler(Interface, Common):
             result = askyesno('確認', '確定要刪除 %s 嗎？' %k, icon='warning')
             if result:
                 button = self.all_buttons[i+2]
+                button['state'] = 'disabled'
                 button.grid_forget()
                 self.center_root(r=-35)
                 root.destroy()
@@ -659,6 +660,7 @@ class KeyHandler(Interface, Common):
                     self.tv.delete(k)
                     self.all_buttons[-1].grid_forget()
                     self.all_buttons.pop()
+                    self.center_root(r=-35)
 
             self.undo_records = self.undo_records[:-1]
             self.n_frame = self.stop_n_frame
@@ -672,12 +674,17 @@ class KeyHandler(Interface, Common):
 
             # update buttons number
             on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
+
+            tmp = []
             for i, b in enumerate(self.all_buttons):
                 if i in [0, 1]:
                     pass
                 elif i - 2 in on_ind:
                     b.grid(row=i + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
                     b.config(text=self.object_name[letter[i-2]]['display_name'])
+                    if b['state'] == 'disabled':
+                        b['state'] = 'normal'
+                        self.center_root(r=35)
                 else:
                     try:
                         self.tv.delete(letter[i-2])
@@ -685,6 +692,11 @@ class KeyHandler(Interface, Common):
                         print(letter[i-2])
 
                     b.grid_forget()
+                    tmp.append(i)
+                    self.center_root(r=-35)
+                    print('Delete button %s' % (i-2))
+
+            self.all_buttons = [b for i, b in enumerate(self.all_buttons) if i not in tmp]
 
     def undo_manual(self):
         self.drag_flag = None
