@@ -7,17 +7,11 @@ LENGTH_ARROW = 20
 class Utils(object):
 
     def draw(self, tup=None):
-
         results_dict = self.results_dict if not self.is_manual else self.tmp_results_dict
         # draw connected paths
         for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
-            # if not self.is_manual:
             pts = np.array(results_dict[k]['path'])
             flag = results_dict[k]['n_frame']
-            # else:
-            #     pts = np.array(results_dict[k]['path'])
-            #     flag = results_dict[k]['n_frame']
-
             color = self.color[self.object_name[k]['ind']]
 
             try:
@@ -80,9 +74,6 @@ class Utils(object):
                                     draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
                 else:
                     pass
-                    # print(ind)
-                    # pts = pts.reshape((-1, 1, 2))
-                    # cv2.polylines(self._frame, [pts], False, color)
 
         # draw coordinate (stop point) that needed to be assigned
         if self.current_pts is not None:
@@ -141,41 +132,12 @@ class Utils(object):
             if self.stop_n_frame == self.n_frame:
                 cv2.putText(self._frame, 'Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
             elif self.stop_n_frame > self.n_frame:
-                cv2.putText(self._frame, 'Pre-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+                cv2.putText(self._frame, 'Prev-Frame', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
             elif self.stop_n_frame < self.n_frame:
-                cv2.putText(self._frame, 'Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+                cv2.putText(self._frame, 'Af-Frame', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
         else:
-            cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
-            # color = self.color[self.label_ind - 1]
-            # if self.stop_n_frame == self.n_frame:
-            #     cv2.putText(self._frame, 'Manual Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
-            # elif self.stop_n_frame > self.n_frame:
-            #     cv2.putText(self._frame, 'Manual Pre-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
-            # elif self.stop_n_frame < self.n_frame:
-            #     cv2.putText(self._frame, 'Manual Post-Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, color, 1)
-
-            # # draw label results
-            # for k, v in self.label_dict.items():
-            #     try:
-            #         color = self.color[self.object_name[k]['ind']]
-            #     except:
-            #         color = self.color[-1]
-
-            #     flag = v['n_frame']
-            #     pts = v['path']
-
-            #     # current frame label
-            #     try:
-            #         ind = flag.index(self.n_frame)
-            #         p = pts[ind]
-            #         cv2.circle(self._frame, p, 3, color, 2)
-            #     except:
-            #         ind = None
-
-            #     # label history
-            #     for i, p in enumerate(pts):
-            #         if i != ind:
-            #             cv2.circle(self._frame, p, 3, color, 1)
+            string = 'Manual Label' if self.stop_n_frame == self.n_frame else 'Manual Prev-Frame' if self.stop_n_frame > self.n_frame else 'Manual Af-Frame'
+            cv2.putText(self._frame, string, (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
 
         # draw manual label paths
         if len(self.tmp_line) > 1:

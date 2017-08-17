@@ -169,10 +169,11 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             frame = self.tracked_frames[ind] 
             if ind < (len(self.tracked_frames) - 1):
                 ind += 1
+                self.scale_nframe.set(20*(ind) + 1)
                 self.display_label.configure(image=frame)
-                self.scale_nframe.set(ind)
                 self.root.after(200, self.update_track, ind)
         else:
+            self.scale_nframe.set(self.stop_n_frame)
             self.safe = False
             self.display_label.configure(image=self.image)
 
@@ -247,6 +248,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             self.msg("Can't open the video")
 
         self.root = tk.Tk()
+        # self.root.eval('tk::PlaceWindow %s center' % self.root.winfo_pathname(self.root.winfo_id()))
+
         self.root.title(self.win_name)
         self.root.protocol('WM_DELETE_WINDOW', self.on_close)
         self.root.bind('<Left>', self.on_left)
@@ -261,6 +264,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         tk.Grid.rowconfigure(self.root, 0, weight=1)
         tk.Grid.columnconfigure(self.root, 0, weight=1)
 
+
         file = self.video_path.split('.avi')[0] + '.dat'
         if os.path.isfile(file):
             self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
@@ -270,7 +274,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.update_frame()
         self.update_info()
         self.draw()
-        self.center(self.root)
 
         # create a menu instance
         menu = tk.Menu(self.root)
@@ -278,8 +281,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         # create the file object
         file = tk.Menu(menu)
-        file.add_command(label='載入', command=self.on_load)
-        file.add_command(label='儲存', command=self.ask_save)
+        file.add_command(label='載入新影像', command=self.on_load)
+        file.add_command(label='暫存操作', command=self.ask_save)
         file.add_command(label='匯出資料', command=self.export)
         menu.add_cascade(label='File', menu=file)
 
@@ -496,6 +499,14 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         self.update_label()
         self.update_draw()
+        # center
+        self.root.update_idletasks()
+        w = self.root.winfo_screenwidth()
+        h = self.root.winfo_screenheight()
+        size = tuple(int(_) for _ in self.root.geometry().split('+')[0].split('x'))
+        x = w/2 - size[0]/2
+        y = h/2.25 - size[1]/2
+        self.root.geometry("%dx%d+%d+%d" % (size + (x, y)))
 
         # bind key and corresponding function
         self.root.bind('<Return>', self.on_return)
@@ -510,6 +521,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('<Delete>', self.on_key)
         self.root.bind('d', self.on_key)
         self.root.bind('n', self.on_key)
-        self.root.bind('l', self.on_key)
+        self.root.bind('m', self.on_key)
         self.root.bind('s', self.break_loop)
         self.root.mainloop()
