@@ -94,7 +94,7 @@ class KeyHandler(Interface, Common):
                     path = v['path']
                     flag = v['n_frame']
                     try:
-                        ind = flag.index(self.n_frame)
+                        ind = max([flag.index(f) for f in flag if f <= self.n_frame])
                     except:
                         ind = 0
                     if self.in_circle((self.mv_x, self.mv_y), path[ind], 15):
