@@ -236,6 +236,19 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         else:
             self.undo_records.append(records)
 
+    def center_root(self, r=0):
+        # self.root.update()
+        self.root.update_idletasks()
+        w = self.root.winfo_screenwidth()
+        h = self.root.winfo_screenheight()
+
+        size = (self.root.winfo_width(), self.root.winfo_height())
+        x = w/2 - size[0]/2
+        y = h/2.25 - size[1]/2
+        print("%dx%d+%d+%d" % (size + (x, y)))
+        self.root.geometry("%dx%d+%d+%d" % (size[0], size[1]+r, x, y))
+
+
     # main logic for runing UI
     def run(self):
         
@@ -503,13 +516,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.update_label()
         self.update_draw()
         # center
-        self.root.update_idletasks()
-        w = self.root.winfo_screenwidth()
-        h = self.root.winfo_screenheight()
-        size = tuple(int(_) for _ in self.root.geometry().split('+')[0].split('x'))
-        x = w/2 - size[0]/2
-        y = h/2.25 - size[1]/2
-        self.root.geometry("%dx%d+%d+%d" % (size + (x, y)))
+        self.center_root()
 
         # bind key and corresponding function
         self.root.bind('<Return>', self.on_return)

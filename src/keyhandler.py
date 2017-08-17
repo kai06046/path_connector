@@ -167,6 +167,7 @@ class KeyHandler(Interface, Common):
             b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
             b.config(state='disabled')
             self.all_buttons.append(b)
+            self.center_root(r=35)
 
             self.display_label.config(cursor='arrow')
             self.drag_flag = None
@@ -316,6 +317,7 @@ class KeyHandler(Interface, Common):
                     b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
                     b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
                     self.all_buttons.append(b)
+                    self.center_root(r=35)
                     # add table info
                     rd = self.results_dict[new_key]
                     self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[self.object_name[new_key]['ind']], rd['path'][-1], rd['n_frame'][-1]))
@@ -479,6 +481,7 @@ class KeyHandler(Interface, Common):
             if result:
                 button = self.all_buttons[i+2]
                 button.grid_forget()
+                self.center_root(r=-35)
                 root.destroy()
                 top.destroy()
 
@@ -714,6 +717,7 @@ class KeyHandler(Interface, Common):
                 except Exception as e:
                     # print('undo_manual', e)
                     pass
+        self.center_root(r=-35)
 
     def jump_frame(self):
         popup = Interface.popupEntry(self.root, title="移動幀數", string="請輸入介於 %s ~ %s 的數字。" % (1, self.total_frame), validnum=True)
