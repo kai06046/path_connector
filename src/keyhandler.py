@@ -96,7 +96,7 @@ class KeyHandler(Interface, Common):
                     try:
                         ind = flag.index(self.n_frame)
                     except:
-                        ind = -1
+                        ind = 0
                     if self.in_circle((self.mv_x, self.mv_y), path[ind], 15):
                         self.drag_flag = k
                         break
