@@ -8,7 +8,7 @@ from tkinter import ttk
 import imageio
 from tkinter.messagebox import askyesno
 import numpy as np
-import copy
+import copy, os
 
 letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
 
@@ -17,7 +17,14 @@ class KeyHandler(Interface, Common):
     # reload the interface after reloading a new video; pending, add judgement for new video (like if a YOLO txt file existed)
     def on_load(self):
         path = self.get_path(res=True)
-        if path not in  ["", None]:
+        yolo_results_path = path.split('.avi')[0] + '.txt'
+        res = os.path.isfile(yolo_results_path)
+        
+        if not res:
+            self.msg('影像檔案路徑底下沒有對應的 YOLO txt。')
+        elif path in [None, ""]:
+            self.msg('請載入影像檔案。')
+        else:
             self.video_path = path
             self.video.release()
             self.init_video()
@@ -121,7 +128,7 @@ class KeyHandler(Interface, Common):
 
     def on_manual_label(self):
         if self.is_manual:
-            self.on_return()
+            self.left_manual_label()
         else:
             self.chg_mode()
 
@@ -377,7 +384,7 @@ class KeyHandler(Interface, Common):
     def on_key(self, event):
         sym = event.keysym
         if not self.is_manual:
-            if sym not in ['n', 'Delete', 'd', 'l']:
+            if sym not in ['n', 'Delete', 'd', 'm']:
                 try:
                     i = int(event.char)
                     self.on_button([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
@@ -389,14 +396,15 @@ class KeyHandler(Interface, Common):
             elif sym in ['Delete', 'd']:
                 self.on_button('誤判')
             # enter manual label mode
-            elif sym == 'l':
+            elif sym == 'm':
                 self.chg_mode()
         else:
             if sym == 'n':
                 self.drag_flag = 'new' if self.drag_flag is None else None
+            elif sym == 'm':
+                self.left_manual_label()
             else:
                 print('on_key error %s' % type(sym))
-
 
     def set_max(self, s):
         v = int(float(s))
@@ -414,6 +422,9 @@ class KeyHandler(Interface, Common):
         self.n_frame = v
 
     def on_return(self, event=None):
+        self.n_frame = self.stop_n_frame
+
+    def left_manual_label(self, event=None):
         
         if self.is_manual:
             # if exists label record
@@ -439,8 +450,8 @@ class KeyHandler(Interface, Common):
                     self.object_name = self.undo_records[-1][-1]
 
             self.chg_mode()
-        else:
-            self.n_frame = self.stop_n_frame
+        # else:
+        #     self.n_frame = self.stop_n_frame
 
     def on_remove(self):
         
