@@ -388,7 +388,7 @@ class KeyHandler(Interface, Common):
     def on_key(self, event):
         sym = event.keysym
         if not self.is_manual:
-            if sym not in ['n', 'Delete', 'd', 'm']:
+            if sym not in ['n', 'Delete', 'd', 'm', 'j']:
                 try:
                     i = int(event.char)
                     self.on_button([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
@@ -402,6 +402,8 @@ class KeyHandler(Interface, Common):
             # enter manual label mode
             elif sym == 'm':
                 self.chg_mode()
+            elif sym == 'j':
+                self.jump_frame()
         else:
             if sym == 'n':
                 if self.drag_flag is None:
@@ -414,6 +416,8 @@ class KeyHandler(Interface, Common):
                 self.drag_flag = 'new' if self.drag_flag is None else None
             elif sym == 'm':
                 self.leave_manual_label()
+            elif sym == 'j':
+                self.jump_frame()
             else:
                 print('on_key error %s' % type(sym))
 
@@ -603,12 +607,12 @@ class KeyHandler(Interface, Common):
         temp_root.mainloop()
 
     # for changing name
-    def tvitem_click(self, event):
+    def tvitem_click(self, event, item=None):
         self.save_records()
 
-        sel_items = self.tv.selection()
+        sel_items = self.tv.selection() if item is None else item
         if sel_items:
-            popup = Interface.popupEntry(self.root)
+            popup = Interface.popupEntry(self.root, title="更改 object 名稱", string="請輸入新的名稱。")
             self.root.wait_window(popup.top)
             sel_item = sel_items[0]
 
@@ -616,8 +620,13 @@ class KeyHandler(Interface, Common):
                 new_key = popup.value
                 if new_key in [v['display_name'] for k, v in self.object_name.items()]:
                     self.msg('%s 已經被使用了。' % new_key)
+                    self.tvitem_click(item=sel_items)
                 elif new_key in [" " * i for i in range(10)]:
                     self.msg('請輸入空白鍵以外的字串。')
+                    self.tvitem_click(item=sel_items)
+                elif len(new_key) > 6:
+                    self.msg('請輸入長度小於 6 的字串。')
+                    self.tvitem_click(item=sel_items)
                 else:
                     self.object_name[sel_item]['display_name'] = new_key
                     self.all_buttons[self.object_name[sel_item]['ind'] + 2].config(text=new_key)
@@ -705,3 +714,16 @@ class KeyHandler(Interface, Common):
                 except Exception as e:
                     # print('undo_manual', e)
                     pass
+
+    def jump_frame(self):
+        popup = Interface.popupEntry(self.root, title="移動幀數", string="請輸入介於 %s ~ %s 的數字。" % (1, self.total_frame), validnum=True)
+        self.root.wait_window(popup.top)
+        try:
+            n = int(popup.value)
+            if n >= 1 and n <= self.total_frame:
+                self.n_frame = n
+            else:
+                self.msg("請輸入介於 %s ~ %s 的數字。" % (1, self.total_frame))
+                self.jump_frame()
+        except Exception as e:
+            print(e)

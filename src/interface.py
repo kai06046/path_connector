@@ -71,8 +71,8 @@ class Interface(object):
         settings_root.focus_force()
         settings_root.title('設定')
 
-        ACTION = ['標註對應的目標 (a/b/c/d)', '誤判', '新目標', '返回', '前一幀', '後一幀', '前五幀', '後五幀', '進入/離開 Manual Label', '回到需被標註的幀數', '設定']
-        HOTKEY = ['1/2/3/4', 'd/DELETE', 'n', 'u/BACKSPACE', 'LEFT', 'RIGHT', 'PAGE DOWN', 'PAGE UP', 'm', 'ENTER', 'h']
+        ACTION = ['標註對應的目標 (a/b/c/d)', '誤判', '新目標', '返回', '前一幀', '後一幀', '前五幀', '後五幀', '進入/離開 Manual Label', '回到需被標註的幀數', '移動幀數', '設定']
+        HOTKEY = ['1/2/3/4', 'd/DELETE', 'n', 'u/BACKSPACE', 'LEFT', 'RIGHT', 'PAGE DOWN', 'PAGE UP', 'm', 'ENTER',  'j', 'h']
 
         hotkey = ttk.LabelFrame(settings_root, text="快捷鍵")
         action = ttk.LabelFrame(settings_root, text="操作")
@@ -96,31 +96,51 @@ class Interface(object):
 
     class popupEntry(object):
 
-        def __init__(self,master):
+        def __init__(self,master, title, string, validnum=False):
             top=self.top= tk.Toplevel(master)
-            top.title('更改 object 名稱')
-            # tk.Grid.rowconfigure(top, 0, weight=1)
-            # tk.Grid.columnconfigure(top, 0, weight=1)
+            top.title(title)
+            tk.Grid.rowconfigure(top, 0, weight=1)
+            tk.Grid.columnconfigure(top, 0, weight=1)
+            top.transient(master)
+            top.grab_set()
 
-            top.update_idletasks()
-            width = top.winfo_reqwidth()
-            height = top.winfo_reqheight()
-            x = (top.winfo_screenwidth() // 2.25) - (width // 2)
-            y = (top.winfo_screenheight() // 2) - (height // 2)
-            top.geometry('+%d+%d' % (x, y))
-
-            self.l=tk.Label(top,text="請輸入新的名稱。", font=("Verdana", 12))
+            self.l=tk.Label(top,text=string, font=("Verdana", 12))
             self.l.pack(expand=tk.YES, fill=tk.BOTH, padx=5, pady=5)
-            self.e=ttk.Entry(top)
+            if validnum:
+                vcmd = (master.register(self.validate), 
+                    '%d', '%i', '%P', '%s', '%S', '%v', '%V', '%W')
+                self.e =ttk.Entry(top, validate='key', validatecommand=vcmd)
+            else:
+                self.e = ttk.Entry(top)
             self.e.config(width=9)
             self.e.pack(expand=tk.YES, padx=5, pady=5)
             self.e.focus_force()
             self.e.bind('<Return>', lambda event: self.cleanup())
-            self.b=ttk.Button(top,text='Ok',command=self.cleanup, width=5)
+            self.b = ttk.Button(top,text='Ok',command=self.cleanup, width=5)
             self.b.pack(expand=tk.YES, padx=5, pady=5)
+
+            top.update_idletasks()
+            width = top.winfo_reqwidth() + 10
+            height = top.winfo_reqheight() + 10
+            x = (top.winfo_screenwidth() // 2.25) - (width // 2)
+            y = (top.winfo_screenheight() // 2) - (height // 2)
+            top.geometry('+%d+%d' % (x, y))
+            top.geometry('260x120')
+
             top.bind('<Escape>', lambda event: top.destroy())
 
             # pending; bind return, a decent name judge
         def cleanup(self):
             self.value=self.e.get()
             self.top.destroy()
+        
+        def validate(self, action, index, value_if_allowed,
+                           prior_value, text, validation_type, trigger_type, widget_name):
+            if text in '0123456789':
+                try:
+                    float(value_if_allowed)
+                    return True
+                except ValueError:
+                    return False
+            else:
+                return False
