@@ -128,7 +128,7 @@ class KeyHandler(Interface, Common):
 
     def on_manual_label(self):
         if self.is_manual:
-            self.left_manual_label()
+            self.leave_manual_label()
         else:
             self.chg_mode()
 
@@ -294,33 +294,37 @@ class KeyHandler(Interface, Common):
                 else:
                     run = False
         elif clr == '新目標':
-            if not self.is_manual:
-                # append results
-                new_key = letter[len(self.object_name)]
-                self.results_dict[new_key] = {'path': [p], 'n_frame': [n]}
-                print(len(self.object_name), self.object_name)
-                self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
-                print(len(self.object_name))
-                try:
-                    self.dist_records[n][new_key] = dict()
-                except:
-                    self.dist_records[n] = dict()
-                    self.dist_records[n][new_key] = dict()
-                self.dist_records[n][new_key]['dist'] = [0]
-                self.dist_records[n][new_key]['center'] = [p]
-                self.dist_records[n][new_key]['below_tol'] = [True]
+            if len(self.object_name) < 6:
+                if not self.is_manual:
+                    # append results
+                    new_key = letter[len(self.object_name)]
+                    self.results_dict[new_key] = {'path': [p], 'n_frame': [n]}
+                    print(len(self.object_name), self.object_name)
+                    self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
+                    print(len(self.object_name))
+                    try:
+                        self.dist_records[n][new_key] = dict()
+                    except:
+                        self.dist_records[n] = dict()
+                        self.dist_records[n][new_key] = dict()
+                    self.dist_records[n][new_key]['dist'] = [0]
+                    self.dist_records[n][new_key]['center'] = [p]
+                    self.dist_records[n][new_key]['below_tol'] = [True]
 
-                # add buttons
-                bg = self.color_name[self.object_name[new_key]['ind']].lower()
-                b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
-                b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
-                self.all_buttons.append(b)
-                # add table info
-                rd = self.results_dict[new_key]
-                self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[self.object_name[new_key]['ind']], rd['path'][-1], rd['n_frame'][-1]))
-                print('added!')
+                    # add buttons
+                    bg = self.color_name[self.object_name[new_key]['ind']].lower()
+                    b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
+                    b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                    self.all_buttons.append(b)
+                    # add table info
+                    rd = self.results_dict[new_key]
+                    self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[self.object_name[new_key]['ind']], rd['path'][-1], rd['n_frame'][-1]))
+                    print('added!')
+                else:
+                    self.drag_flag = 'new'
+                    run = False
             else:
-                self.drag_flag = 'new'
+                self.msg('目標數量太多咯!')
                 run = False
         elif clr == '誤判':
             self.fp_pts.append(p)
@@ -400,9 +404,16 @@ class KeyHandler(Interface, Common):
                 self.chg_mode()
         else:
             if sym == 'n':
+                if self.drag_flag is None:
+                    if len(self.object_name) < 6:
+                        self.drag_flag = 'new'
+                    else:
+                        self.msg('目標數量太多咯!')
+                else:
+                    self.drag_flag = None
                 self.drag_flag = 'new' if self.drag_flag is None else None
             elif sym == 'm':
-                self.left_manual_label()
+                self.leave_manual_label()
             else:
                 print('on_key error %s' % type(sym))
 
@@ -424,7 +435,7 @@ class KeyHandler(Interface, Common):
     def on_return(self, event=None):
         self.n_frame = self.stop_n_frame
 
-    def left_manual_label(self, event=None):
+    def leave_manual_label(self, event=None):
         
         if self.is_manual:
             # if exists label record
@@ -498,6 +509,38 @@ class KeyHandler(Interface, Common):
 
     def break_loop(self, event=None):
         self.safe = False
+
+    def on_view(self):
+        results_dict = self.results_dict
+        object_name = self.object_name
+        start_pt = self.n_frame if self.n_frame != self.stop_n_frame else 1
+        break_pt = max([max(v['n_frame']) for k, v in results_dict.items()])
+
+        for i in range(start_pt, break_pt):
+            if (i % 20 == 0 or i == start_pt):
+                self.n_frame = i
+                self.update_frame()
+                frame = self._orig_frame.copy()
+                for k in sorted([k for k, v in object_name.items() if v['on']]):
+                    flag = results_dict[k]['n_frame']
+                    color = self.color[object_name[k]['ind']]
+                    try:
+                        ind = np.where(np.array(flag) > i)[0][0]
+                    except Exception as e:
+                        # print(e)
+                        ind = None
+                    if ind is not None:
+                        path = results_dict[k]['path'][:ind][-150:]
+                        for l in range(1, len(path)):
+                            thickness = int(np.sqrt((1 + l * 0.01) * 2) * 1.5)
+                            cv2.line(frame, path[l - 1], path[l], color, thickness)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                image = ImageTk.PhotoImage(Image.fromarray(frame))
+                self.display_label.configure(image=image)
+                self.scale_nframe.set(i)
+                self.root.update_idletasks()
+
+        self.n_frame = self.stop_n_frame
 
     def on_view_results(self):
         """

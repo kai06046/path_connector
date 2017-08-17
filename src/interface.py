@@ -68,7 +68,6 @@ class Interface(object):
         def exit(event):
             settings_root.destroy()
 
-        self.center(settings_root)
         settings_root.focus_force()
         settings_root.title('設定')
 
@@ -87,6 +86,7 @@ class Interface(object):
 
         settings_root.bind('<Escape>', exit)
         settings_root.bind('<h>', exit)
+        self.center(settings_root)
         settings_root.mainloop()
 
     def export(self):

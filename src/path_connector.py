@@ -184,7 +184,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
     def start(self):
         root = tk.Tk()
         root.title(self.win_name)
-        self.center(root)
         label = ttk.Label(root, text='請載入埋葬蟲影像。\n* 影像路徑底下請附上包含 YOLO 結果並和影像檔名相同的 txt。', font=LARGE_FONT)
         label.pack(padx=10, pady=10)
 
@@ -197,6 +196,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         button2 = ttk.Button(root, text='開始', command=lambda r = root: self.ready(r))
         button2.pack(padx=10, pady=10)
 
+        self.center(root)
         root.bind('<Escape>', lambda event: root.destroy())
         root.mainloop()
 
@@ -457,28 +457,31 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove)
         button_remove.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        button_replay = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label', command=self.on_manual_label)
-        button_replay.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label', command=self.on_manual_label)
+        button_manual.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+
+        button_replay = ttk.Button(self.BUTTON_FRAME_2, text='回放已追踪路徑', command=self.on_view)
+        button_replay.grid(row=6, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         label_max = ttk.Label(self.BUTTON_FRAME_2, text='顯示路徑的長度: ')
-        label_max.grid(row=6, column=0, rowspan=2, sticky=tk.W)
+        label_max.grid(row=8, column=0, rowspan=2, sticky=tk.W)
         label_max_v = ttk.Label(self.BUTTON_FRAME_2, textvariable=self.maximum_var)
-        label_max_v.grid(row=6, column=1)
+        label_max_v.grid(row=8, column=1)
         scale_max = ttk.Scale(self.BUTTON_FRAME_2, from_=2, to_=3000, length=200, command=self.set_max)
         scale_max.set(self.maximum)
-        scale_max.grid(row=6, column=1)
+        scale_max.grid(row=8, column=1)
 
         check_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
-        check_show_box.grid(row=8, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_box.grid(row=10, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         check_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='Eraser')
-        check_is_clear.grid(row=10, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_is_clear.grid(row=12, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
         check_show_arrow = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_arrow, onvalue=1, offvalue=0, text='顯示路徑方向')
-        check_show_arrow.grid(row=8, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_arrow.grid(row=10, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         check_show_drawing = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_drawing, onvalue=1, offvalue=0, text='顯示已追踪路徑')
-        check_show_drawing.grid(row=10, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_drawing.grid(row=12, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         # update changes
         if self.multi:

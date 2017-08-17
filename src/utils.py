@@ -15,11 +15,13 @@ class Utils(object):
             color = self.color[self.object_name[k]['ind']]
 
             try:
-                ind = flag.index(self.n_frame)
-            except:
+                # ind = flag.index(self.n_frame)
+                ind = max([flag.index(v) for v in flag if v <= self.n_frame])
+            except Exception as e:
+                print('Error occured in draw\n', e)
                 ind = None
 
-            if ind is not None:
+            if ind  == self.n_frame:
                 width = 5
                 if ind != 0:
                     last_pt = tuple(pts[ind - 1])
@@ -198,12 +200,12 @@ class Common(object):
         else:
             return False
     # center a tkinter window
-    def center(self, win):
+    def center(self, win, rx=2, ry=2):
         win.update_idletasks()
         width = win.winfo_reqwidth()
         height = win.winfo_reqheight()
-        x = (win.winfo_screenwidth() // 2.25) - (width // 2)
-        y = (win.winfo_screenheight() // 2) - (height // 2)
+        x = (win.winfo_screenwidth() // rx) - (width // 2)
+        y = (win.winfo_screenheight() // ry) - (height // 2)
         win.geometry('+%d+%d' % (x, y))
 
 # return a triangle with pt as center
