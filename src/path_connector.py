@@ -84,6 +84,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.safe = True
         self.is_calculate = False
         self.is_manual = False
+        self.rat_cnt_dict = dict()
+        
         # variables for breaking from calculating loop
         self.n_run = None
         self.cancel_id = None

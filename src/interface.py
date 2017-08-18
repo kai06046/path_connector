@@ -97,6 +97,11 @@ class Interface(object):
         with open(filename, 'a') as f:
             json.dump(self.results_dict, f)
 
+        filename = "%s_rat_contour.json" % self.video_path.split('.avi')[0]
+        # save rat contour
+        # with open(filename, 'a') as f:
+        #     json.dump(self.rat_cnt_dict, f)
+
     class popupEntry(object):
 
         def __init__(self,master, title, string, validnum=False):

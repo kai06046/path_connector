@@ -138,6 +138,9 @@ class Utils(object):
         rat_detector = RatDetector()
         rat_detector.detect_rat_contour(cv2.cvtColor(self._orig_frame, cv2.COLOR_BGR2GRAY))
 
+        if self.n_frame not in self.rat_cnt_dict.keys():
+            self.rat_cnt_dict[self.n_frame] = rat_detector.rat_cnt.tolist()
+
         if len(rat_detector.rat_cnt) > 0 and self.check_show_rat is not None and self.check_show_rat.get() == 1:
             cv2.drawContours(self._frame, rat_detector.rat_cnt, -1, (216, 233, 62), 2)
 
