@@ -460,14 +460,15 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME_2 = ttk.LabelFrame(OP_FRAME, text='操作')
         self.BUTTON_FRAME_2.grid(row=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
+        # operation buttons
+        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label', command=self.on_manual_label)
+        button_manual.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+
         button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數', command=self.on_return)
-        button_go.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_go.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
         button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove)
-        button_remove.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
-
-        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label', command=self.on_manual_label)
-        button_manual.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_remove.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         button_replay = ttk.Button(self.BUTTON_FRAME_2, text='回放已追踪路徑', command=self.on_view)
         button_replay.grid(row=6, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
@@ -480,6 +481,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         scale_max.set(self.maximum)
         scale_max.grid(row=8, column=1)
 
+        # checkboxes
         check_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
         check_show_box.grid(row=10, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
@@ -493,11 +495,11 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         check_show_drawing.grid(row=12, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         # update changes
-        if self.multi:
-            pass
-        else:
-            pass
-            self.update_track(0)
+        # if self.multi:
+        #     pass
+        # else:
+        #     pass
+        self.update_track(0)
             # self.root.after(0, self.update_track, 0)
 
         # suggest default option

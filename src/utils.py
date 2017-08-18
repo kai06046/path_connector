@@ -211,7 +211,6 @@ class RatDetector(object):
         _, th = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         _, cnts, _ = cv2.findContours(th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         # find contour with the biggest area
-        
         self.rat_cnt = sorted(cnts, key=cv2.contourArea)[-1]
 
     def detect_on_rat(self, bbox):

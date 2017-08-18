@@ -8,7 +8,7 @@ from tkinter import ttk
 import imageio
 from tkinter.messagebox import askyesno
 import numpy as np
-import copy, os
+import copy, os, pickle
 
 letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
 
@@ -26,6 +26,7 @@ class KeyHandler(Interface, Common):
             self.msg('請載入影像檔案。')
         else:
             self.video_path = path
+            old_len = len(self.object_name)
             self.video.release()
             self.init_video()
             self.object_name = dict()
@@ -38,12 +39,18 @@ class KeyHandler(Interface, Common):
             if self.is_manual:
                 self.chg_mode()
             
-            self.n_frame = 1
-            self.video.set(cv2.CAP_PROP_POS_FRAMES, self.n_frame - 1)
-            ok, self._frame = self.video.read()
-            self._orig_frame = self._frame.copy()
-            
-            self.run_calc(self.n_frame)
+            file = self.video_path.split('.avi')[0] + '.dat'
+            if os.path.isfile(file):
+                self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
+                self.n_frame = self.stop_n_frame
+                tmp_diff = len(self.object_name) - old_len
+                self.center_root(r=35*tmp_diff)
+            else:
+                self.n_frame = 1
+                self.video.set(cv2.CAP_PROP_POS_FRAMES, self.n_frame - 1)
+                ok, self._frame = self.video.read()
+                self._orig_frame = self._frame.copy()
+                self.run_calc(self.n_frame)
             
             # reset button
             for b in self.all_buttons:
@@ -80,7 +87,6 @@ class KeyHandler(Interface, Common):
 
     # run bbox assignment algorithm
     def run_calc(self, ind):
-        self.n_run = 0
         self.cancel_id = None
         self.update_frame()
         self.calculate_path(ind)
@@ -91,7 +97,6 @@ class KeyHandler(Interface, Common):
             self.display_label.after_cancel(self.cancel_id)
             self.is_calculate = False
             self.undo()
-            # self.root.update()
             self.cancel_id = None
 
     # record position of current mosue cursor and cursor's type while it's on any object
