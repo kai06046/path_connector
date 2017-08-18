@@ -43,7 +43,7 @@ class KeyHandler(Interface, Common):
             ok, self._frame = self.video.read()
             self._orig_frame = self._frame.copy()
             
-            self.calculate_path(self.n_frame)
+            self.run_calc(self.n_frame)
             
             # reset button
             for b in self.all_buttons:
@@ -77,6 +77,22 @@ class KeyHandler(Interface, Common):
 
     def reset(self, event):
         self.tmp_line = []
+
+    # run bbox assignment algorithm
+    def run_calc(self, ind):
+        self.n_run = 0
+        self.cancel_id = None
+        self.update_frame()
+        self.calculate_path(ind)
+
+    # break from bbox assigment algorithm
+    def cancel_calc(self):
+        if self.cancel_id is not None:
+            self.display_label.after_cancel(self.cancel_id)
+            self.is_calculate = False
+            self.undo()
+            # self.root.update()
+            self.cancel_id = None
 
     # record position of current mosue cursor and cursor's type while it's on any object
     def on_mouse_mv(self, event):
@@ -335,7 +351,7 @@ class KeyHandler(Interface, Common):
         if run:
             if len(self.undone_pts) == 0:
                 self.root.update()
-                self.calculate_path(self.stop_n_frame + 1)
+                self.run_calc(self.stop_n_frame + 1)
             else:
                 self.current_pts, self.current_pts_n = self.undone_pts.pop(0)
                 self.suggest_ind.pop(0)
@@ -460,7 +476,7 @@ class KeyHandler(Interface, Common):
                             except:
                                 pass
 
-                        self.calculate_path(self.min_label_ind)
+                        self.run_calc(self.min_label_ind)
                     else:
                         pass
                 else:
@@ -726,10 +742,10 @@ class KeyHandler(Interface, Common):
                         self.tv.delete(k)
                         self.all_buttons[-1].grid_forget()
                         self.all_buttons.pop()
+                        self.center_root(r=-35)
                 except Exception as e:
                     # print('undo_manual', e)
                     pass
-        self.center_root(r=-35)
 
     def jump_frame(self):
         popup = Interface.popupEntry(self.root, title="移動幀數", string="請輸入介於 %s ~ %s 的數字。" % (1, self.total_frame), validnum=True)

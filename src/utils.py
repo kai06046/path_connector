@@ -59,7 +59,7 @@ class Utils(object):
                 #     else:
                 #         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
 
-                if self.check_show_drawing is None or self.check_show_drawing.get() == 1:
+                if self.check_show_drawing is None or self.check_show_drawing.get() == 1 and not self.is_calculate:
                     # show until current if ind is not None
                     # pts = pts[-self.maximum:ind]
                     pts = pts[-self.maximum:(ind + 1) if ind is not None else None]

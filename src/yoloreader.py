@@ -8,7 +8,7 @@ from PIL import Image, ImageTk
 from skimage.measure import compare_ssim
 
 letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
-N_SHOW = 20
+N_SHOW = 25
 
 # threshold
 THRES_FORWARD_DIST = 30
@@ -42,7 +42,6 @@ class YOLOReader(object):
         
         self.is_calculate = True
         n_frame = ind if ind is not None else self.n_frame
-        print('calculate_path %s' % n_frame)
         undone_pts = []
         self.suggest_ind = []
 
@@ -139,7 +138,7 @@ class YOLOReader(object):
                     pass
                 elif len(set([v[1] for v in hit_condi])) == len(on_keys):
 
-                	# pending assessment
+                    # pending assessment
                     for k, ind in hit_condi:
                         if k not in label_ind:
                             self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
@@ -147,16 +146,11 @@ class YOLOReader(object):
                 # the length of hit_condi is same as the number of nearest indexes
                 elif len(set([v for k, v in hit_condi])) == len(hit_condi):
 
-                	# pending, assessment
+                    # pending, assessment
                     for k, ind in hit_condi:
                         if k not in label_ind:
                             self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
                             self.results_dict[k]['n_frame'].append(n_frame)
-                    # a boxes was assigned to multi object, choose the nearest one
-                    # else:
-                    #     print('multi')
-                    #     print(tmp_dist_record)
-                    #     print(hit_condi)
 
                     # if there are boxes were not assigned
                     if len(hit_condi) != len(boxes):
@@ -239,61 +233,7 @@ class YOLOReader(object):
                         """
                         Try compare difference.
                         """
-                        # print('frame: %s\nDuplicated index: %s\nDuplicated key: %s' % (n_frame, duplicate_ind, duplicate_key) )
                         min_key = []
-                        # compare_diff = {}
-                        # for ind in duplicate_ind:
-                        #     tmp_keys = [k for k, v in hit_condi if v == ind]
-                        #     compare_diff[ind] = dict()
-                        #     compare_diff[ind]['similarity'] = []
-                        #     p = tmp_dist_record[on_keys[0]]['center'][ind]
-                            
-                        #     # get current bounding box
-                        #     _, boxes = eval(self.__yolo_results__[n_frame- 1])
-                        #     for b in boxes:
-                        #         ymin, xmin, ymax, xmax, score = b
-                        #         x_c = int((xmin+xmax) / 2 + 0.5)
-                        #         y_c = int((ymin+ymax) / 2 + 0.5)
-                        #         if p == (x_c, y_c):
-                        #             xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
-                        #             img = self._orig_frame[ymin:ymax, xmin:xmax].copy()
-                        #             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                        #             img = cv2.resize(img, (64, 64))
-                        #             break
-
-                        #     # compare nearest keys
-                        #     for key in tmp_keys:
-                        #         last_p = self.results_dict[key]['path'][-1]
-                        #         last_n = self.results_dict[key]['n_frame'][-1]
-                        #         _, boxes = eval(self.__yolo_results__[last_n - 1])
-                                
-                        #         # get this key's last bounding box
-                        #         for b in boxes:
-                        #             ymin, xmin, ymax, xmax, score = b
-                        #             x_c = int((xmin+xmax) / 2 + 0.5)
-                        #             y_c = int((ymin+ymax) / 2 + 0.5)
-                        #             if last_p == (x_c, y_c):
-                        #                 xmin, ymin, xmax, ymax = int(xmin), int(ymin), int(xmax), int(ymax)
-                        #                 last_img = self._orig_frame[ymin:ymax, xmin:xmax].copy()
-                        #                 last_img = cv2.cvtColor(last_img, cv2.COLOR_BGR2GRAY)
-                        #                 last_img = cv2.resize(last_img, (64, 64))
-                        #                 break
-                        #         diff = compare_ssim(img, last_img)
-                        #         compare_diff[ind]['similarity'].append((key, diff))
-                        #         # Haralick = haralick(img).mean(axis=0)
-                        #     sim = compare_diff[ind]['similarity']
-                        #     compare_diff[ind]['nearest_key'] = sim[sorted(range(len(sim)), key=lambda i: sim[i][1], reverse=True)[0]][0]
-                        #     min_key.append(compare_diff[ind]['nearest_key'])
-
-                        # # if n_frame > 450 and n_frame < 455:
-                        # #     print(n_frame, compare_diff)
-
-                        # if len(set(min_key)) != len(min_key):
-                        #     print('duplicate box and key!')
-                        #     self.is_calculate = False
-                        #     print(tmp_dist_record)
-                        #     print(hit_condi)
-                        #     undone_pts.append((tmp_dist_record[duplicate_key[0]]['center'][duplicate_ind.pop()], n_frame))
 
                         # just use nearest distance
                         for ind in duplicate_ind:
@@ -321,8 +261,13 @@ class YOLOReader(object):
                 on_keys = [k for k, v in self.object_name.items() if v['on']]
                 pass
 
+            if self.is_calculate:
+                n_frame += 1
+            else:
+                print('paths connecting stops at %s' % n_frame)
+
             # record animation
-            if n_frame % n_show == 0:
+            if n_frame % n_show == 0 and self.display_label is not None:
 
                 cv2.putText(self._frame, 'Calculating...', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
                 for k in on_keys:
@@ -346,71 +291,66 @@ class YOLOReader(object):
                     self.scale_nframe.set(n_frame)
                     self.root.update_idletasks()
                 else:
-                # if not self.multi:
                     self.tracked_frames.append(ImageTk.PhotoImage(Image.fromarray(self._frame)))
+                # break from calculating
+                break
 
-            if self.is_calculate:
-                n_frame += 1
-            else:
-                print('paths connecting stops at %s' % n_frame)
+        if self.is_calculate:
+            self.cancel_id = self.display_label.after(0, self.calculate_path, n_frame)
+        else:
+            # algorithm for suggesting a reasonable option
+            for i, tup in enumerate(undone_pts):
+                p, nframe = tup
+                tmp_record = self.dist_records[nframe]
+                min_dist_not_assigned = 9999
+                min_key_not_assigned = None
+                # compare with not assigned key
+                for k, v in tmp_record.items():
+                    if k in [tmp for tmp in on_keys if tmp not in [j for j, _ in hit_condi]]:
+                        ind = tmp_record[k]['center'].index(p)
+                        if tmp_record[k]['dist'][ind] < min_dist_not_assigned:
+                            min_dist_not_assigned = tmp_record[k]['dist'][ind]
+                            min_key_not_assigned = k
+                # compare with assigned key
+                min_dist_assigned = 9999
+                min_key_assigned = None
+                for k, v in tmp_record.items():
+                    if k in [tmp for tmp in on_keys if tmp in [j for j, _ in hit_condi]]:
+                        ind = tmp_record[k]['center'].index(p)
+                        if tmp_record[k]['dist'][ind] < min_dist_assigned:
+                            min_dist_assigned = tmp_record[k]['dist'][ind]
+                            min_key_assigned = k
 
-        # print('condition %s' % hit_condi)
-        # print('undone points %s' % self.undone_pts)
-        # print('lost key %s' % [tmp for tmp in self.object_name if tmp not in [j for j, _ in hit_condi]])
+                # suggest new object if far with both assigned and not assigned keys
+                if min_dist_not_assigned >= 80 and min_dist_assigned > 100:
+                    self.suggest_ind.append(('new', {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
+                # suggest false positive if far with not assigned keys but near with assigned keys
+                elif min_dist_not_assigned >= 80 and min_dist_assigned < 100:
+                    self.suggest_ind.append(('fp', {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
+                # suggest the nearest not assigned key for other cases
+                else:
+                    self.suggest_ind.append((min_key_not_assigned, {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
 
-        # algorithm for suggesting a reasonable option
-        for i, tup in enumerate(undone_pts):
-            p, nframe = tup
-            tmp_record = self.dist_records[nframe]
-            min_dist_not_assigned = 9999
-            min_key_not_assigned = None
-            # compare with not assigned key
-            for k, v in tmp_record.items():
-                if k in [tmp for tmp in on_keys if tmp not in [j for j, _ in hit_condi]]:
-                    ind = tmp_record[k]['center'].index(p)
-                    if tmp_record[k]['dist'][ind] < min_dist_not_assigned:
-                        min_dist_not_assigned = tmp_record[k]['dist'][ind]
-                        min_key_not_assigned = k
-            # compare with assigned key
-            min_dist_assigned = 9999
-            min_key_assigned = None
-            for k, v in tmp_record.items():
-                if k in [tmp for tmp in on_keys if tmp in [j for j, _ in hit_condi]]:
-                    ind = tmp_record[k]['center'].index(p)
-                    if tmp_record[k]['dist'][ind] < min_dist_assigned:
-                        min_dist_assigned = tmp_record[k]['dist'][ind]
-                        min_key_assigned = k
+            # update default option if button has been already created
+            if len(self.all_buttons) > 0:
+                print(self.suggest_ind[0])
 
-            # suggest new object if far with both assigned and not assigned keys
-            if min_dist_not_assigned >= 80 and min_dist_assigned > 100:
-                self.suggest_ind.append(('new', {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
-            # suggest false positive if far with not assigned keys but near with assigned keys
-            elif min_dist_not_assigned >= 80 and min_dist_assigned < 100:
-                self.suggest_ind.append(('fp', {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
-            # suggest the nearest not assigned key for other cases
-            else:
-                self.suggest_ind.append((min_key_not_assigned, {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
+                if self.suggest_ind[0][0] == 'fp':
+                    self.all_buttons[0].focus_force()
+                elif self.suggest_ind[0][0] == 'new':
+                    self.all_buttons[1].focus_force()
+                else:
+                    self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind'] + 2].focus_force()
 
-        # update default option if button has been already created
-        if len(self.all_buttons) > 0:
-            print(self.suggest_ind[0])
+            # update new value
+            self.n_frame = n_frame
+            self.stop_n_frame = n_frame
+            self.current_pts, self.current_pts_n = undone_pts.pop(0)
+            self.undone_pts = undone_pts
+            
+            # record value for undoing
+            self.save_records()
 
-            if self.suggest_ind[0][0] == 'fp':
-                self.all_buttons[0].focus_force()
-            elif self.suggest_ind[0][0] == 'new':
-                self.all_buttons[1].focus_force()
-            else:
-                self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind'] + 2].focus_force()
-
-        # update new value
-        self.n_frame = n_frame
-        self.stop_n_frame = n_frame
-        self.current_pts, self.current_pts_n = undone_pts.pop(0)
-        self.undone_pts = undone_pts
-        
-        # record value for undoing
-        self.save_records()
-
-        # ensure don't enter manual mode and reset variable
-        # self.is_manual = False
-        self.min_label_ind = None
+            # ensure don't enter manual mode and reset relevent variables
+            self.min_label_ind = None
+            self.cancel_id = None

@@ -16,12 +16,15 @@ class Interface(object):
 
     # confirm leave
     def on_close(self, event=None):
-        if askokcancel('離開', '你確定要關閉程式了嗎？'):
-            if len(self.undo_records) > 1:
-                self.ask_save(style='confirm')
-            # if askyesno('存檔', '你要把操作結果存檔嗎？') and len(self.undo_records) > 1:
-            #     pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
-            self.root.destroy()
+        if not self.is_calculate:
+            if askokcancel('離開', '你確定要關閉程式了嗎？'):
+                if len(self.undo_records) > 1:
+                    self.ask_save(style='confirm')
+                # if askyesno('存檔', '你要把操作結果存檔嗎？') and len(self.undo_records) > 1:
+                #     pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
+                self.root.destroy()
+        else:
+            self.cancel_calc()
 
     def ask_save(self, style='replace'):
         filename = "%s.dat" % self.video_path.split('.avi')[0]

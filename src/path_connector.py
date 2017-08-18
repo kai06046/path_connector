@@ -84,6 +84,9 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.safe = True
         self.is_calculate = False
         self.is_manual = False
+        # variables for breaking from calculating loop
+        self.n_run = None
+        self.cancel_id = None
 
         # tkinter widgets
         self.root = None
@@ -103,9 +106,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.check_show_arrow = None
         self.all_buttons = []
 
-        # threading
-        self.lock = threading.Lock()
-        
     def update_frame(self, ind=None):
         ind = ind if ind is not None else self.n_frame - 1
         self.video.set(cv2.CAP_PROP_POS_FRAMES, ind)
@@ -162,7 +162,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         if not self.safe:
             self.display_label.configure(image=self.image)
 
-        self.root.after(100, self.update_draw)
+        self.display_label.after(30, self.update_draw)
 
     def update_track(self, ind):
         if len(self.tracked_frames) > 0 and ind < (len(self.tracked_frames) - 1) and self.safe: #  and self.safe:
@@ -176,10 +176,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             self.scale_nframe.set(self.stop_n_frame)
             self.safe = False
             self.display_label.configure(image=self.image)
-
-    def update_image(self):
-        self.display_label.configure(image=self.image)
-        self.root.after(200, self.update_image)
 
     def start(self):
         root = tk.Tk()
