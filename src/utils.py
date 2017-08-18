@@ -21,12 +21,12 @@ class Utils(object):
                 # print('Error occured in draw\n', e)
                 ind = None
 
+            # if the path is not conneted in the current frame yet, show only the first coordinate
             if ind is None:
                 cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
                 cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
                 pass
             else:
-
                 if flag[ind]  == self.n_frame:
                     width = 4
                 else:
@@ -44,24 +44,9 @@ class Utils(object):
                     cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
                 else:
                     cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
-                # else:
-                #     try:
-                #         last_pt = tuple(pts[-2])
-                #     except:
-                #         last_pt = tuple(pts[-1])
-                #     pt = tuple(pts[-1])
-                #     tri_pts = tri(pt)
-                #     # draw path end point triangle
-                #     cv2.polylines(self._frame, tri_pts, True, color, 1)
-                #     # position of text info
-                #     if last_pt[1] > pt[1]:
-                #         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
-                #     else:
-                #         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
 
                 if self.check_show_drawing is None or self.check_show_drawing.get() == 1 and not self.is_calculate:
                     # show until current if ind is not None
-                    # pts = pts[-self.maximum:ind]
                     pts = pts[-self.maximum:(ind + 1) if ind is not None else None]
                     if len(pts) > 0:
                         # start point
@@ -79,9 +64,8 @@ class Utils(object):
                                 drawline(self._frame, tuple(p1), tuple(p2), color, 1, style='dotted', gap=7)
                             # draw arrow
                             if i % 6 == 0:
-                                if self.check_show_arrow is not None and self.check_show_arrow.get() == 1:
-                                    if dist > 3:
-                                        draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
+                                if dist > 3:
+                                    draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
                     else:
                         pass
 
@@ -139,21 +123,23 @@ class Utils(object):
 
         # draw status
         if not self.is_manual:
-            if self.stop_n_frame == self.n_frame:
-                cv2.putText(self._frame, 'Label', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
-            elif self.stop_n_frame > self.n_frame:
-                cv2.putText(self._frame, 'Prev-Frame', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
-            elif self.stop_n_frame < self.n_frame:
-                cv2.putText(self._frame, 'Af-Frame', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+            string = 'Label' if self.stop_n_frame == self.n_frame else 'Prev' if self.stop_n_frame > self.n_frame else 'Af'
         else:
-            string = 'Manual Label' if self.stop_n_frame == self.n_frame else 'Manual Prev-Frame' if self.stop_n_frame > self.n_frame else 'Manual Af-Frame'
-            cv2.putText(self._frame, string, (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+            string = 'Manual Label' if self.stop_n_frame == self.n_frame else 'Prev (Manual)' if self.stop_n_frame > self.n_frame else 'Af (Manual)'
+        cv2.putText(self._frame, string, (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
 
         # draw manual label paths
         if len(self.tmp_line) > 1:
             color = (255, 255, 255)
             for i in range(1, len(self.tmp_line)):
                 cv2.line(self._frame, self.tmp_line[i - 1], self.tmp_line[i], color, 2)
+
+        # draw rat contour
+        rat_detector = RatDetector()
+        rat_detector.detect_rat_contour(cv2.cvtColor(self._orig_frame, cv2.COLOR_BGR2GRAY))
+
+        if len(rat_detector.rat_cnt) > 0 and self.check_show_rat is not None and self.check_show_rat.get() == 1:
+            cv2.drawContours(self._frame, rat_detector.rat_cnt, -1, (216, 233, 62), 2)
 
         # convert frame into rgb
         self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)
@@ -215,6 +201,33 @@ class Common(object):
         x = (win.winfo_screenwidth() // rx) - (width // 2)
         y = (win.winfo_screenheight() // ry) - (height // 2)
         win.geometry('+%d+%d' % (x, y))
+
+class RatDetector(object):
+
+    def detect_rat_contour(self, gray):
+
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+        _, th = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        _, cnts, _ = cv2.findContours(th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # find contour with the biggest area
+        
+        self.rat_cnt = sorted(cnts, key=cv2.contourArea)[-1]
+
+    def detect_on_rat(self, bbox):
+        x1, y1, w, h = bbox
+        x2, y2 = x1 + w, y1 + h
+        try:
+            cnt = self.rat_cnt.reshape(len(self.rat_cnt), 2)
+            poly = mplPath.Path(cnt)
+            on_rat = False
+            for x in [x1, x2]:
+                for y in [y1, y2]:
+                    on_rat = on_rat or poly.contains_point((x, y))
+        except Exception as e:
+            print('Error in detect_on_rat method', e)
+            on_rat = False
+        return on_rat
 
 # return a triangle with pt as center
 def tri(pt):
