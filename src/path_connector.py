@@ -17,7 +17,7 @@ COLOR_NAME = ['GREEN', 'BLUE', 'PURPLE', 'ORANGE', 'PINK', 'YELLOW', 'CYAN', 'BL
 COLOR = [(0, 255, 0), (255, 100, 10), (245, 10, 180), (0, 122, 255), (255, 102, 255), (0, 255, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
 
 # UI required variables
-letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
+letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
 LARGE_FONT= ("Verdana", 12)
 MULTI = False
 
@@ -444,7 +444,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME = ttk.LabelFrame(OP_FRAME, text="需被標註的 bbox 應該是哪一個目標呢？")
         self.BUTTON_FRAME.grid(row=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
         
-        for i, k in enumerate(['誤判', '新目標'] + sorted(self.object_name.keys())):
+        for i, k in enumerate(['誤判 (d)', '新目標 (n)'] + sorted(self.object_name.keys())):
             if i in [0, 1]:
                 bg = None
                 fg = None
@@ -463,10 +463,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME_2.grid(row=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
         # operation buttons
-        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label', command=self.on_manual_label)
+        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label (m)', command=self.on_manual_label)
         button_manual.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數', command=self.on_return)
+        button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數 (Enter)', command=self.on_return)
         button_go.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
         button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove)
@@ -487,10 +487,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         check_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
         check_show_box.grid(row=10, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        check_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='Eraser')
+        check_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='透鏡')
         check_is_clear.grid(row=12, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
-        check_show_rat = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_rat, onvalue=1, offvalue=0, text='顯示老鼠屍體')
+        check_show_rat = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_rat, onvalue=1, offvalue=0, text='顯示老鼠輪廓')
         check_show_rat.grid(row=10, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         check_show_drawing = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_drawing, onvalue=1, offvalue=0, text='顯示已追踪路徑')

@@ -7,7 +7,7 @@ from PIL import Image, ImageTk
 # from skimage.feature import hog, local_binary_pattern
 from skimage.measure import compare_ssim
 
-letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
+letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
 N_SHOW = 25
 
 # threshold
@@ -333,8 +333,6 @@ class YOLOReader(object):
 
             # update default option if button has been already created
             if len(self.all_buttons) > 0:
-                print(self.suggest_ind[0])
-
                 if self.suggest_ind[0][0] == 'fp':
                     self.all_buttons[0].focus_force()
                 elif self.suggest_ind[0][0] == 'new':

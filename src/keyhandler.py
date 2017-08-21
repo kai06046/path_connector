@@ -10,7 +10,7 @@ from tkinter.messagebox import askyesno
 import numpy as np
 import copy, os, pickle
 
-letter = [chr(i) for i in range(ord('a'), ord('z')+1)]
+letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
 
 class KeyHandler(Interface, Common):
 
@@ -58,7 +58,7 @@ class KeyHandler(Interface, Common):
             self.all_buttons = []
 
             on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
-            for i, k in enumerate(['誤判', '新目標'] + sorted(self.object_name.keys())):
+            for i, k in enumerate(['誤判 (d)', '新目標 (n)'] + sorted(self.object_name.keys())):
                 if i in [0, 1]:
                     bg = None
                     fg = None
@@ -315,7 +315,7 @@ class KeyHandler(Interface, Common):
                     replace = True
                 else:
                     run = False
-        elif clr == '新目標':
+        elif clr == '新目標 (n)':
             if len(self.object_name) < 6:
                 if not self.is_manual:
                     # append results
@@ -349,9 +349,12 @@ class KeyHandler(Interface, Common):
             else:
                 self.msg('目標數量太多咯!')
                 run = False
-        elif clr == '誤判':
+        elif clr == '誤判 (d)':
             self.fp_pts.append(p)
             print('deleted!')
+        else:
+            run = False
+            print('A not considered case happened!')
                 
         if run:
             if len(self.undone_pts) == 0:
@@ -405,7 +408,13 @@ class KeyHandler(Interface, Common):
         print('up')
 
     def on_down(self, event):
-        print('down')
+        if len(self.all_buttons) > 0:
+            if self.suggest_ind[0][0] == 'fp':
+                self.all_buttons[0].invoke()
+            elif self.suggest_ind[0][0] == 'new':
+                self.all_buttons[1].invoke()
+            else:
+                self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind'] + 2].invoke()
 
     # on some key pressed event
     def on_key(self, event):
@@ -419,9 +428,9 @@ class KeyHandler(Interface, Common):
                     print('on_key', e)
 
             elif sym == 'n':
-                self.on_button('新目標')
+                self.on_button('新目標 (n)')
             elif sym in ['Delete', 'd']:
-                self.on_button('誤判')
+                self.on_button('誤判 (d)')
             # enter manual label mode
             elif sym == 'm':
                 self.chg_mode()

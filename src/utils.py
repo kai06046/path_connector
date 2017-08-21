@@ -15,10 +15,8 @@ class Utils(object):
             color = self.color[self.object_name[k]['ind']]
 
             try:
-                # ind = flag.index(self.n_frame)
                 ind = max([flag.index(v) for v in flag if v <= self.n_frame])
             except Exception as e:
-                # print('Error occured in draw\n', e)
                 ind = None
 
             # if the path is not conneted in the current frame yet, show only the first coordinate
@@ -41,9 +39,13 @@ class Utils(object):
                 cv2.polylines(self._frame, tri_pts, True, color, width)
                 # position of text info
                 if last_pt[1] > pt[1]:
-                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    # cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 3)
+                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+
                 else:
-                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 15, pt[1] + 25), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 3)
+                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
 
                 if self.check_show_drawing is None or self.check_show_drawing.get() == 1 and not self.is_calculate:
                     # show until current if ind is not None
