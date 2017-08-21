@@ -65,7 +65,7 @@ class KeyHandler(Interface, Common):
                     b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
                 else:
-                    bg = self.color_name[self.object_name[k]['ind']].lower()
+                    bg = self.color_name[self.object_name[k]['ind']][1].lower()
                     b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_button(clr), bg=bg)
                     b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
@@ -198,7 +198,7 @@ class KeyHandler(Interface, Common):
             self.dist_records[self.n_frame][new_key]['below_tol'] = [True]
 
             # add buttons
-            bg = self.color_name[self.object_name[new_key]['ind']].lower()
+            bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
             b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
             b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
             b.config(state='disabled')
@@ -277,7 +277,7 @@ class KeyHandler(Interface, Common):
                 self.dist_records[self.n_frame][new_key]['below_tol'] = [True]
 
                 # add buttons
-                bg = self.color_name[self.object_name[new_key]['ind']].lower()
+                bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
                 b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
                 b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
                 b.config(state='disabled')
@@ -347,7 +347,7 @@ class KeyHandler(Interface, Common):
                     self.dist_records[n][new_key]['below_tol'] = [True]
 
                     # add buttons
-                    bg = self.color_name[self.object_name[new_key]['ind']].lower()
+                    bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
                     # print("object name %s\n" % self.object_name)
                     # print('Add button', self.all_buttons, len(self.all_buttons))
                     b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
@@ -358,7 +358,7 @@ class KeyHandler(Interface, Common):
                     self.center_root(r=35)
                     # add table info
                     rd = self.results_dict[new_key]
-                    self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[self.object_name[new_key]['ind']], rd['path'][-1], rd['n_frame'][-1]))
+                    self.tv.insert('', 'end', new_key, text=new_key, values=(self.color_name[self.object_name[new_key]['ind']][0], rd['path'][-1], rd['n_frame'][-1]))
                     print('added!')
                 else:
                     self.drag_flag = 'new'

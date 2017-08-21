@@ -13,7 +13,7 @@ from src.utils import Utils
 # basic setup variables
 WIN_NAME = 'Path Connector'
 VIDEO_PATH = 'videos/[CH04] 2016-09-28 20.20.00_x264.avi'
-COLOR_NAME = ['limegreen', 'deepskyblue', 'YELLOW2', 'ORANGE', 'PURPLE', 'PINK', 'CYAN', 'BLACK', 'RED', 'WHITE']
+COLOR_NAME = [('green', 'limegreen'), ('blue', 'deepskyblue'), ('yellow', 'YELLOW2'), ('orange', 'orange'), ('purple', 'purple'), ('pink', 'pink'), ('cyan', 'cyan'), ('black', 'black'), ('red', 'red'), ('white', 'white')]
 COLOR = [(50, 205, 50), (255, 191, 0), (0, 255, 255), (0, 165, 255), (211, 85, 186), (255, 102, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
 
 # UI required variables
@@ -137,10 +137,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
                 except:
                     is_detected = False
                 try:
-                    self.tv.item(n, text=self.object_name[n]['display_name'], values=(self.color_name[self.object_name[n]['ind']], is_detected, rd['n_frame'][-1]))
+                    self.tv.item(n, text=self.object_name[n]['display_name'], values=(self.color_name[self.object_name[n]['ind'][0]], is_detected, rd['n_frame'][-1]))
                 except:
                     self.object_name[n]['on'] = True
-                    self.tv.insert('', 'end', n, text=n, values=(self.color_name[self.object_name[n]['ind']], is_detected, rd['n_frame'][-1]))
+                    self.tv.insert('', 'end', n, text=n, values=(self.color_name[self.object_name[n]['ind']][0], is_detected, rd['n_frame'][-1]))
 
     def update_label(self):
         # text_nframe = 'Current Frame: '
@@ -394,7 +394,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
                 is_detected = True
             except:
                 is_detected = False
-            self.tv.insert('', 'end', n, text=n, values=(self.color_name[self.object_name[n]['ind']], is_detected, rd['n_frame'][-1]))
+            self.tv.insert('', 'end', n, text=n, values=(self.color_name[self.object_name[n]['ind']][0], is_detected, rd['n_frame'][-1]))
         self.tv.bind('<Double-Button-1>', self.tvitem_click) 
 
         # frame for legend
@@ -436,7 +436,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             else:
-                bg = self.color_name[self.object_name[k]['ind']].lower()
+                bg = self.color_name[self.object_name[k]['ind']][1].lower()
                 b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg)
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
