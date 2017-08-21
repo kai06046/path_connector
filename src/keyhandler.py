@@ -81,7 +81,7 @@ class KeyHandler(Interface, Common):
         self.setting()
 
     # reset all the processes
-    def on_reset(self):
+    def on_reset(self, event=None):
         self.video.release()
         self.init_video()
         self.object_name = dict()
@@ -437,7 +437,7 @@ class KeyHandler(Interface, Common):
     def on_key(self, event):
         sym = event.keysym
         if not self.is_manual:
-            if sym not in ['n', 'Delete', 'd', 'm', 'j']:
+            if sym not in ['n', 'Delete', 'd', 'm', 'j', 'r']:
                 try:
                     i = int(event.char)
                     self.on_button([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
@@ -453,6 +453,8 @@ class KeyHandler(Interface, Common):
                 self.chg_mode()
             elif sym == 'j':
                 self.jump_frame()
+            elif sym == 'r':
+                self.on_reset()
         else:
             if sym == 'n':
                 if self.drag_flag is None:

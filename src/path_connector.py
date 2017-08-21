@@ -519,5 +519,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('j', self.on_key)
         self.root.bind('n', self.on_key)
         self.root.bind('m', self.on_key)
+        self.root.bind('r', self.on_key)
         self.root.bind('s', self.break_loop)
         self.root.mainloop()
