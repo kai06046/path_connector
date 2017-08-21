@@ -13,6 +13,7 @@ from src.utils import Utils
 # basic setup variables
 WIN_NAME = 'Path Connector'
 VIDEO_PATH = 'videos/[CH04] 2016-09-28 20.20.00_x264.avi'
+# COLOR_NAME = ['limegreen', 'deepskyblue', 'YELLOW2', 'ORANGE', 'PURPLE', 'PINK', 'CYAN', 'BLACK', 'RED', 'WHITE']
 COLOR_NAME = [('green', 'limegreen'), ('blue', 'deepskyblue'), ('yellow', 'YELLOW2'), ('orange', 'orange'), ('purple', 'purple'), ('pink', 'pink'), ('cyan', 'cyan'), ('black', 'black'), ('red', 'red'), ('white', 'white')]
 COLOR = [(50, 205, 50), (255, 191, 0), (0, 255, 255), (0, 165, 255), (211, 85, 186), (255, 102, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
 
@@ -137,7 +138,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
                 except:
                     is_detected = False
                 try:
-                    self.tv.item(n, text=self.object_name[n]['display_name'], values=(self.color_name[self.object_name[n]['ind'][0]], is_detected, rd['n_frame'][-1]))
+                    self.tv.item(n, text=self.object_name[n]['display_name'], values=(self.color_name[self.object_name[n]['ind']][0], is_detected, rd['n_frame'][-1]))
                 except:
                     self.object_name[n]['on'] = True
                     self.tv.insert('', 'end', n, text=n, values=(self.color_name[self.object_name[n]['ind']][0], is_detected, rd['n_frame'][-1]))
@@ -516,9 +517,9 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('4', self.on_key)
         self.root.bind('<Delete>', self.on_key)
         self.root.bind('d', self.on_key)
+        self.root.bind('r', self.on_key)
         self.root.bind('j', self.on_key)
         self.root.bind('n', self.on_key)
         self.root.bind('m', self.on_key)
-        self.root.bind('r', self.on_key)
         self.root.bind('s', self.break_loop)
         self.root.mainloop()
