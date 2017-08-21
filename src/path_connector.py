@@ -13,8 +13,8 @@ from src.utils import Utils
 # basic setup variables
 WIN_NAME = 'Path Connector'
 VIDEO_PATH = 'videos/[CH04] 2016-09-28 20.20.00_x264.avi'
-COLOR_NAME = ['GREEN', 'BLUE', 'PURPLE', 'ORANGE', 'PINK', 'YELLOW', 'CYAN', 'BLACK', 'RED', 'WHITE']
-COLOR = [(0, 255, 0), (255, 100, 10), (245, 10, 180), (0, 122, 255), (255, 102, 255), (0, 255, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
+COLOR_NAME = ['limegreen', 'deepskyblue', 'YELLOW2', 'ORANGE', 'PURPLE', 'PINK', 'CYAN', 'BLACK', 'RED', 'WHITE']
+COLOR = [(50, 205, 50), (255, 191, 0), (0, 255, 255), (0, 165, 255), (211, 85, 186), (255, 102, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
 
 # UI required variables
 letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
@@ -107,6 +107,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.check_show_drawing = None
         self.check_show_rat = None
         self.all_buttons = []
+        self.suggest_label = None
 
     def update_frame(self, ind=None):
         ind = ind if ind is not None else self.n_frame - 1
@@ -447,17 +448,20 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         for i, k in enumerate(['誤判 (d)', '新目標 (n)'] + sorted(self.object_name.keys())):
             if i in [0, 1]:
                 bg = None
-                fg = None
-                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg, width=40)
+                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, width=40)
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             else:
                 bg = self.color_name[self.object_name[k]['ind']].lower()
-                fg = 'white'
-                b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg)
+                b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg)
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
             self.all_buttons.append(b)
+
+        image = Image.open('button.png')
+        photo = ImageTk.PhotoImage(image)
+        self.suggest_label = ttk.Label(self.BUTTON_FRAME, image=photo)
+        # self.suggest_label
 
         self.BUTTON_FRAME_2 = ttk.LabelFrame(OP_FRAME, text='操作')
         self.BUTTON_FRAME_2.grid(row=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
@@ -507,12 +511,14 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # suggest default option
         print(self.suggest_ind)
         if self.suggest_ind[0][0] == 'fp':
-            self.all_buttons[0].focus_force()
+            ind = 0
         elif self.suggest_ind[0][0] == 'new':
-            self.all_buttons[1].focus_force()
+            ind = 1
         else:
-            self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind'] + 2].focus_force()
-
+            ind = self.object_name[self.suggest_ind[0][0]]['ind'] + 2
+        self.all_buttons[ind].focus_force()
+        self.suggest_label.grid(row=ind, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        
         self.update_label()
         self.update_draw()
         # center

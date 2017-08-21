@@ -61,14 +61,12 @@ class KeyHandler(Interface, Common):
             for i, k in enumerate(['誤判 (d)', '新目標 (n)'] + sorted(self.object_name.keys())):
                 if i in [0, 1]:
                     bg = None
-                    fg = None
-                    b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg, width=40)
+                    b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, width=40)
                     b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
                 else:
                     bg = self.color_name[self.object_name[k]['ind']].lower()
-                    fg = 'white'
-                    b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_button(clr), bg=bg, fg=fg)
+                    b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_button(clr), bg=bg)
                     b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
                 self.all_buttons.append(b)
@@ -184,7 +182,7 @@ class KeyHandler(Interface, Common):
 
             # add buttons
             bg = self.color_name[self.object_name[new_key]['ind']].lower()
-            b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
+            b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
             b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
             b.config(state='disabled')
             self.all_buttons.append(b)
@@ -263,7 +261,7 @@ class KeyHandler(Interface, Common):
 
                 # add buttons
                 bg = self.color_name[self.object_name[new_key]['ind']].lower()
-                b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
+                b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
                 b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
                 b.config(state='disabled')
                 self.all_buttons.append(b)
@@ -321,9 +319,7 @@ class KeyHandler(Interface, Common):
                     # append results
                     new_key = letter[len(self.object_name)]
                     self.results_dict[new_key] = {'path': [p], 'n_frame': [n]}
-                    print(len(self.object_name), self.object_name)
                     self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
-                    print(len(self.object_name))
                     try:
                         self.dist_records[n][new_key] = dict()
                     except:
@@ -335,9 +331,13 @@ class KeyHandler(Interface, Common):
 
                     # add buttons
                     bg = self.color_name[self.object_name[new_key]['ind']].lower()
-                    b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg, fg='white')
-                    b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                    # print("object name %s\n" % self.object_name)
+                    # print('Add button', self.all_buttons, len(self.all_buttons))
+                    b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
                     self.all_buttons.append(b)
+                    # print('length %s' % (len(self.all_buttons) - 1))
+                    for i, b in enumerate(self.all_buttons):
+                        b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
                     self.center_root(r=35)
                     # add table info
                     rd = self.results_dict[new_key]
@@ -364,7 +364,7 @@ class KeyHandler(Interface, Common):
                 self.current_pts, self.current_pts_n = self.undone_pts.pop(0)
                 self.suggest_ind.pop(0)
                 if len(self.suggest_ind) > 0:
-                    print(self.suggest_ind[0])
+                    print('Suggest option index: %s' % self.suggest_ind[0])
                     if self.suggest_ind[0][0] == 'fp':
                         self.all_buttons[0].focus_force()
                     elif self.suggest_ind[0][0] == 'new':
@@ -688,19 +688,22 @@ class KeyHandler(Interface, Common):
                     self.dist_records[self.n_frame].pop(k)
 
                     self.tv.delete(k)
-                    self.all_buttons[-1].grid_forget()
-                    self.all_buttons.pop()
+                    ind = self.object_name[k]['ind'] + 2
+                    self.all_buttons[ind].grid_forget()
+                    self.all_buttons.pop(ind)
                     self.center_root(r=-35)
 
             self.undo_records = self.undo_records[:-1]
             self.n_frame = self.stop_n_frame
             if len(self.suggest_ind) > 0:
                 if self.suggest_ind[0][0] == 'fp':
-                    self.all_buttons[0].focus_force()
+                    ind = 0
                 elif self.suggest_ind[0][0] == 'new':
-                    self.all_buttons[1].focus_force()
+                    ind = 1
                 else:
-                    self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind']].focus_force()
+                    ind = self.object_name[self.suggest_ind[0][0]]['ind'] + 2
+                self.all_buttons[ind].focus_force()
+                self.suggest_label.grid(row=ind, column=1, sticky="nwes", padx=5, pady=5)
 
             # update buttons number
             on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
@@ -725,6 +728,7 @@ class KeyHandler(Interface, Common):
                     tmp.append(i)
                     self.center_root(r=-35)
                     print('Delete button %s' % (i-2))
+            print('undo method %s \n\n' % tmp)
 
             self.all_buttons = [b for i, b in enumerate(self.all_buttons) if i not in tmp]
 

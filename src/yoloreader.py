@@ -210,11 +210,11 @@ class YOLOReader(object):
                                             undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind], n_frame))
 
                                             print('not assigned boxes')
-                                            print(tmp_dist_record)
-                                            print(hit_condi)
+                                            print('distance records %s' % tmp_dist_record)
+                                            print('object and bbox match pairs %s' % hit_condi)
                                             print('index of not assigned bounding boxes: %s' % ind)
                                             lost_box_key = [k for k in on_keys if k not in [j for j, _ in hit_condi]]
-                                            print(lost_box_key)
+                                            print('lost boxes key %s' % lost_box_key)
                                             if (tmp_dist_record[lost_box_key[0]]['center'][ind], n_frame) not in undone_pts:
                                                 undone_pts.append((tmp_dist_record[lost_box_key[0]]['center'][ind], n_frame))
                                             self.is_calculate = False
@@ -334,11 +334,13 @@ class YOLOReader(object):
             # update default option if button has been already created
             if len(self.all_buttons) > 0:
                 if self.suggest_ind[0][0] == 'fp':
-                    self.all_buttons[0].focus_force()
+                    ind = 0
                 elif self.suggest_ind[0][0] == 'new':
-                    self.all_buttons[1].focus_force()
+                    ind = 1
                 else:
-                    self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind'] + 2].focus_force()
+                    ind = self.object_name[self.suggest_ind[0][0]]['ind'] + 2
+                self.all_buttons[ind].focus_force()
+                self.suggest_label.grid(row=ind, column=1, sticky="nwes", padx=5, pady=5)
 
             # update new value
             self.n_frame = n_frame
