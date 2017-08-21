@@ -125,9 +125,9 @@ class Utils(object):
 
         # draw status
         if not self.is_manual:
-            string = 'Label' if self.stop_n_frame == self.n_frame else 'Prev' if self.stop_n_frame > self.n_frame else 'Af'
+            string = 'Label' if self.stop_n_frame == self.n_frame else 'Prev.' if self.stop_n_frame > self.n_frame else 'Af.'
         else:
-            string = 'Manual Label' if self.stop_n_frame == self.n_frame else 'Prev (Manual)' if self.stop_n_frame > self.n_frame else 'Af (Manual)'
+            string = 'Manual Label' if self.stop_n_frame == self.n_frame else 'Prev. (Manual)' if self.stop_n_frame > self.n_frame else 'Af. (Manual)'
         cv2.putText(self._frame, string, (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
 
         # draw manual label paths

@@ -80,8 +80,25 @@ class KeyHandler(Interface, Common):
     def on_settings(self, event=None):
         self.setting()
 
-    def reset(self, event):
-        self.tmp_line = []
+    # reset all the processes
+    def on_reset(self):
+        self.video.release()
+        self.init_video()
+        self.object_name = dict()
+        self.results_dict = dict()
+        self.tmp_results_dict = None
+        self.dist_records = dict()
+        self.label_dict = dict()
+        self.undo_records = []
+        self.drag_flag = None
+        if self.is_manual:
+            self.chg_mode()
+        
+        self.n_frame = 1
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.n_frame - 1)
+        ok, self._frame = self.video.read()
+        self._orig_frame = self._frame.copy()
+        self.run_calc(self.n_frame)
 
     # run bbox assignment algorithm
     def run_calc(self, ind):
@@ -94,7 +111,7 @@ class KeyHandler(Interface, Common):
         if self.cancel_id is not None:
             self.display_label.after_cancel(self.cancel_id)
             self.is_calculate = False
-            self.undo()
+            self.undo(is_esc=True)
             self.cancel_id = None
 
     # record position of current mosue cursor and cursor's type while it's on any object
@@ -668,7 +685,7 @@ class KeyHandler(Interface, Common):
                 pass
 
     # undo method
-    def undo(self, event=None):
+    def undo(self, event=None, is_esc=False):
 
         if len(self.undo_records)  == 0:
             self.msg('Nothing can undo.')
@@ -677,7 +694,7 @@ class KeyHandler(Interface, Common):
         else:
             old_name = self.object_name
 
-            self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if len(self.undo_records) > 1 else -1]
+            self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if (len(self.undo_records) > 1 and not is_esc) else -1]
 
             if old_name != self.object_name:
                 keys = set(self.object_name.keys()).difference(set(old_name.keys()))
@@ -728,9 +745,14 @@ class KeyHandler(Interface, Common):
                     tmp.append(i)
                     self.center_root(r=-35)
                     print('Delete button %s' % (i-2))
+
+
             print('undo method %s \n\n' % tmp)
 
             self.all_buttons = [b for i, b in enumerate(self.all_buttons) if i not in tmp]
+
+            for i, b in enumerate(self.all_buttons):
+                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
     def undo_manual(self):
         self.drag_flag = None

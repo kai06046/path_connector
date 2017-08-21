@@ -335,10 +335,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.display_label = ttk.Label(IMAGE_FRAME, image=self.image)
         self.display_label.grid(row=0, column=0, columnspan=2)
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
-        # self.display_label.bind('<Double-Button-1>', self.on_mouse)
         self.display_label.bind('<Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
-        self.display_label.bind('<ButtonRelease-1>', self.reset)
         self.display_label.bind('<Motion>', self.on_mouse_mv)
         
         IMAGE_LABEL_FRAME = ttk.LabelFrame(IMAGE_FRAME)
@@ -372,20 +370,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         label_time.grid(row=1, column=0, sticky=tk.W)
         self.label_time = ttk.Label(INFO_FRAME, text=text_time)
         self.label_time.grid(row=1, column=1, sticky=tk.W)
-        # label_elapsed = ttk.Label(INFO_FRAME, text='Elapsed time: ')
-        # label_elapsed.grid(row=2, column=0, sticky=tk.W)
-        # self.label_elapsed = ttk.Label(INFO_FRAME, text=text_elapsed)
-        # self.label_elapsed.grid(row=1, column=1, sticky=tk.W)
-        # self.label_mvpts = ttk.Label(INFO_FRAME, text=text_mvpts)
-        # self.label_mvpts.grid(row=3, columnspan=2, sticky=tk.W)
-
-        # label_tol = ttk.Label(INFO_FRAME, text='Maximum distance: ')
-        # label_tol.grid(row=6, column=0, rowspan=2)
-        # label_tol_v = ttk.Label(INFO_FRAME, textvariable=self.tol_var)
-        # label_tol_v.grid(row=6, column=1)
-        # scale_tol = ttk.Scale(INFO_FRAME, from_=1, to_=100, length=300, command=self.set_tol)
-        # scale_tol.set(self.tol)
-        # scale_tol.grid(row=7, column=1)
 
         # subframe for displaying object information
         OBJ_FRAME = ttk.LabelFrame(STATE_FRAME, text='目標資訊')
@@ -467,46 +451,41 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME_2.grid(row=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
         # operation buttons
-        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label (m)', command=self.on_manual_label)
-        button_manual.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
-
         button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數 (Enter)', command=self.on_return)
-        button_go.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_go.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
+        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label (m)', command=self.on_manual_label)
+        button_manual.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+
+        button_reset = ttk.Button(self.BUTTON_FRAME_2, text='重置 (r)', command=self.on_reset)
+        button_reset.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+
         button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove)
-        button_remove.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_remove.grid(row=6, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         button_replay = ttk.Button(self.BUTTON_FRAME_2, text='回放已追踪路徑', command=self.on_view)
-        button_replay.grid(row=6, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_replay.grid(row=8, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         label_max = ttk.Label(self.BUTTON_FRAME_2, text='顯示路徑的長度: ')
-        label_max.grid(row=8, column=0, rowspan=2, sticky=tk.W)
+        label_max.grid(row=10, column=0, rowspan=2, sticky=tk.W)
         label_max_v = ttk.Label(self.BUTTON_FRAME_2, textvariable=self.maximum_var)
-        label_max_v.grid(row=8, column=1)
+        label_max_v.grid(row=10, column=1)
         scale_max = ttk.Scale(self.BUTTON_FRAME_2, from_=2, to_=3000, length=200, command=self.set_max)
         scale_max.set(self.maximum)
-        scale_max.grid(row=8, column=1)
+        scale_max.grid(row=10, column=1)
 
         # checkboxes
         check_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
-        check_show_box.grid(row=10, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_box.grid(row=12, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         check_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='透鏡')
-        check_is_clear.grid(row=12, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_is_clear.grid(row=14, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
         check_show_rat = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_rat, onvalue=1, offvalue=0, text='顯示老鼠輪廓')
-        check_show_rat.grid(row=10, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_rat.grid(row=12, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         check_show_drawing = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_drawing, onvalue=1, offvalue=0, text='顯示已追踪路徑')
-        check_show_drawing.grid(row=12, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
-
-        # update changes
-        # if self.multi:
-        #     pass
-        # else:
-        #     pass
-        self.update_track(0)
-            # self.root.after(0, self.update_track, 0)
+        check_show_drawing.grid(row=14, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         # suggest default option
         print(self.suggest_ind)
@@ -519,6 +498,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.all_buttons[ind].focus_force()
         self.suggest_label.grid(row=ind, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
         
+        self.update_track(0)
         self.update_label()
         self.update_draw()
         # center
