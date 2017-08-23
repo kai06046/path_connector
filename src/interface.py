@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.messagebox import askyesno, askokcancel, showerror, showwarning, showinfo
 from tkinter.filedialog import askopenfilename
 import pickle, os, json
+from src.listbox import Tk_Table
 
 class Interface(object):
 
@@ -100,6 +101,25 @@ class Interface(object):
         # save rat contour
         # with open(filename, 'a') as f:
         #     json.dump(self.rat_cnt_dict, f)
+
+    def pop_behavior_table(self):
+
+        top = tk.Toplevel(self.root)
+        top.title("行為記錄")
+        table = Tk_Table(top, ["幀數","名稱", "行為"], row_numbers=True, stripped_rows = ("white","#f2f2f2"), select_mode="none")
+        table.grid(column=0, row=0, columnspan=2, padx=10, pady=10, sticky='news')
+        table.focus_force()
+
+        button = ttk.Button(top, text='Add', command=lambda: table.insert_row([100, 'A', 'Attack']))
+        button.grid(column=0, row=1, padx=10, pady=10, sticky='news')
+        table.insert_row([1, 'A', 'Attack'])
+        table.insert_row([2, 'B', 'Wrestle'])
+        table.insert_row([30, 'C', 'Chase'])
+        table.insert_row([45, 'D', 'Escape'])
+
+        self.center(top)
+        top.bind('<Escape>', lambda event: top.destroy())
+        top.protocol('WM_DELETE_WINDOW', lambda : top.destroy())
 
     class popupEntry(object):
 

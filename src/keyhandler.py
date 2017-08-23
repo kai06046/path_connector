@@ -100,6 +100,29 @@ class KeyHandler(Interface, Common):
         self._orig_frame = self._frame.copy()
         self.run_calc(self.n_frame)
 
+        for b in self.all_buttons:
+            b.grid_forget()
+        self.all_buttons = []
+
+        on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
+        for i, k in enumerate(['誤判 (d)', '新目標 (n)'] + sorted(self.object_name.keys())):
+            if i in [0, 1]:
+                bg = None
+                b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, width=40)
+                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+
+            else:
+                bg = self.color_name[self.object_name[k]['ind']][1].lower()
+                b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_button(clr), bg=bg)
+                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+
+            self.all_buttons.append(b)
+
+        # reset table information
+        x = self.tv.get_children()
+        for item in x:
+            self.tv.delete(item)
+
     # run bbox assignment algorithm
     def run_calc(self, ind):
         self.cancel_id = None
@@ -436,6 +459,9 @@ class KeyHandler(Interface, Common):
     # on some key pressed event
     def on_key(self, event):
         sym = event.keysym
+        if sym == 'b':
+            self.pop_behavior_table()
+
         if not self.is_manual:
             if sym not in ['n', 'Delete', 'd', 'm', 'j']:
                 try:
@@ -468,7 +494,8 @@ class KeyHandler(Interface, Common):
             elif sym == 'j':
                 self.jump_frame()
             else:
-                print('on_key error %s' % type(sym))
+                pass
+                # print('on_key error %s' % type(sym))
 
     def set_max(self, s):
         v = int(float(s))

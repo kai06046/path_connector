@@ -181,6 +181,14 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             self.safe = False
             self.display_label.configure(image=self.image)
 
+    def _resize_image(self, event):
+        pass
+        new_w = self.root.winfo_width()
+        new_h = self.root.winfo_height()
+
+
+        # self.image = 
+
     def start(self):
         root = tk.Tk()
         root.iconbitmap('beetle.ico')
@@ -522,4 +530,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('n', self.on_key)
         self.root.bind('m', self.on_key)
         self.root.bind('s', self.break_loop)
+        self.root.bind('b', self.on_key)
+        self.root.bind('<Configure>', self._resize_image)
         self.root.mainloop()
