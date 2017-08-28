@@ -345,9 +345,46 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # convert to format that ImageTk require
         self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
         
+        # IMAGE_FRAME.grid_columnconfigure(0, weight=1)
+        # IMAGE_FRAME.grid_rowconfigure(0, weight=1)
+        # IMAGE_FRAME.grid_rowconfigure(1, weight=1)
+        # # size = (IMAGE_FRAME.winfo_height(), IMAGE_FRAME.winfo_width())
+        # # print('Size: %d %d' % size)
+        # # self.display_label = self.Pict_Frame(parent=IMAGE_FRAME, picture=self._frame, imagesize=(1280, 720), master=self.root)
+        # self.display_label = tk.Label(IMAGE_FRAME, image=self.image, bg='red')
+        # self.display_label.grid(row=0, column=0, columnspan=2, sticky='news')
+        # self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
+        # self.display_label.bind('<Button-1>', self.on_mouse)
+        # self.display_label.bind('<Button-3>', self.on_mouse)
+        # self.display_label.bind('<Motion>', self.on_mouse_mv)
+        # # size = (self.display_label.winfo_height(), self.display_label.winfo_width())
+        # # print('Size: %d %d' % size)
+
+        
+        # IMAGE_LABEL_FRAME = tk.LabelFrame(IMAGE_FRAME, bg='green')
+        # IMAGE_LABEL_FRAME.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='news', padx=5, pady=5)
+
+        # self.label_nframe = tk.Label(IMAGE_LABEL_FRAME, text=text_nframe, bg='yellow')
+        # self.label_nframe.grid(row=0, column=0, rowspan=2)
+        # label_nframe_v = tk.Label(IMAGE_LABEL_FRAME, textvariable=self.n_frame_var, bg='blue')
+        # label_nframe_v.grid(row=0, column=1)
+        # # label_nframe_v.grid_rowconfigure(0, weight=1)
+        # # label_nframe_v.grid_columnconfigure(0, weight=1)
+        # self.scale_nframe = ttk.Scale(IMAGE_LABEL_FRAME, from_=1, to_=self.total_frame, length=1200, command=self.set_nframe)
+        # self.scale_nframe.set(self.n_frame)
+        # self.scale_nframe.grid(row=1, column=1)
+
+        # for x in range(2):
+        #     tk.Grid.rowconfigure(IMAGE_LABEL_FRAME, x, weight=1)
+        #     tk.Grid.columnconfigure(IMAGE_LABEL_FRAME, x, weight=1)
+
         # frame for displaying image label
         IMAGE_FRAME = ttk.Frame(self.root)
         IMAGE_FRAME.grid(row=0, column=0)
+        IMAGE_FRAME.grid_columnconfigure(0, weight=1)
+        IMAGE_FRAME.grid_rowconfigure(0, weight=1)
+        IMAGE_FRAME.grid_rowconfigure(1, weight=1)
+
         self.display_label = ttk.Label(IMAGE_FRAME, image=self.image)
         self.display_label.grid(row=0, column=0, columnspan=2)
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
@@ -357,9 +394,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         
         IMAGE_LABEL_FRAME = ttk.LabelFrame(IMAGE_FRAME)
         IMAGE_LABEL_FRAME.grid(sticky='news', padx=5, pady=5)
-        tk.Grid.rowconfigure(IMAGE_FRAME, 1, weight=1)
-        tk.Grid.columnconfigure(IMAGE_FRAME, 0, weight=1)
-        tk.Grid.columnconfigure(IMAGE_FRAME, 1, weight=1)
+        tk.Grid.rowconfigure(IMAGE_LABEL_FRAME, 0, weight=1)
+        tk.Grid.rowconfigure(IMAGE_LABEL_FRAME, 1, weight=1)
+        tk.Grid.columnconfigure(IMAGE_LABEL_FRAME, 0, weight=1)
+        tk.Grid.columnconfigure(IMAGE_LABEL_FRAME, 1, weight=1)
         self.label_nframe = ttk.Label(IMAGE_LABEL_FRAME, text=text_nframe)
         self.label_nframe.grid(row=0, column=0, sticky=tk.W, rowspan=2)
         label_nframe_v = ttk.Label(IMAGE_LABEL_FRAME, textvariable=self.n_frame_var)
