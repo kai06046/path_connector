@@ -109,6 +109,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.check_show_rat = None
         self.all_buttons = []
         self.suggest_label = None
+        self._init_width = None
+        self._init_height = None
+        self._r_height = None
+        self._r_width = None
 
     def update_frame(self, ind=None):
         ind = ind if ind is not None else self.n_frame - 1
@@ -182,6 +186,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             self.display_label.configure(image=self.image)
 
     def _resize_image(self, event):
+        print(self.root.state())
         pass
         new_w = self.root.winfo_width()
         new_h = self.root.winfo_height()
@@ -512,6 +517,12 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.update_draw()
         # center
         self.center_root()
+        self._init_height = self.root.winfo_height()
+        self._init_width = self.root.winfo_width()
+        self._r_height = self._frame.shape[1] / self._init_width
+        self._r_width = self._frame.shape[0] / self._init_height
+
+        # self.root.minsize(width=self._init_width, height=self._init_height)
 
         # bind key and corresponding function
         self.root.bind('<Return>', self.on_return)
@@ -531,5 +542,5 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('m', self.on_key)
         self.root.bind('s', self.break_loop)
         self.root.bind('b', self.on_key)
-        self.root.bind('<Configure>', self._resize_image)
+        # self.root.bind('<Configure>', self._resize_image)
         self.root.mainloop()

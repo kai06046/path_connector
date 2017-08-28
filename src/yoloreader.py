@@ -284,6 +284,17 @@ class YOLOReader(object):
                             thickness = int(np.sqrt((1 + i * 0.01)  * 2) * 1.5)
                             cv2.line(self._frame, pts[i - 1], pts[i], color, thickness)
 
+                if self.root.state() == 'zoomed':
+                    shape = self._frame.shape
+                    r1 = (shape[1] / self.root.winfo_screenwidth())
+                    r2 = (shape[0] / self.root.winfo_screenheight())
+                    # print('shrink ratio: %s %s' % (r1, r2))
+                    shrink_r = max(r1, r2)
+
+                    newsize = (int(shape[1] * self._r_width/shrink_r), int(shape[0] * self._r_height/shrink_r))
+                    # print('newsize: %dx%d' % newsize)
+                    self._frame = cv2.resize(self._frame, newsize)
+
                 self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)
                 self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
                 if self.display_label is not None:

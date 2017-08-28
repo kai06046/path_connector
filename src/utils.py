@@ -146,6 +146,17 @@ class Utils(object):
         if len(rat_detector.rat_cnt) > 0 and self.check_show_rat is not None and self.check_show_rat.get() == 1:
             cv2.drawContours(self._frame, rat_detector.rat_cnt, -1, (216, 233, 62), 2)
 
+        if self.root.state() == 'zoomed':
+            shape = self._frame.shape
+            r1 = (shape[1] / self.root.winfo_screenwidth())
+            r2 = (shape[0] / self.root.winfo_screenheight())
+            # print('shrink ratio: %s %s' % (r1, r2))
+            shrink_r = max(r1, r2)
+
+            newsize = (int(shape[1] * self._r_width/shrink_r), int(shape[0] * self._r_height/shrink_r))
+            # print('newsize: %dx%d' % newsize)
+            self._frame = cv2.resize(self._frame, newsize)
+
         # convert frame into rgb
         self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)
 
