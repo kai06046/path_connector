@@ -152,8 +152,11 @@ class Utils(object):
             r2 = (shape[0] / self.root.winfo_screenheight())
             # print('shrink ratio: %s %s' % (r1, r2))
             shrink_r = max(r1, r2)
+            self._c_width = self._r_width/shrink_r
+            self._c_height = self._r_height/shrink_r
 
             newsize = (int(shape[1] * self._r_width/shrink_r), int(shape[0] * self._r_height/shrink_r))
+
             # print('newsize: %dx%d' % newsize)
             self._frame = cv2.resize(self._frame, newsize)
 

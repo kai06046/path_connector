@@ -113,6 +113,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self._init_height = None
         self._r_height = None
         self._r_width = None
+        self._c_height = None
+        self._c_width = None
 
     def update_frame(self, ind=None):
         ind = ind if ind is not None else self.n_frame - 1
@@ -519,8 +521,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.center_root()
         self._init_height = self.root.winfo_height()
         self._init_width = self.root.winfo_width()
-        self._r_height = self._frame.shape[1] / self._init_width
-        self._r_width = self._frame.shape[0] / self._init_height
+        self._r_height = self._frame.shape[0] / self._init_height
+        self._r_width = self._frame.shape[1] / self._init_width
 
         # self.root.minsize(width=self._init_width, height=self._init_height)
 

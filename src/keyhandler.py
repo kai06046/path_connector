@@ -145,6 +145,12 @@ class KeyHandler(Interface, Common):
         self.mv_x = event.x
         self.mv_y = event.y
 
+        if self.root.state() == 'zoomed':
+            self.mv_x = int(self.mv_x / self._c_width)
+            self.mv_y = int(self.mv_y / self._c_height)
+
+        print('Mouse: %s x %s\nModified: %s x %s' % (event.x, event.y, self.mv_x, self.mv_y))
+
         # update cursor
         if self.is_manual:
             if self.drag_flag != 'new':
@@ -205,6 +211,11 @@ class KeyHandler(Interface, Common):
         elif self.is_manual and self.drag_flag == 'new':
             # pending; add a UI to confirm adding object
             p = (event.x, event.y)
+            if self.root.state() == 'zoomed':
+                p1 = int(event.x / self._c_width)
+                p2 = int(event.y / self._c_height)
+                p = (p1, p2)
+
             new_key = letter[len(self.object_name)]
             self.min_label_ind = self.n_frame if self.min_label_ind is None else min(self.n_frame, self.min_label_ind)
             self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
@@ -233,6 +244,13 @@ class KeyHandler(Interface, Common):
 
     # drag method for manual label mode
     def on_mouse_drag(self, event):
+        if self.root.state() == 'zoomed':
+            p1 = int(event.x / self._c_width)
+            p2 = int(event.y / self._c_height)
+            p = (p1, p2)
+        else:
+            p = (event.x, event.y)
+
         # drag is available while the cursor changed
         if self.is_manual and self.drag_flag not in [None, 'new']:
             flags = self.tmp_results_dict[self.drag_flag]['n_frame']
@@ -240,7 +258,7 @@ class KeyHandler(Interface, Common):
             # get index of path if existed and then update with new coordinate
             try:
                 ind = flags.index(self.n_frame)
-                self.tmp_results_dict[self.drag_flag]['path'][ind] = (event.x, event.y)
+                self.tmp_results_dict[self.drag_flag]['path'][ind] = p
                 self.min_label_ind = self.n_frame if self.min_label_ind is None else min(self.min_label_ind, self.n_frame)
 
             # otherwise, find the minimum index that are bigger than self.frame
@@ -250,12 +268,12 @@ class KeyHandler(Interface, Common):
                 if len(tmp) > 0:
                     ind = min(tmp)
                     self.tmp_results_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
-                    self.tmp_results_dict[self.drag_flag]['path'] = path[:ind] + [(event.x, event.y)] + path[ind:]
+                    self.tmp_results_dict[self.drag_flag]['path'] = path[:ind] + [p] + path[ind:]
                     self.min_label_ind = self.n_frame if self.min_label_ind is None else min(self.min_label_ind, self.n_frame)
                 # otherwise, append the coordinate on the end of the path
                 else:
                     self.tmp_results_dict[self.drag_flag]['n_frame'].append(self.n_frame)
-                    self.tmp_results_dict[self.drag_flag]['path'].append((event.x, event.y))
+                    self.tmp_results_dict[self.drag_flag]['path'].append(p)
 
             # record for label
             if self.drag_flag not in self.label_dict.keys():
@@ -264,17 +282,17 @@ class KeyHandler(Interface, Common):
             path = self.label_dict[self.drag_flag]['path']
             try:
                 ind = flags.index(self.n_frame)
-                self.label_dict[self.drag_flag]['path'][ind] = (event.x, event.y)
+                self.label_dict[self.drag_flag]['path'][ind] = p
             except:
                 tmp = [flags.index(v) for v in flags if v >= self.n_frame]
                 if len(tmp) > 0:
                     ind = min(tmp)
                     self.label_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
-                    self.label_dict[self.drag_flag]['path'] = path[:ind] + [(event.x, event.y)] + path[ind:]
+                    self.label_dict[self.drag_flag]['path'] = path[:ind] + [p] + path[ind:]
                 # otherwise, append the coordinate on the end of the path
                 else:
                     self.label_dict[self.drag_flag]['n_frame'].append(self.n_frame)
-                    self.label_dict[self.drag_flag]['path'].append((event.x, event.y))
+                    self.label_dict[self.drag_flag]['path'].append(p)
 
     # left click append label record; not used anymore
     def on_mouse_manual_label(self, event):
