@@ -261,8 +261,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         x = w/2 - size[0]/2
         y = h/2.25 - size[1]/2
         # print("%dx%d+%d+%d" % (size + (x, y)))
+        r = 0 if self.root.state() == 'zoomed' else r
         self.root.geometry("%dx%d+%d+%d" % (size[0], size[1]+r, x, y))
-
 
     # main logic for runing UI
     def run(self):
@@ -356,8 +356,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.display_label.bind('<Motion>', self.on_mouse_mv)
         
         IMAGE_LABEL_FRAME = ttk.LabelFrame(IMAGE_FRAME)
-        IMAGE_LABEL_FRAME.grid(sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
-
+        IMAGE_LABEL_FRAME.grid(sticky='news', padx=5, pady=5)
+        tk.Grid.rowconfigure(IMAGE_FRAME, 1, weight=1)
+        tk.Grid.columnconfigure(IMAGE_FRAME, 0, weight=1)
+        tk.Grid.columnconfigure(IMAGE_FRAME, 1, weight=1)
         self.label_nframe = ttk.Label(IMAGE_LABEL_FRAME, text=text_nframe)
         self.label_nframe.grid(row=0, column=0, sticky=tk.W, rowspan=2)
         label_nframe_v = ttk.Label(IMAGE_LABEL_FRAME, textvariable=self.n_frame_var)
@@ -544,5 +546,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('m', self.on_key)
         self.root.bind('s', self.break_loop)
         self.root.bind('b', self.on_key)
+        self.root.state('zoomed')
         # self.root.bind('<Configure>', self._resize_image)
         self.root.mainloop()

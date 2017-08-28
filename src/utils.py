@@ -164,30 +164,32 @@ class Utils(object):
         self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)
 
     def draw_legend(self):
-        shape = (40, 40, 3)
+        shape = (40, 40)
+        bg = cv2.merge([np.ones(shape, dtype='uint8') * i for i in [237, 240, 240]])
         c = (20, 20)
         fg = (0, 0, 0)
         color = (50, 50, 255)
 
         # origin
-        self.legend_1 = np.ones(shape, dtype='uint8') * 255
+        self.legend_1 = bg.copy()
         cv2.circle(self.legend_1, c, 10, fg, 1)
         cv2.circle(self.legend_1, c, 13, fg, 1)
         self.legend_1 = cv2.cvtColor(self.legend_1, cv2.COLOR_BGR2RGB)
 
+
         # to be decided
-        self.legend_2 = np.ones(shape, dtype='uint8') * 255
+        self.legend_2 = bg.copy()
         cv2.circle(self.legend_2, c, 15, color, 1)
         cv2.putText(self.legend_2, '?', (20 - 8, 20 + 9), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
         self.legend_2 = cv2.cvtColor(self.legend_2, cv2.COLOR_BGR2RGB)
 
         # current location
-        self.legend_3 = np.ones(shape, dtype='uint8') * 255
+        self.legend_3 = bg.copy()
         tri_pts = tri(c)
         cv2.polylines(self.legend_3, tri_pts, True, fg, 3)
 
         # last detected location
-        self.legend_4 = np.ones(shape, dtype='uint8') * 255
+        self.legend_4 = bg.copy()
         tri_pts = tri(c)
         cv2.polylines(self.legend_4, tri_pts, True, fg, 1)
 
