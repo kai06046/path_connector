@@ -155,7 +155,7 @@ class Utils(object):
             self._c_width = self._r_width/shrink_r
             self._c_height = self._r_height/shrink_r
 
-            newsize = (int(shape[1] * self._r_width/shrink_r), int(shape[0] * self._r_height/shrink_r))
+            newsize = (int(shape[1] * self._c_width), int(shape[0] * self._c_height))
 
             # print('newsize: %dx%d' % newsize)
             self._frame = cv2.resize(self._frame, newsize)

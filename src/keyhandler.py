@@ -585,6 +585,7 @@ class KeyHandler(Interface, Common):
                 self.object_name[k]['on'] = False
 
                 del self.results_dict[k]
+                self.suggest_label.grid(row=0, column=1, sticky="nwes", padx=5, pady=5)
                 if k in self.dist_records.keys():
                     del self.dist_records[k]
             else:
@@ -636,6 +637,11 @@ class KeyHandler(Interface, Common):
                         for l in range(1, len(path)):
                             thickness = int(np.sqrt((1 + l * 0.01) * 2) * 1.5)
                             cv2.line(frame, path[l - 1], path[l], color, thickness)
+                if self.root.state() == 'zoomed':
+                    shape = frame.shape
+                    newsize = (int(shape[1] * self._c_width), int(shape[0] * self._c_height))
+                    frame = cv2.resize(frame, newsize)
+
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 image = ImageTk.PhotoImage(Image.fromarray(frame))
                 self.display_label.configure(image=image)
