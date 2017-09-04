@@ -583,7 +583,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('n', self.on_key)
         self.root.bind('m', self.on_key)
         self.root.bind('s', self.break_loop)
-        self.root.bind('b', self.on_key)
+        # self.root.bind('b', self.on_key)
         self.root.state('zoomed')
         # self.root.bind('<Configure>', self._resize_image)
         self.root.mainloop()

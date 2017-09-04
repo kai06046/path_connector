@@ -306,7 +306,7 @@ class KeyHandler(Interface, Common):
                 # pending; ask new object UI
                 new_key = letter[len(self.object_name)]
                 self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
-                self.tmp_results_dict[new_key] = {'path': [p, p], 'n_frame': [self.n_frame, self.n_frame]}
+                self.tmp_results_dict[new_key] = {'path': [p, p], 'n_frame': [self.n_frame, self.n_frame], 'wh': [(0, 0), (0, 0)]}
                 self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
 
                 # self.results_dict[new_key] = {'path': [p, p], 'n_frame': [n, n]}
@@ -353,6 +353,19 @@ class KeyHandler(Interface, Common):
             self.save_records()
             self.n_frame = self.stop_n_frame
             p, n = self.current_pts, self.current_pts_n
+
+            _, boxes = eval(self.__yolo_results__[self.n_frame - 1])
+
+            for b in boxes:
+                ymin, xmin, ymax, xmax, score = b
+                x_c = int((xmin+xmax) / 2 + 0.5)
+                y_c = int((ymin+ymax) / 2 + 0.5)
+                w = int(xmax - xmin)
+                h = int(ymax - ymin)
+
+                if p == (x_c, y_c):
+                    break
+        
         run = True
         replace = False
 
@@ -361,6 +374,7 @@ class KeyHandler(Interface, Common):
             if not is_assigned:
                 self.results_dict[clr]['path'].append(p)
                 self.results_dict[clr]['n_frame'].append(n)
+                self.results_dict[clr]['wh'].append((w, h)) # append last bounding box's width and height
                 print('appended!')
             else:
                 res = self.ask_yes_no(clr)
@@ -368,6 +382,7 @@ class KeyHandler(Interface, Common):
                     self.undone_pts.append((self.results_dict[clr]['path'][-1], n))
                     print(self.undone_pts)
                     self.results_dict[clr]['path'][-1] = p
+                    self.results_dict[clr]['wh'][-1] = (w, h)
                     print('appended!')
                     run = True
                     replace = True
@@ -378,7 +393,7 @@ class KeyHandler(Interface, Common):
                 if not self.is_manual:
                     # append results
                     new_key = letter[len(self.object_name)]
-                    self.results_dict[new_key] = {'path': [p], 'n_frame': [n]}
+                    self.results_dict[new_key] = {'path': [p], 'n_frame': [n], 'wh': [(w, h)]}
                     self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
                     try:
                         self.dist_records[n][new_key] = dict()
@@ -388,6 +403,7 @@ class KeyHandler(Interface, Common):
                     self.dist_records[n][new_key]['dist'] = [0]
                     self.dist_records[n][new_key]['center'] = [p]
                     self.dist_records[n][new_key]['below_tol'] = [True]
+                    self.dist_records[n][new_key]['wh'] = [(w,h)]
 
                     # add buttons
                     bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
