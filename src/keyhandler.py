@@ -220,8 +220,8 @@ class KeyHandler(Interface, Common):
 
             new_key = letter[len(self.object_name)]
             self.min_label_ind = self.n_frame if self.min_label_ind is None else min(self.n_frame, self.min_label_ind)
-            self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
-            self.tmp_results_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
+            self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame], 'wh': [(0, 0)]}
+            self.tmp_results_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame], 'wh': [(0, 0)]}
             self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
 
             try:
@@ -305,7 +305,7 @@ class KeyHandler(Interface, Common):
             if self.label_ind == 0:
                 # pending; ask new object UI
                 new_key = letter[len(self.object_name)]
-                self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame]}
+                self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame], 'wh': [(0, 0)]}
                 self.tmp_results_dict[new_key] = {'path': [p, p], 'n_frame': [self.n_frame, self.n_frame], 'wh': [(0, 0), (0, 0)]}
                 self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
 
@@ -334,17 +334,21 @@ class KeyHandler(Interface, Common):
                 if self.n_frame not in self.label_dict[k]['n_frame']:
                     self.label_dict[k]['n_frame'].append(self.n_frame)
                     self.label_dict[k]['path'].append(p)
+                    self.label_dict[k]['wh'].append((0, 0))
                 else:
                     self.label_dict[k]['path'][self.label_dict[k]['n_frame'].index(self.n_frame)] = p
+                    self.label_dict[k]['wh'][self.label_dict[k]['n_frame'].index(self.n_frame)] = (0, 0)
 
                 # modify label point if it conflicts with original result dicts
                 try:
                     ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
                     # pending; conflict with existing path, ask reassign UI?
                     self.tmp_results_dict[k]['path'][ind] = p
+                    self.tmp_results_dict[k]['wh'][ind] = (0, 0)
                 except:
                     self.tmp_results_dict[k]['n_frame'].append(self.n_frame)
                     self.tmp_results_dict[k]['path'].append(p)
+                    self.tmp_results_dict[k]['wh'].append((0, 0))
 
     # button event
     def on_button(self, clr):
@@ -831,17 +835,20 @@ class KeyHandler(Interface, Common):
                 ind = self.label_dict[k]['n_frame'].index(self.n_frame)
                 self.label_dict[k]['n_frame'].pop(ind)
                 self.label_dict[k]['path'].pop(ind)
+                self.label_dict[k]['wh'].pop(ind)
             except:
                 pass
 
             try:
                 ind = self.results_dict[k]['n_frame'].index(self.n_frame)
                 self.tmp_results_dict[k]['path'][ind] = self.results_dict[k]['path'][ind]
+                self.tmp_results_dict[k]['wh'][ind] = self.results_dict[k]['wh'][ind]
             except:
                 try:
                     ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
                     self.tmp_results_dict[k]['n_frame'].pop(ind)
                     self.tmp_results_dict[k]['path'].pop(ind)
+                    self.tmp_results_dict[k]['wh'].pop(ind)
 
                     if len(self.tmp_results_dict[k]['path']) == 0:
                         self.object_name.pop(k)

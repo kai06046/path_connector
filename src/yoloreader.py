@@ -55,6 +55,7 @@ class YOLOReader(object):
             label_ind = [k for k, v in self.label_dict.items() if n_frame in v['n_frame']]
             for k in label_ind:
                 i = self.label_dict[k]['n_frame'].index(n_frame)
+                print(self.results_dict[k])
                 self.results_dict[k]['n_frame'].append(n_frame)
                 self.results_dict[k]['path'].append(self.label_dict[k]['path'][i])
                 self.results_dict[k]['wh'].append(self.label_dict[k]['wh'][i])
