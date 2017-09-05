@@ -20,33 +20,7 @@ class Utils(object):
                 ind = None
 
             # if the path is not conneted in the current frame yet, show only the first coordinate
-            if ind is None:
-                cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
-                cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
-                pass
-            else:
-                if flag[ind]  == self.n_frame:
-                    width = 4
-                else:
-                    width = 1
-                if ind != 0:
-                    last_pt = tuple(pts[ind - 1])
-                else:
-                    last_pt = tuple(pts[ind])
-                pt = tuple(pts[ind])
-                tri_pts = tri(pt)
-                # draw path end point triangle
-                cv2.polylines(self._frame, tri_pts, True, color, width)
-                # position of text info
-                if last_pt[1] > pt[1]:
-                    # cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 25, pt[1] - 15), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
-                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 3)
-                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
-
-                else:
-                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 3)
-                    cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
-
+            if ind is not None:
                 if self.check_show_drawing is None or self.check_show_drawing.get() == 1 and not self.is_calculate:
                     # show until current if ind is not None
                     pts = pts[-self.maximum:(ind + 1) if ind is not None else None]
@@ -70,6 +44,50 @@ class Utils(object):
                                     draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
                     else:
                         pass
+
+        # draw names after paths
+        for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
+            pts = np.array(results_dict[k]['path'])
+            flag = results_dict[k]['n_frame']
+            color = self.color[self.object_name[k]['ind']]
+
+            try:
+                ind = max([flag.index(v) for v in flag if v <= self.n_frame])
+            except Exception as e:
+                ind = None
+            if ind is None:
+                cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
+                cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
+            else:
+                if flag[ind]  == self.n_frame:
+                    width = 4
+                else:
+                    width = 1
+                if ind != 0:
+                    last_pt = tuple(pts[ind - 1])
+                else:
+                    last_pt = tuple(pts[ind])
+                pt = tuple(pts[ind])
+                tri_pts = tri(pt)
+                # draw path end point triangle
+                cv2.polylines(self._frame, tri_pts, True, color, width)
+                
+                # position of text info
+                if last_pt[1] > pt[1]:
+                    if width == 4:
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 3)
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    else:
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 3)
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
+
+                else:
+                    if width == 4:
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 3)
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                    else:
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 3)
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
 
         # draw coordinate (stop point) that needed to be assigned
         if self.current_pts is not None:
