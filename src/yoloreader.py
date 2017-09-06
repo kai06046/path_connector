@@ -7,7 +7,9 @@ from PIL import Image, ImageTk
 # from skimage.feature import hog, local_binary_pattern
 from skimage.measure import compare_ssim
 
-letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
+# letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
+letter = [str(i) for i in range(1, 20)]
+
 N_SHOW = 25
 
 # threshold

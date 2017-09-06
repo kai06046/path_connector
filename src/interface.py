@@ -74,8 +74,8 @@ class Interface(object):
         settings_root.focus_force()
         settings_root.title('設定')
 
-        ACTION = ['標註對應的目標 (a/b/c/d)', '誤判', '新目標', '返回', '重置', '前一幀', '後一幀', '前五幀', '後五幀', '選擇 default 選項', '進入/離開 Manual Label', '回到需被標註的幀數', '移動幀數', '設定']
-        HOTKEY = ['1/2/3/4', 'd/DELETE', 'n', 'u/BACKSPACE', 'r', 'LEFT', 'RIGHT', 'PAGE DOWN', 'PAGE UP', 'DOWN', 'm', 'ENTER',  'j', 'h']
+        ACTION = ['標註對應的目標', '誤判', '新目標', '返回', '重置', '前一幀', '後一幀', '前五幀', '後五幀', '選擇 default 選項', '進入/離開 Manual Label', '回到需被標註的幀數', '移動幀數', '設定']
+        HOTKEY = ['1/2/3/4', 'd/DELETE', 'a', 'u/BACKSPACE', 'r', 'LEFT', 'RIGHT', 'PAGE DOWN', 'PAGE UP', 'DOWN', 'q', 'ENTER',  'j', 'h']
 
         hotkey = ttk.LabelFrame(settings_root, text="快捷鍵")
         action = ttk.LabelFrame(settings_root, text="操作")

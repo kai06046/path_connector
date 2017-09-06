@@ -73,20 +73,20 @@ class Utils(object):
                 cv2.polylines(self._frame, tri_pts, True, color, width)
                 
                 # position of text info
-                if last_pt[1] > pt[1]:
+                if last_pt[1] > pt[1] and pt[1] > 50:
                     if width == 4:
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 3)
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 4)
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
                     else:
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 3)
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 4)
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
 
                 else:
                     if width == 4:
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 3)
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 4)
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
                     else:
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 3)
+                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 4)
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
 
         # draw coordinate (stop point) that needed to be assigned

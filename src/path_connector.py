@@ -14,11 +14,12 @@ from src.utils import Utils
 WIN_NAME = 'Path Connector'
 VIDEO_PATH = 'videos/[CH04] 2016-09-28 20.20.00_x264.avi'
 # COLOR_NAME = ['limegreen', 'deepskyblue', 'YELLOW2', 'ORANGE', 'PURPLE', 'PINK', 'CYAN', 'BLACK', 'RED', 'WHITE']
-COLOR_NAME = [('green', 'limegreen'), ('blue', 'deepskyblue'), ('yellow', 'YELLOW2'), ('orange', 'orange'), ('purple', 'purple'), ('pink', 'pink'), ('cyan', 'cyan'), ('black', 'black'), ('red', 'red'), ('white', 'white')]
-COLOR = [(50, 205, 50), (255, 191, 0), (0, 255, 255), (0, 165, 255), (211, 85, 186), (255, 102, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
+COLOR_NAME = [('green', 'limegreen'), ('blue', 'deepskyblue'), ('yellow', 'gold'), ('orange', 'orange'), ('purple', 'purple'), ('pink', 'pink'), ('cyan', 'cyan'), ('black', 'black'), ('red', 'red'), ('white', 'white')]
+COLOR = [(50, 205, 50), (255, 191, 0), (0, 215, 255), (0, 165, 255), (211, 85, 186), (255, 102, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
 
 # UI required variables
-letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
+# letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
+letter = [str(i) for i in range(1, 20)]
 LARGE_FONT= ("Verdana", 12)
 MULTI = False
 
@@ -186,15 +187,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             self.scale_nframe.set(self.stop_n_frame)
             self.safe = False
             self.display_label.configure(image=self.image)
-
-    def _resize_image(self, event):
-        print(self.root.state())
-        pass
-        new_w = self.root.winfo_width()
-        new_h = self.root.winfo_height()
-
-
-        # self.image = 
 
     def start(self):
         root = tk.Tk()
@@ -485,7 +477,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME = ttk.LabelFrame(OP_FRAME, text="需被標註的 bbox 應該是哪一個目標呢？")
         self.BUTTON_FRAME.grid(row=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
         
-        for i, k in enumerate(['誤判 (d)', '新目標 (n)'] + sorted(self.object_name.keys())):
+        for i, k in enumerate(['誤判 (d)', '新目標 (a)'] + sorted(self.object_name.keys())):
             if i in [0, 1]:
                 bg = None
                 b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, width=40)
@@ -510,7 +502,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數 (Enter)', command=self.on_return)
         button_go.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
-        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label (m)', command=self.on_manual_label)
+        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label (q)', command=self.on_manual_label)
         button_manual.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         button_reset = ttk.Button(self.BUTTON_FRAME_2, text='重置 (r)', command=self.on_reset)
@@ -576,14 +568,14 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('2', self.on_key)
         self.root.bind('3', self.on_key)
         self.root.bind('4', self.on_key)
+        self.root.bind('5', self.on_key)
+        self.root.bind('6', self.on_key)
         self.root.bind('<Delete>', self.on_key)
         self.root.bind('d', self.on_key)
         self.root.bind('r', self.on_key)
         self.root.bind('j', self.on_key)
-        self.root.bind('n', self.on_key)
+        self.root.bind('d', self.on_key)
         self.root.bind('m', self.on_key)
         self.root.bind('s', self.break_loop)
-        # self.root.bind('b', self.on_key)
         self.root.state('zoomed')
-        # self.root.bind('<Configure>', self._resize_image)
         self.root.mainloop()

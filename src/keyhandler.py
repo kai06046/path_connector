@@ -10,7 +10,8 @@ from tkinter.messagebox import askyesno
 import numpy as np
 import copy, os, pickle
 
-letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
+# letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
+letter = [str(i) for i in range(1, 20)]
 
 class KeyHandler(Interface, Common):
 
@@ -58,7 +59,7 @@ class KeyHandler(Interface, Common):
             self.all_buttons = []
 
             on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
-            for i, k in enumerate(['誤判 (d)', '新目標 (n)'] + sorted(self.object_name.keys())):
+            for i, k in enumerate(['誤判 (d)', '新目標 (a)'] + sorted(self.object_name.keys())):
                 if i in [0, 1]:
                     bg = None
                     b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, width=40)
@@ -105,7 +106,7 @@ class KeyHandler(Interface, Common):
         self.all_buttons = []
 
         on_ind = [v['ind'] for k, v in self.object_name.items() if v['on']]
-        for i, k in enumerate(['誤判 (d)', '新目標 (n)'] + sorted(self.object_name.keys())):
+        for i, k in enumerate(['誤判 (d)', '新目標 (a)'] + sorted(self.object_name.keys())):
             if i in [0, 1]:
                 bg = None
                 b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, width=40)
@@ -392,7 +393,7 @@ class KeyHandler(Interface, Common):
                     replace = True
                 else:
                     run = False
-        elif clr == '新目標 (n)':
+        elif clr == '新目標 (a)':
             if len(self.object_name) < 6:
                 if not self.is_manual:
                     # append results
@@ -503,24 +504,26 @@ class KeyHandler(Interface, Common):
             self.pop_behavior_table()
 
         if not self.is_manual:
-            if sym not in ['n', 'Delete', 'd', 'm', 'j']:
+            if sym not in ['a', 'Delete', 'd', 'q', 'j', 'r']:
                 try:
                     i = int(event.char)
                     self.on_button([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
                 except Exception as e:
-                    print('on_key', e)
+                    print('on_key_error', e)
 
-            elif sym == 'n':
-                self.on_button('新目標 (n)')
+            elif sym == 'a':
+                self.on_button('新目標 (a)')
             elif sym in ['Delete', 'd']:
                 self.on_button('誤判 (d)')
             # enter manual label mode
-            elif sym == 'm':
+            elif sym == 'q':
                 self.chg_mode()
             elif sym == 'j':
                 self.jump_frame()
+            elif sym == 'r':
+                self.on_reset()
         else:
-            if sym == 'n':
+            if sym == 'a':
                 if self.drag_flag is None:
                     if len(self.object_name) < 6:
                         self.drag_flag = 'new'
@@ -529,7 +532,7 @@ class KeyHandler(Interface, Common):
                 else:
                     self.drag_flag = None
                 self.drag_flag = 'new' if self.drag_flag is None else None
-            elif sym == 'm':
+            elif sym == 'q':
                 self.leave_manual_label()
             elif sym == 'j':
                 self.jump_frame()
