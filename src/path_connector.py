@@ -87,6 +87,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.is_calculate = False
         self.is_manual = False
         self.rat_cnt_dict = dict()
+        self.hit_condi = None
         
         # variables for breaking from calculating loop
         self.n_run = None
@@ -236,7 +237,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
     def save_records(self):
         
-        records = (copy.deepcopy(self.results_dict), copy.deepcopy(self.tmp_results_dict), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
+        records = (copy.deepcopy(self.results_dict), copy.deepcopy(self.tmp_results_dict), copy.deepcopy(self.dist_records), copy.deepcopy(self.hit_condi), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
         if len(self.undo_records) > 0:
             if self.stop_n_frame != self.undo_records[-1][1]:
                 self.undo_records.append(records)
@@ -287,7 +288,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         file = self.video_path.split('.avi')[0] + '.dat'
         if os.path.isfile(file):
-            self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
+            self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
             self.n_frame = self.stop_n_frame
         else:
             self.calculate_path()

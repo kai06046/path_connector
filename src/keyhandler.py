@@ -442,18 +442,22 @@ class KeyHandler(Interface, Common):
                 self.root.update()
                 self.run_calc(self.stop_n_frame + 1)
             else:
-                self.current_pts, self.current_pts_n = self.undone_pts.pop(0)
+                print(self.suggest_ind)
                 self.suggest_ind.pop(0)
-                if len(self.suggest_ind) > 0:
-                    print('Suggest option index: %s' % self.suggest_ind[0])
-                    if self.suggest_ind[0][0] == 'fp':
-                        self.all_buttons[0].focus_force()
-                    elif self.suggest_ind[0][0] == 'new':
-                        self.all_buttons[1].focus_force()
-                    else:
-                        self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind']].focus_force()
-                else:
-                    self.all_buttons[0].focus_force()
+                self.suggest_options(self.undone_pts, self.n_frame)
+                print(self.suggest_ind)
+                self.current_pts, self.current_pts_n = self.undone_pts.pop(0)
+                
+                # if len(self.suggest_ind) > 0:
+                #     print('Suggest option index: %s' % self.suggest_ind[0])
+                #     if self.suggest_ind[0][0] == 'fp':
+                #         self.all_buttons[0].focus_force()
+                #     elif self.suggest_ind[0][0] == 'new':
+                #         self.all_buttons[1].focus_force()
+                #     else:
+                #         self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind']].focus_force()
+                # else:
+                #     self.all_buttons[0].focus_force()
 
     # move to previous frame
     def on_left(self, event):
@@ -506,11 +510,12 @@ class KeyHandler(Interface, Common):
         if not self.is_manual:
             if sym not in ['a', 'Delete', 'd', 'q', 'j', 'r']:
                 try:
+                    print("event char:", event.char)
                     i = int(event.char)
                     self.on_button([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
                 except Exception as e:
+                    print(event.char)
                     print('on_key_error', e)
-
             elif sym == 'a':
                 self.on_button('新目標 (a)')
             elif sym in ['Delete', 'd']:
@@ -770,7 +775,7 @@ class KeyHandler(Interface, Common):
         else:
             old_name = self.object_name
 
-            self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if (len(self.undo_records) > 1 and not is_esc) else -1]
+            self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = self.undo_records[-2 if (len(self.undo_records) > 1 and not is_esc) else -1]
 
             if old_name != self.object_name:
                 keys = set(self.object_name.keys()).difference(set(old_name.keys()))

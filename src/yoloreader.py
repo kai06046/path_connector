@@ -324,49 +324,8 @@ class YOLOReader(object):
         if self.is_calculate:
             self.cancel_id = self.display_label.after(0, self.calculate_path, n_frame)
         else:
-            # algorithm for suggesting a reasonable option
-            for i, tup in enumerate(undone_pts):
-                p, nframe = tup
-                tmp_record = self.dist_records[nframe]
-                min_dist_not_assigned = 9999
-                min_key_not_assigned = None
-                # compare with not assigned key
-                for k, v in tmp_record.items():
-                    if k in [tmp for tmp in on_keys if tmp not in [j for j, _ in hit_condi]]:
-                        ind = tmp_record[k]['center'].index(p)
-                        if tmp_record[k]['dist'][ind] < min_dist_not_assigned:
-                            min_dist_not_assigned = tmp_record[k]['dist'][ind]
-                            min_key_not_assigned = k
-                # compare with assigned key
-                min_dist_assigned = 9999
-                min_key_assigned = None
-                for k, v in tmp_record.items():
-                    if k in [tmp for tmp in on_keys if tmp in [j for j, _ in hit_condi]]:
-                        ind = tmp_record[k]['center'].index(p)
-                        if tmp_record[k]['dist'][ind] < min_dist_assigned:
-                            min_dist_assigned = tmp_record[k]['dist'][ind]
-                            min_key_assigned = k
-
-                # suggest new object if far with both assigned and not assigned keys
-                if min_dist_not_assigned >= 80 and min_dist_assigned > 100:
-                    self.suggest_ind.append(('new', {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
-                # suggest false positive if far with not assigned keys but near with assigned keys
-                elif min_dist_not_assigned >= 80 and min_dist_assigned < 100:
-                    self.suggest_ind.append(('fp', {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
-                # suggest the nearest not assigned key for other cases
-                else:
-                    self.suggest_ind.append((min_key_not_assigned, {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
-
-            # update default option if button has been already created
-            if len(self.all_buttons) > 0:
-                if self.suggest_ind[0][0] == 'fp':
-                    ind = 0
-                elif self.suggest_ind[0][0] == 'new':
-                    ind = 1
-                else:
-                    ind = self.object_name[self.suggest_ind[0][0]]['ind'] + 2
-                self.all_buttons[ind].focus_force()
-                self.suggest_label.grid(row=ind, column=1, sticky="nwes", padx=5, pady=5)
+            self.hit_condi = hit_condi
+            self.suggest_options(undone_pts, nframe)
 
             # update new value
             self.n_frame = n_frame
@@ -380,3 +339,50 @@ class YOLOReader(object):
             # ensure don't enter manual mode and reset relevent variables
             self.min_label_ind = None
             self.cancel_id = None
+
+    # algorithm for suggesting a reasonable option
+    def suggest_options(self, undone_pts, nframe):
+        on_keys = [k for k, v in self.object_name.items() if v['on']]
+        hit_condi = self.hit_condi
+        for i, tup in enumerate(undone_pts):
+            p, nframe = tup
+            tmp_record = self.dist_records[nframe]
+            min_dist_not_assigned = 9999
+            min_key_not_assigned = None
+            # compare with not assigned key
+            for k, v in tmp_record.items():
+                if k in [tmp for tmp in on_keys if tmp not in [j for j, _ in hit_condi]]:
+                    ind = tmp_record[k]['center'].index(p)
+                    if tmp_record[k]['dist'][ind] < min_dist_not_assigned:
+                        min_dist_not_assigned = tmp_record[k]['dist'][ind]
+                        min_key_not_assigned = k
+            # compare with assigned key
+            min_dist_assigned = 9999
+            min_key_assigned = None
+            for k, v in tmp_record.items():
+                if k in [tmp for tmp in on_keys if tmp in [j for j, _ in hit_condi]]:
+                    ind = tmp_record[k]['center'].index(p)
+                    if tmp_record[k]['dist'][ind] < min_dist_assigned:
+                        min_dist_assigned = tmp_record[k]['dist'][ind]
+                        min_key_assigned = k
+
+            # suggest new object if far with both assigned and not assigned keys
+            if min_dist_not_assigned >= 160 and min_dist_assigned > 100:
+                self.suggest_ind.append(('new', {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
+            # suggest false positive if far with not assigned keys but near with assigned keys
+            elif min_dist_not_assigned >= 160 and min_dist_assigned < 100:
+                self.suggest_ind.append(('fp', {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
+            # suggest the nearest not assigned key for other cases
+            else:
+                self.suggest_ind.append((min_key_not_assigned, {'assigned': (min_key_assigned, min_dist_assigned), 'not_assigned': (min_key_not_assigned, min_dist_not_assigned)}))
+
+        # update default option if button has been already created
+        if len(self.all_buttons) > 0:
+            if self.suggest_ind[0][0] == 'fp':
+                ind = 0
+            elif self.suggest_ind[0][0] == 'new':
+                ind = 1
+            else:
+                ind = self.object_name[self.suggest_ind[0][0]]['ind'] + 2
+            self.all_buttons[ind].focus_force()
+            self.suggest_label.grid(row=ind, column=1, sticky="nwes", padx=5, pady=5)
