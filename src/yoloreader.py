@@ -343,7 +343,9 @@ class YOLOReader(object):
     # algorithm for suggesting a reasonable option
     def suggest_options(self, undone_pts, nframe):
         on_keys = [k for k, v in self.object_name.items() if v['on']]
+        print("on keys: ", on_keys)
         hit_condi = self.hit_condi
+        print("suggest_options", hit_condi)
         for i, tup in enumerate(undone_pts):
             p, nframe = tup
             tmp_record = self.dist_records[nframe]
@@ -352,7 +354,28 @@ class YOLOReader(object):
             # compare with not assigned key
             for k, v in tmp_record.items():
                 if k in [tmp for tmp in on_keys if tmp not in [j for j, _ in hit_condi]]:
-                    ind = tmp_record[k]['center'].index(p)
+                    try:
+                        ind = tmp_record[k]['center'].index(p)
+                    # should only occur while there are multi undone points, calculate dist record
+                    except Exception as e:
+                        dist = np.linalg.norm(np.array(self.results_dict[k]['path'][-1]) - np.array())
+                        _, boxes = eval(self.__yolo_results__[self.n_frame - 1])
+                        for b in boxes:
+                            ymin, xmin, ymax, xmax, score = b
+                            x_c = int((xmin+xmax) / 2 + 0.5)
+                            y_c = int((ymin+ymax) / 2 + 0.5)
+                            w = int(xmax - xmin)
+                            h = int(ymax - ymin)
+
+                            if p == (x_c, y_c):
+                                break
+
+                        tmp_record[k]['center'].append(p)
+                        tmp_record[k]['dist'].append(dist)
+                        tmp_record[k]['below_tol'].append(True if dist <= self.tol else False)
+                        tmp_record[k]['wh'].append((w, h))
+                        ind = tmp_record[k]['center'].index(p)
+
                     if tmp_record[k]['dist'][ind] < min_dist_not_assigned:
                         min_dist_not_assigned = tmp_record[k]['dist'][ind]
                         min_key_not_assigned = k
@@ -361,7 +384,27 @@ class YOLOReader(object):
             min_key_assigned = None
             for k, v in tmp_record.items():
                 if k in [tmp for tmp in on_keys if tmp in [j for j, _ in hit_condi]]:
-                    ind = tmp_record[k]['center'].index(p)
+                    try:
+                        ind = tmp_record[k]['center'].index(p)
+                    except:
+                        dist = np.linalg.norm(np.array(self.results_dict[k]['path'][-1]) - np.array(p))
+                        _, boxes = eval(self.__yolo_results__[self.n_frame - 1])
+                        for b in boxes:
+                            ymin, xmin, ymax, xmax, score = b
+                            x_c = int((xmin+xmax) / 2 + 0.5)
+                            y_c = int((ymin+ymax) / 2 + 0.5)
+                            w = int(xmax - xmin)
+                            h = int(ymax - ymin)
+
+                            if p == (x_c, y_c):
+                                break
+
+                        tmp_record[k]['center'].append(p)
+                        tmp_record[k]['dist'].append(dist)
+                        tmp_record[k]['below_tol'].append(True if dist <= self.tol else False)
+                        tmp_record[k]['wh'].append((w, h))
+                        ind = tmp_record[k]['center'].index(p)
+
                     if tmp_record[k]['dist'][ind] < min_dist_assigned:
                         min_dist_assigned = tmp_record[k]['dist'][ind]
                         min_key_assigned = k

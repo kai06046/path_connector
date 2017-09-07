@@ -73,6 +73,7 @@ class Utils(object):
                 cv2.polylines(self._frame, tri_pts, True, color, width)
                 
                 # position of text info
+                c = color # (50, 50, 255)
                 if last_pt[1] > pt[1] and pt[1] > 50:
                     if width == 4:
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 4)
@@ -80,6 +81,7 @@ class Utils(object):
                     else:
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 4)
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
+                        cv2.putText(self._frame, '?', (pt[0] - 18, pt[1] - 38), cv2.FONT_HERSHEY_TRIPLEX, 0.6, c, 1)
 
                 else:
                     if width == 4:
@@ -88,6 +90,7 @@ class Utils(object):
                     else:
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 4)
                         cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
+                        cv2.putText(self._frame, '?', (pt[0] + 32, pt[1] + 12), cv2.FONT_HERSHEY_TRIPLEX, 0.6, c, 1)
 
         # draw coordinate (stop point) that needed to be assigned
         if self.current_pts is not None:

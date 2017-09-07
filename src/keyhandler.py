@@ -42,7 +42,7 @@ class KeyHandler(Interface, Common):
             
             file = self.video_path.split('.avi')[0] + '.dat'
             if os.path.isfile(file):
-                self.results_dict, self.tmp_results_dict, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
+                self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
                 self.n_frame = self.stop_n_frame
                 tmp_diff = len(self.object_name) - old_len
                 self.center_root(r=35*tmp_diff)
@@ -410,6 +410,9 @@ class KeyHandler(Interface, Common):
                     self.dist_records[n][new_key]['below_tol'] = [True]
                     self.dist_records[n][new_key]['wh'] = [(w,h)]
 
+                    self.hit_condi.append((new_key, 0))
+                    print('add button', self.hit_condi)
+
                     # add buttons
                     bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
                     # print("object name %s\n" % self.object_name)
@@ -443,22 +446,12 @@ class KeyHandler(Interface, Common):
                 self.run_calc(self.stop_n_frame + 1)
             else:
                 print(self.suggest_ind)
-                self.suggest_ind.pop(0)
+                if len(self.suggest_ind) > 0:
+                    self.suggest_ind.pop(0)
                 self.suggest_options(self.undone_pts, self.n_frame)
                 print(self.suggest_ind)
                 self.current_pts, self.current_pts_n = self.undone_pts.pop(0)
                 
-                # if len(self.suggest_ind) > 0:
-                #     print('Suggest option index: %s' % self.suggest_ind[0])
-                #     if self.suggest_ind[0][0] == 'fp':
-                #         self.all_buttons[0].focus_force()
-                #     elif self.suggest_ind[0][0] == 'new':
-                #         self.all_buttons[1].focus_force()
-                #     else:
-                #         self.all_buttons[self.object_name[self.suggest_ind[0][0]]['ind']].focus_force()
-                # else:
-                #     self.all_buttons[0].focus_force()
-
     # move to previous frame
     def on_left(self, event):
         if self.n_frame > 1:
