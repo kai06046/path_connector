@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askyesno, askokcancel, showerror, showwarning, showinfo
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 import pickle, os, json
 from src.listbox import Tk_Table
 
@@ -93,10 +93,17 @@ class Interface(object):
         settings_root.mainloop()
 
     def export(self):
-        filename = "%s.json" % self.video_path.split('.avi')[0]
-        with open(filename, 'w+') as f:
-            json.dump(self.results_dict, f)
-
+        root = '/'.join(self.video_path.split('/')[:-1])
+        filename = self.video_path.split('/')[-1]
+        filename = "%s.json" % filename.split('.avi')[0]
+        filename = asksaveasfilename(initialdir='%s' % (root), 
+                                     defaultextension=".json", 
+                                     filetypes=(("JSON", "*.json"),("All Files", "*.*")), 
+                                     initialfile=filename, 
+                                     title='匯出路徑')
+        if filename not in ["", None]:
+            with open(filename, 'w+') as f:
+                json.dump(self.results_dict, f)
         # filename = "%s_rat_contour.json" % self.video_path.split('.avi')[0]
         # save rat contour
         # with open(filename, 'a') as f:
