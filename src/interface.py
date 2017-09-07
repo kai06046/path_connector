@@ -67,6 +67,7 @@ class Interface(object):
         settings_root = tk.Tk()
         tk.Grid.rowconfigure(settings_root, 0, weight=1)
         tk.Grid.columnconfigure(settings_root, 0, weight=1)
+        tk.Grid.columnconfigure(settings_root, 1, weight=1)
 
         def exit(event):
             settings_root.destroy()
@@ -79,13 +80,19 @@ class Interface(object):
 
         hotkey = ttk.LabelFrame(settings_root, text="快捷鍵")
         action = ttk.LabelFrame(settings_root, text="操作")
-        hotkey.grid(row=0, column=0, padx=5, pady=5)
-        action.grid(row=0, column=1, padx=5, pady=5)
+        hotkey.grid_columnconfigure(0, weight=1)
+        action.grid_columnconfigure(0, weight=1)
+        hotkey.grid(row=0, column=0, padx=5, pady=5, sticky='news')
+        action.grid(row=0, column=1, padx=5, pady=5, sticky='news')
 
         # action description section
         for i, a in enumerate(ACTION):
             ttk.Label(action, text=a).grid(column=0, row=i, sticky=tk.W, padx=5, pady=5)
             ttk.Label(hotkey, text=HOTKEY[i]).grid(column=0, row=i, padx=5, pady=5)
+
+            hotkey.grid_rowconfigure(i, weight=1)
+            action.grid_rowconfigure(i, weight=1)
+
 
         settings_root.bind('<Escape>', exit)
         settings_root.bind('<h>', exit)
