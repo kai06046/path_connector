@@ -160,6 +160,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         text_time = "%d:%02d:%02d" % (h, m, s)
         
         self.label_video_name.configure(text=text_video_name)
+        self.label_nframe_v.configure(text="%s/%s" % (self.n_frame, self.total_frame))
         self.label_time.configure(text=text_time)
         self.scale_nframe.set(self.n_frame)
 
@@ -393,8 +394,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         tk.Grid.columnconfigure(IMAGE_LABEL_FRAME, 1, weight=1)
         self.label_nframe = ttk.Label(IMAGE_LABEL_FRAME, text=text_nframe)
         self.label_nframe.grid(row=0, column=0, sticky=tk.W, rowspan=2)
-        label_nframe_v = ttk.Label(IMAGE_LABEL_FRAME, textvariable=self.n_frame_var)
-        label_nframe_v.grid(row=0, column=1)
+        self.label_nframe_v = ttk.Label(IMAGE_LABEL_FRAME, text="%s/%s" % (self.n_frame, self.total_frame))
+        self.label_nframe_v.grid(row=0, column=1)
         self.scale_nframe = ttk.Scale(IMAGE_LABEL_FRAME, from_=1, to_=self.total_frame, length=1200, command=self.set_nframe)
         self.scale_nframe.set(self.n_frame)
         self.scale_nframe.grid(row=1, column=1)
@@ -488,6 +489,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
                 bg = self.color_name[self.object_name[k]['ind']][1].lower()
                 b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg)
                 b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+            b.config(cursor='hand2')
 
             self.all_buttons.append(b)
 
@@ -500,19 +502,19 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.BUTTON_FRAME_2.grid(row=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
 
         # operation buttons
-        button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數 (Enter)', command=self.on_return)
+        button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數 (Enter)', command=self.on_return, cursor='hand2')
         button_go.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
         
-        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label (q)', command=self.on_manual_label)
+        button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label (q)', command=self.on_manual_label, cursor='hand2')
         button_manual.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        button_reset = ttk.Button(self.BUTTON_FRAME_2, text='重置 (r)', command=self.on_reset)
+        button_reset = ttk.Button(self.BUTTON_FRAME_2, text='重置 (r)', command=self.on_reset, cursor='hand2')
         button_reset.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove)
+        button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove, cursor='hand2')
         button_remove.grid(row=6, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
-        button_replay = ttk.Button(self.BUTTON_FRAME_2, text='回放已追踪路徑', command=self.on_view)
+        button_replay = ttk.Button(self.BUTTON_FRAME_2, text='回放已追踪路徑', command=self.on_view, cursor='hand2')
         button_replay.grid(row=8, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
 
         label_max = ttk.Label(self.BUTTON_FRAME_2, text='顯示路徑的長度: ')
