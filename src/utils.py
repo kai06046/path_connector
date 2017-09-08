@@ -191,15 +191,10 @@ class Utils(object):
                 nh = int(shape[0] * self._c_height)
                 nw = int(shape[1] * nh / shape[0])
                 self._c_width = nh / shape[0]
-            # nw = int(shape[1] * self._c_width)
-            # nh = int(shape[0] * nw / shape[1])
-            self.OP_FRAME.update()
             df_w = self.display_frame.winfo_width()
             if df_w == 1284:
                 pass
             elif nw > df_w:
-                print('nw', nw, 'df_w', df_w)
-                print('oh no...')
                 nn_w = df_w - 4
                 r = nn_w / nw
                 self._c_width = r * self._c_width
@@ -214,14 +209,8 @@ class Utils(object):
             newsize = (nw, nh)
 
             # print(newsize)
-            # newsize = (int(shape[1] * self._c_width), int(shape[0] * self._c_height))
 
             self._frame = cv2.resize(self._frame, newsize)
-
-        # if self.display_label is not None:
-        #     print('Frame', self.display_frame.winfo_height(), self.display_frame.winfo_width())
-        #     print('OP Frame', self.OP_FRAME.winfo_height(), self.OP_FRAME.winfo_width())
-        # print('shape', self._frame.shape)
 
         # convert frame into rgb
         self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)

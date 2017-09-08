@@ -316,16 +316,19 @@ class YOLOReader(object):
                         nh = int(shape[0] * _c_height)
                         nw = int(shape[1] * nh / shape[0])
 
+                    df_w = self.display_frame.winfo_width()
+                    if df_w == 1284:
+                        pass
+                    elif nw > df_w:
+                        nn_w = df_w - 4
+                        r = nn_w / nw
+                        nn_h = int(nh * r)
+                        nh = nn_h
+                        nw = nn_w
+                    else:
+                        print(df_w)
+
                     newsize = (nw, nh)
-                    # nw = int(shape[1] * self._c_width)
-                    # nh = int(shape[0] * nw / shape[1])
-
-                    # r1 = (shape[1] / self.root.winfo_screenwidth())
-                    # r2 = (shape[0] / self.root.winfo_screenheight())
-                    # shrink_r = max(r1, r2)
-
-                    # newsize = (int(shape[1] * self._r_width/shrink_r), int(shape[0] * self._r_height/shrink_r))
-                    # print('newsize: %dx%d' % newsize)
                     self._frame = cv2.resize(self._frame, newsize)
 
                 self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)
