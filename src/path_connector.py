@@ -346,8 +346,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         IMAGE_FRAME.grid_rowconfigure(0, weight=1)
         IMAGE_FRAME.grid_rowconfigure(1, weight=1)
 
-        self.display_frame = tk.Frame(IMAGE_FRAME, bg='green')
-        self.display_frame.grid(row=0, column=0, columnspan=2, padx=2, pady=2)
+        self.display_frame = tk.Frame(IMAGE_FRAME)
+        self.display_frame.grid(row=0, column=0, columnspan=2)
         self.display_label = ttk.Label(self.display_frame, image=self.image)
         self.display_label.grid()
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
@@ -368,15 +368,15 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.scale_nframe.grid(row=1, column=0, sticky='news', padx=10)
 
         # operation frame that will display all application relevent information
-        OP_FRAME = ttk.Frame(self.root)
-        OP_FRAME.grid(row=0, column=1, sticky="news", padx=5, pady=5)
-        OP_FRAME.grid_rowconfigure(0, weight=1)
-        OP_FRAME.grid_rowconfigure(1, weight=1)
-        OP_FRAME.grid_rowconfigure(2, weight=1)
-        OP_FRAME.grid_columnconfigure(0, weight=1)
+        self.OP_FRAME = ttk.Frame(self.root)
+        self.OP_FRAME.grid(row=0, column=1, sticky="news", padx=5, pady=5)
+        self.OP_FRAME.grid_rowconfigure(0, weight=1)
+        self.OP_FRAME.grid_rowconfigure(1, weight=1)
+        self.OP_FRAME.grid_rowconfigure(2, weight=1)
+        self.OP_FRAME.grid_columnconfigure(0, weight=1)
 
         # frame for displaying current statement
-        STATE_FRAME = ttk.Frame(OP_FRAME)
+        STATE_FRAME = ttk.Frame(self.OP_FRAME)
         STATE_FRAME.grid(row=0, column=0, sticky="news", padx=5, pady=5)
         STATE_FRAME.grid_rowconfigure(0, weight=1)
         STATE_FRAME.grid_rowconfigure(1, weight=1)
@@ -459,7 +459,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         label_legend_4.grid(row=1, column=3, padx=3, pady=3)        
 
         # frame for display buttons
-        self.BUTTON_FRAME = ttk.LabelFrame(OP_FRAME, text="需被標註的 bbox 應該是哪一個目標呢？")
+        self.BUTTON_FRAME = ttk.LabelFrame(self.OP_FRAME, text="需被標註的 bbox 應該是哪一個目標呢？")
         self.BUTTON_FRAME.grid(row=1, column=0, sticky="news", padx=5, pady=5)
         self.BUTTON_FRAME.grid_columnconfigure(0, weight=1)
         for x in range(8):
@@ -484,7 +484,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.suggest_label = ttk.Label(self.BUTTON_FRAME, image=photo)
         # self.suggest_label
 
-        self.BUTTON_FRAME_2 = ttk.LabelFrame(OP_FRAME, text='操作')
+        self.BUTTON_FRAME_2 = ttk.LabelFrame(self.OP_FRAME, text='操作')
         self.BUTTON_FRAME_2.grid(row=2, column=0, sticky="news", padx=5, pady=3)
         self.BUTTON_FRAME_2.grid_columnconfigure(0, weight=1)
         self.BUTTON_FRAME_2.grid_columnconfigure(1, weight=1)

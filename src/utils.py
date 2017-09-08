@@ -184,13 +184,13 @@ class Utils(object):
             self._c_width = self._r_width/shrink_r
 
             if r1 == shrink_r:
-                print('r1')
                 nw = int(shape[1] * self._c_width)
                 nh = int(shape[0] * nw / shape[1])
+                self._c_height = nw / shape[1]
             else:
-                print('r2')
                 nh = int(shape[0] * self._c_height)
                 nw = int(shape[1] * nh / shape[0])
+                self._c_width = nh / shape[0]
             # nw = int(shape[1] * self._c_width)
             # nh = int(shape[0] * nw / shape[1])
             newsize = (nw, nh)
@@ -198,6 +198,11 @@ class Utils(object):
             # newsize = (int(shape[1] * self._c_width), int(shape[0] * self._c_height))
 
             self._frame = cv2.resize(self._frame, newsize)
+
+        # if self.display_label is not None:
+        #     print('Frame', self.display_frame.winfo_height(), self.display_frame.winfo_width())
+        #     print('OP Frame', self.OP_FRAME.winfo_height(), self.OP_FRAME.winfo_width())
+        # print('shape', self._frame.shape)
 
         # convert frame into rgb
         self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)

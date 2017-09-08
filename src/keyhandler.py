@@ -150,10 +150,6 @@ class KeyHandler(Interface, Common):
             self.mv_x = int(self.mv_x / self._c_width)
             self.mv_y = int(self.mv_y / self._c_height)
 
-        # print('Mouse: %s x %s\nModified: %s x %s' % (event.x, event.y, self.mv_x, self.mv_y))
-        
-        # print('Screen size: %s x %s' % (self.root.winfo_screenwidth(), self.root.winfo_screenheight()))
-
         # update cursor
         if self.is_manual:
             if self.drag_flag != 'new':
