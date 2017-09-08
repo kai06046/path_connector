@@ -347,7 +347,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         IMAGE_FRAME.grid_rowconfigure(1, weight=1)
 
         self.display_frame = tk.Frame(IMAGE_FRAME)
-        self.display_frame.grid(row=0, column=0, columnspan=2)
+        self.display_frame.grid(row=0, column=0)
         self.display_label = ttk.Label(self.display_frame, image=self.image)
         self.display_label.grid()
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
@@ -573,5 +573,5 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('j', self.on_key)
         self.root.bind('q', self.on_key)
         # self.root.bind('s', self.break_loop)
-        # self.root.state('zoomed')
+        self.root.state('zoomed')
         self.root.mainloop()

@@ -178,8 +178,8 @@ class Utils(object):
 
             r1 = (shape[1] / self.root.winfo_width())
             r2 = (shape[0] / self.root.winfo_height())
-            # shrink_r = max(r1, r2)
-            shrink_r = r1
+            shrink_r = max(r1, r2)
+            # shrink_r = r1
             self._c_height = self._r_height/shrink_r
             self._c_width = self._r_width/shrink_r
 
@@ -193,7 +193,26 @@ class Utils(object):
                 self._c_width = nh / shape[0]
             # nw = int(shape[1] * self._c_width)
             # nh = int(shape[0] * nw / shape[1])
+            self.OP_FRAME.update()
+            df_w = self.display_frame.winfo_width()
+            if df_w == 1284:
+                pass
+            elif nw > df_w:
+                print('nw', nw, 'df_w', df_w)
+                print('oh no...')
+                nn_w = df_w - 4
+                r = nn_w / nw
+                self._c_width = r * self._c_width
+
+                nn_h = int(nh * r)
+                self._c_height = nn_h / shape[0]
+                nh = nn_h
+                nw = nn_w
+            else:
+                print(df_w)
+
             newsize = (nw, nh)
+
             # print(newsize)
             # newsize = (int(shape[1] * self._c_width), int(shape[0] * self._c_height))
 
