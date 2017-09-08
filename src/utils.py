@@ -173,10 +173,13 @@ class Utils(object):
             self.root.update()
             # r1 = (shape[1] / self.root.winfo_screenwidth())
             # r2 = (shape[0] / self.root.winfo_screenheight())
+            # r1 = (shape[1] / self.root.winfo_width())
+            # r2 = (shape[0] / self.root.winfo_height())
+
             r1 = (shape[1] / self.root.winfo_width())
             r2 = (shape[0] / self.root.winfo_height())
-            shrink_r = max(r1, r2)
-            # shrink_r = r1
+            # shrink_r = max(r1, r2)
+            shrink_r = r1
             self._c_height = self._r_height/shrink_r
             self._c_width = self._r_width/shrink_r
 
@@ -188,7 +191,6 @@ class Utils(object):
                 print('r2')
                 nh = int(shape[0] * self._c_height)
                 nw = int(shape[1] * nh / shape[0])
-
             # nw = int(shape[1] * self._c_width)
             # nh = int(shape[0] * nw / shape[1])
             newsize = (nw, nh)

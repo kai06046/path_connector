@@ -346,8 +346,10 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         IMAGE_FRAME.grid_rowconfigure(0, weight=1)
         IMAGE_FRAME.grid_rowconfigure(1, weight=1)
 
-        self.display_label = ttk.Label(IMAGE_FRAME, image=self.image)
-        self.display_label.grid(row=0, column=0, columnspan=2, padx=2, pady=2)
+        self.display_frame = tk.Frame(IMAGE_FRAME, bg='green')
+        self.display_frame.grid(row=0, column=0, columnspan=2, padx=2, pady=2)
+        self.display_label = ttk.Label(self.display_frame, image=self.image)
+        self.display_label.grid()
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
         self.display_label.bind('<Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
@@ -546,6 +548,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.update()
         self._init_height = self.root.winfo_height()
         self._init_width = self.root.winfo_width()
+
         self._r_height = self._frame.shape[0] / self._init_height
         self._r_width = self._frame.shape[1] / self._init_width
 
