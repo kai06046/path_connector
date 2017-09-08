@@ -301,12 +301,30 @@ class YOLOReader(object):
 
                 if self.root.state() == 'zoomed':
                     shape = self._frame.shape
-                    r1 = (shape[1] / self.root.winfo_screenwidth())
-                    r2 = (shape[0] / self.root.winfo_screenheight())
-                    # print('shrink ratio: %s %s' % (r1, r2))
+
+                    r1 = (shape[1] / self.root.winfo_width())
+                    r2 = (shape[0] / self.root.winfo_height())
                     shrink_r = max(r1, r2)
 
-                    newsize = (int(shape[1] * self._r_width/shrink_r), int(shape[0] * self._r_height/shrink_r))
+                    _c_height = self._r_height/shrink_r
+                    _c_width = self._r_width/shrink_r
+
+                    if r1 == shrink_r:
+                        nw = int(shape[1] * _c_width)
+                        nh = int(shape[0] * nw / shape[1])
+                    else:
+                        nh = int(shape[0] * _c_height)
+                        nw = int(shape[1] * nh / shape[0])
+
+                    newsize = (nw, nh)
+                    # nw = int(shape[1] * self._c_width)
+                    # nh = int(shape[0] * nw / shape[1])
+
+                    # r1 = (shape[1] / self.root.winfo_screenwidth())
+                    # r2 = (shape[0] / self.root.winfo_screenheight())
+                    # shrink_r = max(r1, r2)
+
+                    # newsize = (int(shape[1] * self._r_width/shrink_r), int(shape[0] * self._r_height/shrink_r))
                     # print('newsize: %dx%d' % newsize)
                     self._frame = cv2.resize(self._frame, newsize)
 
