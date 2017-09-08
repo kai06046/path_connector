@@ -160,7 +160,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         text_time = "%d:%02d:%02d" % (h, m, s)
         
         self.label_video_name.configure(text=text_video_name)
-        self.label_nframe_v.configure(text="%s/%s" % (self.n_frame, self.total_frame))
+        self.label_nframe_v.configure(text="當前幀數: %s/%s" % (self.n_frame, self.total_frame))
         self.label_time.configure(text=text_time)
         self.scale_nframe.set(self.n_frame)
 
@@ -288,7 +288,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         tk.Grid.columnconfigure(self.root, 0, weight=1)
         tk.Grid.columnconfigure(self.root, 1, weight=1)
 
-
         file = self.video_path.split('.avi')[0] + '.dat'
         if os.path.isfile(file):
             self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
@@ -331,7 +330,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.check_is_clear = tk.IntVar()
         self.check_is_clear.set(1)
 
-        text_nframe = '當前幀數: '
         text_video_name =self.video_path.split('/')[-1]
         sec = round(self.n_frame / self.fps, 2)
         m, s = divmod(sec, 60)
@@ -341,39 +339,6 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # convert to format that ImageTk require
         self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
         
-        # IMAGE_FRAME.grid_columnconfigure(0, weight=1)
-        # IMAGE_FRAME.grid_rowconfigure(0, weight=1)
-        # IMAGE_FRAME.grid_rowconfigure(1, weight=1)
-        # # size = (IMAGE_FRAME.winfo_height(), IMAGE_FRAME.winfo_width())
-        # # print('Size: %d %d' % size)
-        # # self.display_label = self.Pict_Frame(parent=IMAGE_FRAME, picture=self._frame, imagesize=(1280, 720), master=self.root)
-        # self.display_label = tk.Label(IMAGE_FRAME, image=self.image, bg='red')
-        # self.display_label.grid(row=0, column=0, columnspan=2, sticky='news')
-        # self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
-        # self.display_label.bind('<Button-1>', self.on_mouse)
-        # self.display_label.bind('<Button-3>', self.on_mouse)
-        # self.display_label.bind('<Motion>', self.on_mouse_mv)
-        # # size = (self.display_label.winfo_height(), self.display_label.winfo_width())
-        # # print('Size: %d %d' % size)
-
-        
-        # IMAGE_LABEL_FRAME = tk.LabelFrame(IMAGE_FRAME, bg='green')
-        # IMAGE_LABEL_FRAME.grid(row=1, column=0, rowspan=2, columnspan=2, sticky='news', padx=5, pady=5)
-
-        # self.label_nframe = tk.Label(IMAGE_LABEL_FRAME, text=text_nframe, bg='yellow')
-        # self.label_nframe.grid(row=0, column=0, rowspan=2)
-        # label_nframe_v = tk.Label(IMAGE_LABEL_FRAME, textvariable=self.n_frame_var, bg='blue')
-        # label_nframe_v.grid(row=0, column=1)
-        # # label_nframe_v.grid_rowconfigure(0, weight=1)
-        # # label_nframe_v.grid_columnconfigure(0, weight=1)
-        # self.scale_nframe = ttk.Scale(IMAGE_LABEL_FRAME, from_=1, to_=self.total_frame, length=1200, command=self.set_nframe)
-        # self.scale_nframe.set(self.n_frame)
-        # self.scale_nframe.grid(row=1, column=1)
-
-        # for x in range(2):
-        #     tk.Grid.rowconfigure(IMAGE_LABEL_FRAME, x, weight=1)
-        #     tk.Grid.columnconfigure(IMAGE_LABEL_FRAME, x, weight=1)
-
         # frame for displaying image label
         IMAGE_FRAME = ttk.Frame(self.root)
         IMAGE_FRAME.grid(row=0, column=0)
@@ -382,7 +347,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         IMAGE_FRAME.grid_rowconfigure(1, weight=1)
 
         self.display_label = ttk.Label(IMAGE_FRAME, image=self.image)
-        self.display_label.grid(row=0, column=0, columnspan=2)
+        self.display_label.grid(row=0, column=0, columnspan=2, padx=2, pady=2)
         self.display_label.bind('<B1-Motion>', self.on_mouse_drag)
         self.display_label.bind('<Button-1>', self.on_mouse)
         self.display_label.bind('<Button-3>', self.on_mouse)
@@ -393,14 +358,11 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         tk.Grid.rowconfigure(IMAGE_LABEL_FRAME, 0, weight=1)
         tk.Grid.rowconfigure(IMAGE_LABEL_FRAME, 1, weight=1)
         tk.Grid.columnconfigure(IMAGE_LABEL_FRAME, 0, weight=1)
-        tk.Grid.columnconfigure(IMAGE_LABEL_FRAME, 1, weight=1)
-        self.label_nframe = ttk.Label(IMAGE_LABEL_FRAME, text=text_nframe)
-        self.label_nframe.grid(row=0, column=0, sticky=tk.W, rowspan=2)
-        self.label_nframe_v = ttk.Label(IMAGE_LABEL_FRAME, text="%s/%s" % (self.n_frame, self.total_frame))
-        self.label_nframe_v.grid(row=0, column=1)
-        self.scale_nframe = ttk.Scale(IMAGE_LABEL_FRAME, from_=1, to_=self.total_frame, length=1200, command=self.set_nframe)
+        self.label_nframe_v = ttk.Label(IMAGE_LABEL_FRAME, text="當前幀數: %s/%s" % (self.n_frame, self.total_frame))
+        self.label_nframe_v.grid(row=0, column=0)
+        self.scale_nframe = ttk.Scale(IMAGE_LABEL_FRAME, from_=1, to_=self.total_frame, command=self.set_nframe)
         self.scale_nframe.set(self.n_frame)
-        self.scale_nframe.grid(row=1, column=1)
+        self.scale_nframe.grid(row=1, column=0, sticky='news', padx=10)
 
         # operation frame that will display all application relevent information
         OP_FRAME = ttk.Frame(self.root)
@@ -434,18 +396,24 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # subframe for displaying object information
         OBJ_FRAME = ttk.LabelFrame(STATE_FRAME, text='目標資訊')
         OBJ_FRAME.grid(sticky="news", padx=5, pady=5)
+        OBJ_FRAME.grid_rowconfigure(0, weight=1)
+        OBJ_FRAME.grid_columnconfigure(0, weight=1)
+        OBJ_FRAME.grid_columnconfigure(1, weight=1)
         
-        self.tv = ttk.Treeview(OBJ_FRAME, height = 5)
+        self.tv = ttk.Treeview(OBJ_FRAME, height = 3)
         self.tv['columns'] = ('color', 'lastpoint', 'lastdetectedframe')
         self.tv.heading('#0', text='名稱', anchor='center')
         self.tv.column('#0', anchor='w', width=50)
         self.tv.heading('color', text='顏色')
         self.tv.column('color', anchor='center', width=60)
         self.tv.heading('lastpoint', text='在本幀是否有被偵測到')
-        self.tv.column('lastpoint', anchor='center', width=140)
+        self.tv.column('lastpoint', anchor='center', width=130)
         self.tv.heading('lastdetectedframe', text='最後被偵測到的幀數')
-        self.tv.column('lastdetectedframe', anchor='center', width=140)
-        self.tv.grid()
+        self.tv.column('lastdetectedframe', anchor='center', width=130)
+        self.tv.grid(row=0, column=0, sticky='news', pady=3)
+        vsb = ttk.Scrollbar(OBJ_FRAME, orient='vertical', command=self.tv.yview)
+        vsb.grid(row=0, column=1, sticky='news', pady=3)
+        self.tv.configure(yscrollcommand=vsb.set)
 
         for n in sorted(self.object_name.keys()):
             rd = self.results_dict[n]
