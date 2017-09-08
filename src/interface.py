@@ -22,6 +22,7 @@ class Interface(object):
                 if len(self.undo_records) > 1:
                     pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
                     # self.ask_save(style='confirm')
+                self.root.quit()
                 self.root.destroy()
         else:
             self.cancel_calc()

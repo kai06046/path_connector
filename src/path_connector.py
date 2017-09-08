@@ -286,6 +286,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.aspect(1, 1, 1, 1)
         tk.Grid.rowconfigure(self.root, 0, weight=1)
         tk.Grid.columnconfigure(self.root, 0, weight=1)
+        tk.Grid.columnconfigure(self.root, 1, weight=1)
 
 
         file = self.video_path.split('.avi')[0] + '.dat'
@@ -403,15 +404,23 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         # operation frame that will display all application relevent information
         OP_FRAME = ttk.Frame(self.root)
-        OP_FRAME.grid(row=0, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        OP_FRAME.grid(row=0, column=1, sticky="news", padx=5, pady=5)
+        OP_FRAME.grid_rowconfigure(0, weight=1)
+        OP_FRAME.grid_rowconfigure(1, weight=1)
+        OP_FRAME.grid_rowconfigure(2, weight=1)
+        OP_FRAME.grid_columnconfigure(0, weight=1)
 
         # frame for displaying current statement
         STATE_FRAME = ttk.Frame(OP_FRAME)
-        STATE_FRAME.grid(sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        STATE_FRAME.grid(row=0, column=0, sticky="news", padx=5, pady=5)
+        STATE_FRAME.grid_rowconfigure(0, weight=1)
+        STATE_FRAME.grid_rowconfigure(1, weight=1)
+        STATE_FRAME.grid_rowconfigure(2, weight=1)
+        STATE_FRAME.grid_columnconfigure(0, weight=1)
         
         # subframe for displaying frame information
         INFO_FRAME = ttk.LabelFrame(STATE_FRAME, text='影像訊息')
-        INFO_FRAME.grid(sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        INFO_FRAME.grid(sticky="news", padx=5, pady=5)
 
         label_video_name = ttk.Label(INFO_FRAME, text='影像檔名: ')
         label_video_name.grid(row=0, column=0, sticky=tk.W)
@@ -424,7 +433,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         # subframe for displaying object information
         OBJ_FRAME = ttk.LabelFrame(STATE_FRAME, text='目標資訊')
-        OBJ_FRAME.grid(sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        OBJ_FRAME.grid(sticky="news", padx=5, pady=5)
         
         self.tv = ttk.Treeview(OBJ_FRAME, height = 5)
         self.tv['columns'] = ('color', 'lastpoint', 'lastdetectedframe')
@@ -450,7 +459,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         # frame for legend
         LEGENG_FRAME = ttk.LabelFrame(STATE_FRAME, text='圖例說明')
-        LEGENG_FRAME.grid(sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        LEGENG_FRAME.grid(sticky="news", padx=5, pady=5)
         LEGENG_FRAME.grid_columnconfigure(1, weight=1)
         LEGENG_FRAME.grid_rowconfigure(1, weight=1)
         l_1 = ImageTk.PhotoImage(Image.fromarray(self.legend_1))
@@ -478,18 +487,18 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         # frame for display buttons
         self.BUTTON_FRAME = ttk.LabelFrame(OP_FRAME, text="需被標註的 bbox 應該是哪一個目標呢？")
-        self.BUTTON_FRAME.grid(row=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        self.BUTTON_FRAME.grid(row=1, column=0, sticky="news", padx=5, pady=5)
         
         for i, k in enumerate(['誤判 (d)', '新目標 (a)'] + sorted(self.object_name.keys())):
             if i in [0, 1]:
                 bg = None
                 b = ttk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg, width=40)
-                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                b.grid(row=i, column=0, sticky="news", padx=5, pady=5)
 
             else:
                 bg = self.color_name[self.object_name[k]['ind']][1].lower()
                 b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg)
-                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+                b.grid(row=i, column=0, sticky="news", padx=5, pady=5)
             b.config(cursor='hand2')
 
             self.all_buttons.append(b)
@@ -500,23 +509,23 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # self.suggest_label
 
         self.BUTTON_FRAME_2 = ttk.LabelFrame(OP_FRAME, text='操作')
-        self.BUTTON_FRAME_2.grid(row=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        self.BUTTON_FRAME_2.grid(row=2, column=0, sticky="news", padx=5, pady=5)
 
         # operation buttons
         button_go = ttk.Button(self.BUTTON_FRAME_2, text='回到需被標註的幀數 (Enter)', command=self.on_return, cursor='hand2')
-        button_go.grid(row=0, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_go.grid(row=0, rowspan=2, columnspan=2, sticky="news", padx=10, pady=5)
         
         button_manual = ttk.Button(self.BUTTON_FRAME_2, text='進入 / 離開 Manual Label (q)', command=self.on_manual_label, cursor='hand2')
-        button_manual.grid(row=2, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_manual.grid(row=2, rowspan=2, columnspan=2, sticky="news", padx=10, pady=5)
 
         button_reset = ttk.Button(self.BUTTON_FRAME_2, text='重置 (r)', command=self.on_reset, cursor='hand2')
-        button_reset.grid(row=4, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_reset.grid(row=4, rowspan=2, columnspan=2, sticky="news", padx=10, pady=5)
 
         button_remove = ttk.Button(self.BUTTON_FRAME_2, text='刪除目標', command=self.on_remove, cursor='hand2')
-        button_remove.grid(row=6, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_remove.grid(row=6, rowspan=2, columnspan=2, sticky="news", padx=10, pady=5)
 
         button_replay = ttk.Button(self.BUTTON_FRAME_2, text='回放已追踪路徑', command=self.on_view, cursor='hand2')
-        button_replay.grid(row=8, rowspan=2, columnspan=2, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        button_replay.grid(row=8, rowspan=2, columnspan=2, sticky="news", padx=10, pady=5)
 
         label_max = ttk.Label(self.BUTTON_FRAME_2, text='顯示路徑的長度: ')
         label_max.grid(row=10, column=0, rowspan=2, sticky=tk.W)
@@ -528,16 +537,16 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         # checkboxes
         check_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
-        check_show_box.grid(row=12, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_box.grid(row=12, rowspan=2, column=0, sticky="news", padx=10, pady=5)
 
         check_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='透鏡')
-        check_is_clear.grid(row=14, rowspan=2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_is_clear.grid(row=14, rowspan=2, column=0, sticky="news", padx=10, pady=5)
         
         check_show_rat = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_rat, onvalue=1, offvalue=0, text='顯示老鼠輪廓')
-        check_show_rat.grid(row=12, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_rat.grid(row=12, rowspan=2, column=1, sticky="news", padx=10, pady=5)
 
         check_show_drawing = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_drawing, onvalue=1, offvalue=0, text='顯示已追踪路徑')
-        check_show_drawing.grid(row=14, rowspan=2, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=10, pady=5)
+        check_show_drawing.grid(row=14, rowspan=2, column=1, sticky="news", padx=10, pady=5)
 
         # suggest default option
         print(self.suggest_ind)
@@ -548,7 +557,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         else:
             ind = self.object_name[self.suggest_ind[0][0]]['ind'] + 2
         self.all_buttons[ind].focus_force()
-        self.suggest_label.grid(row=ind, column=1, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+        self.suggest_label.grid(row=ind, column=1, sticky="news", padx=5, pady=5)
         
         self.update_track(0)
         self.update_label()
