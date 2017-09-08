@@ -178,7 +178,12 @@ class KeyHandler(Interface, Common):
         # modify state of buttons for object index assignment
         for i, b in enumerate(self.all_buttons):
             if i != 1:
-                b['state'] = 'disabled' if self.is_manual else 'normal'
+                if self.is_manual:
+                    b['state'] = 'disabled'
+                    b.configure(cursor='arrow')
+                else:
+                    b['state'] = 'normal'
+                    b.configure(cursor='hand2')
 
         if self.is_manual:
             # temporally results for manual label
