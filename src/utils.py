@@ -170,11 +170,7 @@ class Utils(object):
         # adjust the frame aspect ratio if the window is maximized
         if self.root.state() == 'zoomed':
             shape = self._frame.shape
-            # print(self.root.winfo_width(), self.root.winfo_height())
-
             self.root.update()
-            # print(self.root.winfo_width(), self.root.winfo_height())
-
             # r1 = (shape[1] / self.root.winfo_screenwidth())
             # r2 = (shape[0] / self.root.winfo_screenheight())
             r1 = (shape[1] / self.root.winfo_width())
@@ -185,9 +181,11 @@ class Utils(object):
             self._c_width = self._r_width/shrink_r
 
             if r1 == shrink_r:
+                print('r1')
                 nw = int(shape[1] * self._c_width)
                 nh = int(shape[0] * nw / shape[1])
             else:
+                print('r2')
                 nh = int(shape[0] * self._c_height)
                 nw = int(shape[1] * nh / shape[0])
 

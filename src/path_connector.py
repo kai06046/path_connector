@@ -283,6 +283,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.focus_force()
         self.root.option_add('*tearOff', False)
         self.root.option_add("*Font", "verdana 10")
+        self.root.aspect(1, 1, 1, 1)
         tk.Grid.rowconfigure(self.root, 0, weight=1)
         tk.Grid.columnconfigure(self.root, 0, weight=1)
 
@@ -554,6 +555,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.update_draw()
         # center
         self.center_root()
+        self.root.update()
         self._init_height = self.root.winfo_height()
         self._init_width = self.root.winfo_width()
         self._r_height = self._frame.shape[0] / self._init_height
