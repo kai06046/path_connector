@@ -238,7 +238,7 @@ class KeyHandler(Interface, Common):
             # add buttons
             bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
             b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
-            b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+            b.grid(row=len(self.all_buttons) + 1, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
             b.config(state='disabled')
             self.all_buttons.append(b)
             self.center_root(r=35)
@@ -523,14 +523,15 @@ class KeyHandler(Interface, Common):
                 self.on_reset()
         else:
             if sym == 'a':
-                if self.drag_flag is None:
-                    if len(self.object_name) < 6:
-                        self.drag_flag = 'new'
-                    else:
-                        self.msg('目標數量太多咯!')
-                else:
-                    self.drag_flag = None
-                self.drag_flag = 'new' if self.drag_flag is None else None
+                self.on_button('新目標 (a)')
+                # if self.drag_flag is None:
+                #     if len(self.object_name) < 6:
+                #         self.drag_flag = 'new'
+                #     else:
+                #         self.msg('目標數量太多咯!')
+                # else:
+                #     self.drag_flag = None
+                # self.drag_flag = 'new' if self.drag_flag is None else None
             elif sym == 'q':
                 self.leave_manual_label()
             elif sym == 'j':

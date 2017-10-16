@@ -45,6 +45,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.resolution = None
         self.total_frame = None
         self.__yolo_results__ = None
+        self.is_root_exist = True
 
         # basic variables
         self.color = COLOR
@@ -567,11 +568,11 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('5', self.on_key)
         self.root.bind('6', self.on_key)
         self.root.bind('<Delete>', self.on_key)
-        self.root.bind('a', self.on_key)
-        self.root.bind('d', self.on_key)
-        self.root.bind('r', self.on_key)
-        self.root.bind('j', self.on_key)
-        self.root.bind('q', self.on_key)
+        self.root.bind('<a>', self.on_key)
+        self.root.bind('<d>', self.on_key)
+        self.root.bind('<r>', self.on_key)
+        self.root.bind('<j>', self.on_key)
+        self.root.bind('<q>', self.on_key)
         # self.root.bind('s', self.break_loop)
         self.root.state('zoomed')
         self.root.mainloop()

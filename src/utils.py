@@ -7,213 +7,214 @@ LENGTH_ARROW = 20
 class Utils(object):
 
     def draw(self, tup=None):
-        results_dict = self.results_dict if not self.is_manual else self.tmp_results_dict
-        # draw connected paths
-        for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
-            pts = np.array(results_dict[k]['path'])
-            flag = results_dict[k]['n_frame']
-            color = self.color[self.object_name[k]['ind']]
+        if self.is_root_exist:
+            results_dict = self.results_dict if not self.is_manual else self.tmp_results_dict
+            # draw connected paths
+            for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
+                pts = np.array(results_dict[k]['path'])
+                flag = results_dict[k]['n_frame']
+                color = self.color[self.object_name[k]['ind']]
 
-            try:
-                ind = max([flag.index(v) for v in flag if v <= self.n_frame])
-            except Exception as e:
-                ind = None
+                try:
+                    ind = max([flag.index(v) for v in flag if v <= self.n_frame])
+                except Exception as e:
+                    ind = None
 
-            # if the path is not conneted in the current frame yet, show only the first coordinate
-            if ind is not None:
-                if self.check_show_drawing is None or self.check_show_drawing.get() == 1 and not self.is_calculate:
-                    # show until current if ind is not None
-                    pts = pts[-self.maximum:(ind + 1) if ind is not None else None]
-                    if len(pts) > 0:
-                        # start point
-                        cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
-                        cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
+                # if the path is not conneted in the current frame yet, show only the first coordinate
+                if ind is not None:
+                    if self.check_show_drawing is None or self.check_show_drawing.get() == 1 and not self.is_calculate:
+                        # show until current if ind is not None
+                        pts = pts[-self.maximum:(ind + 1) if ind is not None else None]
+                        if len(pts) > 0:
+                            # start point
+                            cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
+                            cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
 
-                        for i in range(1, len(pts)):
-                            p1 = pts[i-1]
-                            p2 = pts[i]
-                            dist = np.linalg.norm(p1 - p2)
-                            # draw dotted line
-                            if dist < 48:
-                                cv2.line(self._frame, tuple(p1), tuple(p2), color, 1)
-                            else:
-                                drawline(self._frame, tuple(p1), tuple(p2), color, 1, style='dotted', gap=7)
-                            # draw arrow
-                            if i % 6 == 0:
-                                if dist > 3:
-                                    draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
+                            for i in range(1, len(pts)):
+                                p1 = pts[i-1]
+                                p2 = pts[i]
+                                dist = np.linalg.norm(p1 - p2)
+                                # draw dotted line
+                                if dist < 48:
+                                    cv2.line(self._frame, tuple(p1), tuple(p2), color, 1)
+                                else:
+                                    drawline(self._frame, tuple(p1), tuple(p2), color, 1, style='dotted', gap=7)
+                                # draw arrow
+                                if i % 6 == 0:
+                                    if dist > 3:
+                                        draw_arrow(self._frame, tuple(p1), tuple(p2), color, dist=dist, thickness=2, line_type=16)
+                        else:
+                            pass
+
+            # draw names after paths
+            for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
+                pts = np.array(results_dict[k]['path'])
+                flag = results_dict[k]['n_frame']
+                color = self.color[self.object_name[k]['ind']]
+
+                try:
+                    ind = max([flag.index(v) for v in flag if v <= self.n_frame])
+                except Exception as e:
+                    ind = None
+                if ind is None:
+                    cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
+                    cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
+                else:
+                    if flag[ind]  == self.n_frame:
+                        width = 4
                     else:
-                        pass
-
-        # draw names after paths
-        for i, k in enumerate(sorted([k for k, v in self.object_name.items() if v['on']])):
-            pts = np.array(results_dict[k]['path'])
-            flag = results_dict[k]['n_frame']
-            color = self.color[self.object_name[k]['ind']]
-
-            try:
-                ind = max([flag.index(v) for v in flag if v <= self.n_frame])
-            except Exception as e:
-                ind = None
-            if ind is None:
-                cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
-                cv2.circle(self._frame, tuple(pts[0]), 13, color, 1)
-            else:
-                if flag[ind]  == self.n_frame:
-                    width = 4
-                else:
-                    width = 1
-                if ind != 0:
-                    last_pt = tuple(pts[ind - 1])
-                else:
-                    last_pt = tuple(pts[ind])
-                pt = tuple(pts[ind])
-                tri_pts = tri(pt)
-                # draw path end point triangle
-                cv2.polylines(self._frame, tri_pts, True, color, width)
-                
-                # position of text info
-                c = color # (50, 50, 255)
-                if last_pt[1] > pt[1] and pt[1] > 50:
-                    if width == 4:
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 4)
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                        width = 1
+                    if ind != 0:
+                        last_pt = tuple(pts[ind - 1])
                     else:
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 4)
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
-                        cv2.putText(self._frame, '?', (pt[0] - 18, pt[1] - 38), cv2.FONT_HERSHEY_TRIPLEX, 0.6, c, 1)
+                        last_pt = tuple(pts[ind])
+                    pt = tuple(pts[ind])
+                    tri_pts = tri(pt)
+                    # draw path end point triangle
+                    cv2.polylines(self._frame, tri_pts, True, color, width)
+                    
+                    # position of text info
+                    c = color # (50, 50, 255)
+                    if last_pt[1] > pt[1] and pt[1] > 50:
+                        if width == 4:
+                            cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 4)
+                            cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                        else:
+                            cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 4)
+                            cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] - 30, pt[1] - 20), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
+                            cv2.putText(self._frame, '?', (pt[0] - 18, pt[1] - 38), cv2.FONT_HERSHEY_TRIPLEX, 0.6, c, 1)
 
-                else:
-                    if width == 4:
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 4)
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
                     else:
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 4)
-                        cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
-                        cv2.putText(self._frame, '?', (pt[0] + 32, pt[1] + 12), cv2.FONT_HERSHEY_TRIPLEX, 0.6, c, 1)
+                        if width == 4:
+                            cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 4)
+                            cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 1)
+                        else:
+                            cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, 4)
+                            cv2.putText(self._frame, self.object_name[k]['display_name'], (pt[0] + 20, pt[1] + 30), cv2.FONT_HERSHEY_TRIPLEX, 0.8, (255, 255, 255), 1)
+                            cv2.putText(self._frame, '?', (pt[0] + 32, pt[1] + 12), cv2.FONT_HERSHEY_TRIPLEX, 0.6, c, 1)
 
-        # draw coordinate (stop point) that needed to be assigned
-        if self.current_pts is not None:
-            p, nframe = self.current_pts, self.current_pts_n
-            color = (50, 50, 255)
-            x, y = p
-            thickness = 2 if nframe == self.n_frame else 1
-            cv2.circle(self._frame, p, 15, color, thickness)
-            cv2.putText(self._frame, '?', (x - 9, y + 9), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, thickness)
+            # draw coordinate (stop point) that needed to be assigned
+            if self.current_pts is not None:
+                p, nframe = self.current_pts, self.current_pts_n
+                color = (50, 50, 255)
+                x, y = p
+                thickness = 2 if nframe == self.n_frame else 1
+                cv2.circle(self._frame, p, 15, color, thickness)
+                cv2.putText(self._frame, '?', (x - 9, y + 9), cv2.FONT_HERSHEY_TRIPLEX, 0.8, color, thickness)
 
-        # draw YOLO bounding boxes
-        if self.check_show_yolo is None or self.check_show_yolo.get() == 1:
-            _, boxes = eval(self.__yolo_results__[self.n_frame - 1])
+            # draw YOLO bounding boxes
+            if self.check_show_yolo is None or self.check_show_yolo.get() == 1:
+                _, boxes = eval(self.__yolo_results__[self.n_frame - 1])
 
-            for b in boxes:
-                ymin, xmin, ymax, xmax, score = b
-                x_c = int((xmin+xmax) / 2 + 0.5)
-                y_c = int((ymin+ymax) / 2 + 0.5)
+                for b in boxes:
+                    ymin, xmin, ymax, xmax, score = b
+                    x_c = int((xmin+xmax) / 2 + 0.5)
+                    y_c = int((ymin+ymax) / 2 + 0.5)
 
-                p1, p2 = (int(xmin), int(ymin)), (int(xmax), int(ymax))
+                    p1, p2 = (int(xmin), int(ymin)), (int(xmax), int(ymax))
 
-                color = None
-                # find corresponding color of YOLO bounding boxes
-                for k in sorted([k for k, v in self.object_name.items() if v['on']]):
-                    pts = results_dict[k]['path']
-                    flag = results_dict[k]['n_frame']
-                    ind = None                    
-                    try:
-                        ind = flag.index(self.n_frame)
-                    except:
-                        pass
+                    color = None
+                    # find corresponding color of YOLO bounding boxes
+                    for k in sorted([k for k, v in self.object_name.items() if v['on']]):
+                        pts = results_dict[k]['path']
+                        flag = results_dict[k]['n_frame']
+                        ind = None                    
+                        try:
+                            ind = flag.index(self.n_frame)
+                        except:
+                            pass
 
-                    if ind is not None:
-                        if pts[ind] == (x_c, y_c):
-                            color = self.color[self.object_name[k]['ind']]
-                            break
-                if color:
-                    cv2.rectangle(self._frame, p1, p2, color, 1)
+                        if ind is not None:
+                            if pts[ind] == (x_c, y_c):
+                                color = self.color[self.object_name[k]['ind']]
+                                break
+                    if color:
+                        cv2.rectangle(self._frame, p1, p2, color, 1)
+                    else:
+                        cv2.rectangle(self._frame, p1, p2, (0, 255, 255), 1)
+
+            # remove drawing on specific region
+            n = 60
+            e = 100
+            if self.clear and self.check_is_clear.get() == 1:
+                x, y = self.mv_x, self.mv_y
+                xmin, xmax = max(0, (x-n)), min((x+n), self.width)
+                ymin, ymax = max(0, (y-n)), min((y+n), self.height)
+                self._frame[ymin:ymax, xmin:xmax] = self._orig_frame[ymin:ymax, xmin:xmax].copy()
+                drawrect(self._frame, (xmin, ymin), (xmax, ymax), (0, 255, 255), 1, style='dotted')
+                if not (x >= (self.last_x - e) and x <= (self.last_x + e) and y >= (self.last_y - e) and  y <= (self.last_y + e)):
+                    self.clear = False
+
+            # draw status
+            if not self.is_manual:
+                string = 'Label' if self.stop_n_frame == self.n_frame else 'Prev.' if self.stop_n_frame > self.n_frame else 'Af.'
+            else:
+                string = 'Manual Label' if self.stop_n_frame == self.n_frame else 'Prev. (Manual)' if self.stop_n_frame > self.n_frame else 'Af. (Manual)'
+            cv2.putText(self._frame, string, (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+
+            # draw manual label paths
+            if len(self.tmp_line) > 1:
+                color = (255, 255, 255)
+                for i in range(1, len(self.tmp_line)):
+                    cv2.line(self._frame, self.tmp_line[i - 1], self.tmp_line[i], color, 2)
+
+            # draw rat contour
+            rat_detector = RatDetector()
+            rat_detector.detect_rat_contour(cv2.cvtColor(self._orig_frame, cv2.COLOR_BGR2GRAY))
+
+            if self.n_frame not in self.rat_cnt_dict.keys():
+                self.rat_cnt_dict[self.n_frame] = rat_detector.rat_cnt.tolist()
+
+            if len(rat_detector.rat_cnt) > 0 and self.check_show_rat is not None and self.check_show_rat.get() == 1:
+                cv2.drawContours(self._frame, rat_detector.rat_cnt, -1, (216, 233, 62), 2)
+
+            # adjust the frame aspect ratio if the window is maximized
+            if self.root.state() == 'zoomed':
+                shape = self._frame.shape
+                self.root.update()
+                # r1 = (shape[1] / self.root.winfo_screenwidth())
+                # r2 = (shape[0] / self.root.winfo_screenheight())
+                # r1 = (shape[1] / self.root.winfo_width())
+                # r2 = (shape[0] / self.root.winfo_height())
+
+                r1 = (shape[1] / self.root.winfo_width())
+                r2 = (shape[0] / self.root.winfo_height())
+                shrink_r = max(r1, r2)
+                # shrink_r = r1
+                self._c_height = self._r_height/shrink_r
+                self._c_width = self._r_width/shrink_r
+
+                if r1 == shrink_r:
+                    nw = int(shape[1] * self._c_width)
+                    nh = int(shape[0] * nw / shape[1])
+                    self._c_height = nw / shape[1]
                 else:
-                    cv2.rectangle(self._frame, p1, p2, (0, 255, 255), 1)
+                    nh = int(shape[0] * self._c_height)
+                    nw = int(shape[1] * nh / shape[0])
+                    self._c_width = nh / shape[0]
+                df_w = self.display_frame.winfo_width()
+                if df_w == 1284:
+                    pass
+                elif nw > df_w:
+                    nn_w = df_w - 4
+                    r = nn_w / nw
+                    self._c_width = r * self._c_width
 
-        # remove drawing on specific region
-        n = 60
-        e = 100
-        if self.clear and self.check_is_clear.get() == 1:
-            x, y = self.mv_x, self.mv_y
-            xmin, xmax = max(0, (x-n)), min((x+n), self.width)
-            ymin, ymax = max(0, (y-n)), min((y+n), self.height)
-            self._frame[ymin:ymax, xmin:xmax] = self._orig_frame[ymin:ymax, xmin:xmax].copy()
-            drawrect(self._frame, (xmin, ymin), (xmax, ymax), (0, 255, 255), 1, style='dotted')
-            if not (x >= (self.last_x - e) and x <= (self.last_x + e) and y >= (self.last_y - e) and  y <= (self.last_y + e)):
-                self.clear = False
+                    nn_h = int(nh * r)
+                    self._c_height = nn_h / shape[0]
+                    nh = nn_h
+                    nw = nn_w
+                else:
+                    print(df_w)
 
-        # draw status
-        if not self.is_manual:
-            string = 'Label' if self.stop_n_frame == self.n_frame else 'Prev.' if self.stop_n_frame > self.n_frame else 'Af.'
-        else:
-            string = 'Manual Label' if self.stop_n_frame == self.n_frame else 'Prev. (Manual)' if self.stop_n_frame > self.n_frame else 'Af. (Manual)'
-        cv2.putText(self._frame, string, (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+                newsize = (nw, nh)
 
-        # draw manual label paths
-        if len(self.tmp_line) > 1:
-            color = (255, 255, 255)
-            for i in range(1, len(self.tmp_line)):
-                cv2.line(self._frame, self.tmp_line[i - 1], self.tmp_line[i], color, 2)
+                # print(newsize)
 
-        # draw rat contour
-        rat_detector = RatDetector()
-        rat_detector.detect_rat_contour(cv2.cvtColor(self._orig_frame, cv2.COLOR_BGR2GRAY))
+                self._frame = cv2.resize(self._frame, newsize)
 
-        if self.n_frame not in self.rat_cnt_dict.keys():
-            self.rat_cnt_dict[self.n_frame] = rat_detector.rat_cnt.tolist()
-
-        if len(rat_detector.rat_cnt) > 0 and self.check_show_rat is not None and self.check_show_rat.get() == 1:
-            cv2.drawContours(self._frame, rat_detector.rat_cnt, -1, (216, 233, 62), 2)
-
-        # adjust the frame aspect ratio if the window is maximized
-        if self.root.state() == 'zoomed':
-            shape = self._frame.shape
-            self.root.update()
-            # r1 = (shape[1] / self.root.winfo_screenwidth())
-            # r2 = (shape[0] / self.root.winfo_screenheight())
-            # r1 = (shape[1] / self.root.winfo_width())
-            # r2 = (shape[0] / self.root.winfo_height())
-
-            r1 = (shape[1] / self.root.winfo_width())
-            r2 = (shape[0] / self.root.winfo_height())
-            shrink_r = max(r1, r2)
-            # shrink_r = r1
-            self._c_height = self._r_height/shrink_r
-            self._c_width = self._r_width/shrink_r
-
-            if r1 == shrink_r:
-                nw = int(shape[1] * self._c_width)
-                nh = int(shape[0] * nw / shape[1])
-                self._c_height = nw / shape[1]
-            else:
-                nh = int(shape[0] * self._c_height)
-                nw = int(shape[1] * nh / shape[0])
-                self._c_width = nh / shape[0]
-            df_w = self.display_frame.winfo_width()
-            if df_w == 1284:
-                pass
-            elif nw > df_w:
-                nn_w = df_w - 4
-                r = nn_w / nw
-                self._c_width = r * self._c_width
-
-                nn_h = int(nh * r)
-                self._c_height = nn_h / shape[0]
-                nh = nn_h
-                nw = nn_w
-            else:
-                print(df_w)
-
-            newsize = (nw, nh)
-
-            # print(newsize)
-
-            self._frame = cv2.resize(self._frame, newsize)
-
-        # convert frame into rgb
-        self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)
+            # convert frame into rgb
+            self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)
 
     def draw_legend(self):
         shape = (40, 40)

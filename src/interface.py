@@ -23,6 +23,7 @@ class Interface(object):
                     pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
                     # self.ask_save(style='confirm')
                 self.root.quit()
+                self.is_root_exist = False
                 self.root.destroy()
         else:
             self.cancel_calc()
