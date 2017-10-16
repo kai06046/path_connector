@@ -234,13 +234,16 @@ class KeyHandler(Interface, Common):
             self.dist_records[self.n_frame][new_key]['dist'] = [0]
             self.dist_records[self.n_frame][new_key]['center'] = [p]
             self.dist_records[self.n_frame][new_key]['below_tol'] = [True]
+            self.dist_records[self.n_frame][new_key]['wh'] = [(0,0)]
 
             # add buttons
             bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
             b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
-            b.grid(row=len(self.all_buttons) + 1, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
-            b.config(state='disabled')
             self.all_buttons.append(b)
+            for i, b in enumerate(self.all_buttons):
+                b.grid(row=i, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+            # b.grid(row=len(self.all_buttons) + 1, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+            b.config(state='disabled')
             self.center_root(r=35)
 
             self.display_label.config(cursor='arrow')
@@ -299,58 +302,58 @@ class KeyHandler(Interface, Common):
                     self.label_dict[self.drag_flag]['path'].append(p)
 
     # left click append label record; not used anymore
-    def on_mouse_manual_label(self, event):
-        # execute only if it is manual label mode
-        if self.is_manual:
-            # manual label for new object
-            p = (event.x, event.y)
-            if self.label_ind == 0:
-                # pending; ask new object UI
-                new_key = letter[len(self.object_name)]
-                self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame], 'wh': [(0, 0)]}
-                self.tmp_results_dict[new_key] = {'path': [p, p], 'n_frame': [self.n_frame, self.n_frame], 'wh': [(0, 0), (0, 0)]}
-                self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
+    # def on_mouse_manual_label(self, event):
+    #     # execute only if it is manual label mode
+    #     if self.is_manual:
+    #         # manual label for new object
+    #         p = (event.x, event.y)
+    #         if self.label_ind == 0:
+    #             # pending; ask new object UI
+    #             new_key = letter[len(self.object_name)]
+    #             self.label_dict[new_key] = {'path': [p], 'n_frame': [self.n_frame], 'wh': [(0, 0)]}
+    #             self.tmp_results_dict[new_key] = {'path': [p, p], 'n_frame': [self.n_frame, self.n_frame], 'wh': [(0, 0), (0, 0)]}
+    #             self.object_name[new_key] = {'ind': len(self.object_name), 'on': True, 'display_name': new_key}
 
-                # self.results_dict[new_key] = {'path': [p, p], 'n_frame': [n, n]}
-                try:
-                    self.dist_records[self.n_frame][new_key] = dict()
-                except:
-                    self.dist_records[self.n_frame] = dict()
-                    self.dist_records[self.n_frame][new_key] = dict()
-                self.dist_records[self.n_frame][new_key]['dist'] = [0]
-                self.dist_records[self.n_frame][new_key]['center'] = [p]
-                self.dist_records[self.n_frame][new_key]['below_tol'] = [True]
+    #             # self.results_dict[new_key] = {'path': [p, p], 'n_frame': [n, n]}
+    #             try:
+    #                 self.dist_records[self.n_frame][new_key] = dict()
+    #             except:
+    #                 self.dist_records[self.n_frame] = dict()
+    #                 self.dist_records[self.n_frame][new_key] = dict()
+    #             self.dist_records[self.n_frame][new_key]['dist'] = [0]
+    #             self.dist_records[self.n_frame][new_key]['center'] = [p]
+    #             self.dist_records[self.n_frame][new_key]['below_tol'] = [True]
 
-                # add buttons
-                bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
-                b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
-                b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
-                b.config(state='disabled')
-                self.all_buttons.append(b)
-                self.label_ind = 1 + max([v['ind'] for k, v in self.object_name.items() if v['on']])
+    #             # add buttons
+    #             bg = self.color_name[self.object_name[new_key]['ind']][1].lower()
+    #             b = tk.Button(self.BUTTON_FRAME, text=new_key, command=lambda clr=new_key: self.on_button(clr), bg=bg)
+    #             b.grid(row=len(self.all_buttons) + 2, column=0, sticky=tk.W+tk.E+tk.N+tk.S, padx=5, pady=5)
+    #             b.config(state='disabled')
+    #             self.all_buttons.append(b)
+    #             self.label_ind = 1 + max([v['ind'] for k, v in self.object_name.items() if v['on']])
 
-            # manual label for existing object
-            else:
-                k = [k for k, v in self.object_name.items() if v['ind'] == self.label_ind - 1][0]
-                # record label points
-                if self.n_frame not in self.label_dict[k]['n_frame']:
-                    self.label_dict[k]['n_frame'].append(self.n_frame)
-                    self.label_dict[k]['path'].append(p)
-                    self.label_dict[k]['wh'].append((0, 0))
-                else:
-                    self.label_dict[k]['path'][self.label_dict[k]['n_frame'].index(self.n_frame)] = p
-                    self.label_dict[k]['wh'][self.label_dict[k]['n_frame'].index(self.n_frame)] = (0, 0)
+    #         # manual label for existing object
+    #         else:
+    #             k = [k for k, v in self.object_name.items() if v['ind'] == self.label_ind - 1][0]
+    #             # record label points
+    #             if self.n_frame not in self.label_dict[k]['n_frame']:
+    #                 self.label_dict[k]['n_frame'].append(self.n_frame)
+    #                 self.label_dict[k]['path'].append(p)
+    #                 self.label_dict[k]['wh'].append((0, 0))
+    #             else:
+    #                 self.label_dict[k]['path'][self.label_dict[k]['n_frame'].index(self.n_frame)] = p
+    #                 self.label_dict[k]['wh'][self.label_dict[k]['n_frame'].index(self.n_frame)] = (0, 0)
 
-                # modify label point if it conflicts with original result dicts
-                try:
-                    ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
-                    # pending; conflict with existing path, ask reassign UI?
-                    self.tmp_results_dict[k]['path'][ind] = p
-                    self.tmp_results_dict[k]['wh'][ind] = (0, 0)
-                except:
-                    self.tmp_results_dict[k]['n_frame'].append(self.n_frame)
-                    self.tmp_results_dict[k]['path'].append(p)
-                    self.tmp_results_dict[k]['wh'].append((0, 0))
+    #             # modify label point if it conflicts with original result dicts
+    #             try:
+    #                 ind = self.tmp_results_dict[k]['n_frame'].index(self.n_frame)
+    #                 # pending; conflict with existing path, ask reassign UI?
+    #                 self.tmp_results_dict[k]['path'][ind] = p
+    #                 self.tmp_results_dict[k]['wh'][ind] = (0, 0)
+    #             except:
+    #                 self.tmp_results_dict[k]['n_frame'].append(self.n_frame)
+    #                 self.tmp_results_dict[k]['path'].append(p)
+    #                 self.tmp_results_dict[k]['wh'].append((0, 0))
 
     # button event
     def on_button(self, clr):

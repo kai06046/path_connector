@@ -195,7 +195,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         root = tk.Tk()
         root.iconbitmap('beetle.ico')
         root.title(self.win_name)
-        label = ttk.Label(root, text='請載入埋葬蟲影像。\n* 影像路徑底下請附上包含 YOLO 結果並和影像檔名相同的 txt。', font=LARGE_FONT)
+        label = ttk.Label(root, text='請載入埋葬蟲影像。\n* 影像路徑底下請附上包含埋葬蟲偵測結果並和影像檔名相同的 txt。', font=LARGE_FONT)
         label.pack(padx=10, pady=10)
 
         label2 = ttk.Label(root, text='當下沒有影像。')
@@ -228,7 +228,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
             res = True
 
         if not res:
-            self.msg('路徑底下沒有對應的 YOLO txt。')
+            self.msg('路徑底下沒有對應的埋葬蟲偵測結果的 txt。')
         elif self.video_path is None:
             self.msg('請載入影像檔案。')
         else:
@@ -518,7 +518,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         scale_max.grid(row=5, column=1)
 
         # checkboxes
-        check_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示 YOLO bounding box')
+        check_show_box = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_show_yolo, onvalue=1, offvalue=0, text='顯示埋葬蟲 bounding box')
         check_show_box.grid(row=6, column=0, sticky="news", padx=10, pady=5)
 
         check_is_clear = ttk.Checkbutton(self.BUTTON_FRAME_2, variable=self.check_is_clear, onvalue=1, offvalue=0, text='透鏡')
