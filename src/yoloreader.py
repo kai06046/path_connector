@@ -13,16 +13,16 @@ letter = [str(i) for i in range(1, 20)]
 N_SHOW = 25
 
 # threshold
-THRES_FORWARD_DIST = 30
+THRES_FORWARD_DIST = 25
 THRES_FORWARD_N_MAX = 30
-THRES_FORWARD_N = 10
+THRES_FORWARD_N = 20
 THRES_NEAR_DIST = 80 # for pass false positive
 
 THRES_NEAR_DIST_NOT_ASSIGN = 48 # for append if very near not assigned key
 THRES_NOT_ASSIGN_FORWARD_N_MAX = 100
 THRES_NOT_ASSIGN_FORWARD_DIST = 35
 THRES_NOT_ASSIGN_FORWARD_N = 10
-THRES_NOT_ASSIGN_FP_DIST = 20
+THRES_NOT_ASSIGN_FP_DIST = 25
 
 class YOLOReader(object):
 
@@ -68,7 +68,7 @@ class YOLOReader(object):
             if len(boxes) > 0:
                 self.dist_records[n_frame] = dict()
 
-                on_keys = [k for k, v in self.object_name.items() if v['on']]
+                on_keys = sorted([k for k, v in self.object_name.items() if v['on']])
 
                 for i, box in enumerate(boxes):
                     ymin, xmin, ymax, xmax, score = box
@@ -273,8 +273,12 @@ class YOLOReader(object):
                         print(hit_condi)
             # just ignored if there is no bounding box in this frame
             else:
-                on_keys = [k for k, v in self.object_name.items() if v['on']]
-                pass
+                on_keys = sorted([k for k, v in self.object_name.items() if v['on']])
+
+            # check if there is a separation of bboxes after overlapping
+             
+            # if is_separate:
+            #     self.is_calculate = False
 
             if self.is_calculate:
                 n_frame += 1

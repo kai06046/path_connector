@@ -40,9 +40,10 @@ class KeyHandler(Interface, Common):
             if self.is_manual:
                 self.chg_mode()
             
-            file = self.video_path.split('.avi')[0] + '.dat'
-            if os.path.isfile(file):
-                self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
+            filename = self.video_path.split('.avi')[0] + '.dat'
+            if os.path.isfile(filename):
+                with open(filename, "rb") as f:
+                    self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(f)
                 self.n_frame = self.stop_n_frame
                 tmp_diff = len(self.object_name) - old_len
                 self.center_root(r=35*tmp_diff)
@@ -646,7 +647,7 @@ class KeyHandler(Interface, Common):
         break_pt = max([max(v['n_frame']) for k, v in results_dict.items()])
 
         for i in range(start_pt, break_pt):
-            if (i % 20 == 0 or i == start_pt):
+            if (i % 30 == 0 or i == start_pt):
                 self.n_frame = i
                 self.update_frame()
                 frame = self._orig_frame.copy()
@@ -672,6 +673,7 @@ class KeyHandler(Interface, Common):
                 image = ImageTk.PhotoImage(Image.fromarray(frame))
                 self.display_label.configure(image=image)
                 self.scale_nframe.set(i)
+                self.label_nframe_v.configure(text="當前幀數: %s/%s" % (self.n_frame, self.total_frame))
                 self.root.update_idletasks()
 
         self.n_frame = self.stop_n_frame

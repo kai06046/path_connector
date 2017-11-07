@@ -20,7 +20,8 @@ class Interface(object):
         if not self.is_calculate:
             if askokcancel('離開', '你確定要關閉程式了嗎？'):
                 if len(self.undo_records) > 1:
-                    pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
+                    with open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) as f:
+                        pickle.dump(self.undo_records[-1], f)
                     # self.ask_save(style='confirm')
                 self.root.quit()
                 self.is_root_exist = False
@@ -33,12 +34,15 @@ class Interface(object):
         if style == 'replace':
             if os.path.isfile(filename):
                 if askyesno('存檔', '檔案已存在, 是否要覆蓋原本的檔案?'):
-                    pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
+                    with open(filename, "wb" ) as f:
+                        pickle.dump(self.undo_records[-1], f)
             else:
-                pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
+                with open(filename, "wb" ) as f:
+                    pickle.dump(self.undo_records[-1], f)
         elif style == 'confirm':
             if askyesno('存檔', '要把操作結果存檔嗎?'):
-                pickle.dump(self.undo_records, open( "%s.dat" % self.video_path.split('.avi')[0], "wb" ) )
+                with open(filename, "wb" ) as f:
+                    pickle.dump(self.undo_records[-1], f)
 
     # confirm for replacement
     def ask_yes_no(self, clr, title='確認', icontype='warning'):

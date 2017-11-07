@@ -50,7 +50,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         # basic variables
         self.color = COLOR
         self.color_name = COLOR_NAME
-        self.maximum = maximum
+        # self.maximum = maximum
+        self.maximum = 150
         self.tol = tol
 
         # variables for displaying in canvas
@@ -176,7 +177,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         if not self.safe:
             self.display_label.configure(image=self.image)
 
-        self.display_label.after(30, self.update_draw)
+        self.display_label.after(20, self.update_draw)
 
     def update_track(self, ind):
         if len(self.tracked_frames) > 0 and ind < (len(self.tracked_frames) - 1) and self.safe: #  and self.safe:
@@ -291,7 +292,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
         file = self.video_path.split('.avi')[0] + '.dat'
         if os.path.isfile(file):
-            self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(open(file, "rb" ))[-1]
+            with open(file, "rb") as f:
+                self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(f)
             self.n_frame = self.stop_n_frame
         else:
             self.calculate_path()
