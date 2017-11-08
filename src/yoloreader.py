@@ -19,12 +19,12 @@ N_SHOW = 25 # thres for update image frame
 THRES_FORWARD_DIST = 30 # append 到 assigned key 的最小距離
 THRES_FORWARD_N_MAX = 50 # 往後看多少 frame 是不是有符合最小距離的條件
 THRES_FORWARD_N = 10 # 往後 N_MAX 裡有符合最小距離的最少數量, 如果有就當作新 key
-THRES_NEAR_DIST = 10 # 對於沒有被分配 key 的bbox, 距離多進就直接 pass
+THRES_NEAR_DIST = 100 # 對於沒有被分配 key 的bbox, 距離多進就直接 pass
 
-THRES_NEAR_DIST_NOT_ASSIGN = 50 # 對於沒有被分配 key 的 bbox, 和其他沒被分配到 bbox 的 key 可以符合 append 條件的距離
+THRES_NEAR_DIST_NOT_ASSIGN = 80 # 對於沒有被分配 key 的 bbox, 和其他沒被分配到 bbox 的 key 可以符合 append 條件的距離
 THRES_NOT_ASSIGN_FORWARD_N_MAX = 100 # 沒有被分配 key 的 bbox, 往之後再看多少 frame 數
 THRES_NOT_ASSIGN_FORWARD_DIST = 50 # 沒有被分配 key 的 bbox, 符合停下來讓 user 判斷的最小距離
-THRES_NOT_ASSIGN_FORWARD_N = 12 # 往後 N_MAX 裡符合最小距離的最少數量
+THRES_NOT_ASSIGN_FORWARD_N = 15 # 往後 N_MAX 裡符合最小距離的最少數量
 THRES_NOT_ASSIGN_FP_DIST = 30 # 比較和已經是 false positive 的距離
 
 class YOLOReader(object):
@@ -143,30 +143,73 @@ class YOLOReader(object):
                 sorted_indexes = {k: sorted(range(len(v['dist'])), key=lambda k: v['dist'][k]) for k, v in tmp_dist_record.items()}
                 hit_condi = [(k, sorted_indexes[k][0]) for k in on_keys if tmp_dist_record[k]['below_tol'][sorted_indexes[k][0]]]
                 
-                if n_frame > 280 and n_frame < 290:
-                    print(n_frame)
-                    # print(tmp_dist_record)
-                    print(hit_condi)
+                # if n_frame > 280 and n_frame < 290:
+                #     print(n_frame)
+                #     print(tmp_dist_record)
+                #     print(hit_condi)
 
                 # the easiest part: the length of hit_condi is same as the number of objects
                 if n_frame == 1:
                     pass
                 elif len(set([v[1] for v in hit_condi])) == len(on_keys):
 
-                    # pending assessment
                     for k, ind in hit_condi:
                         if k not in label_ind:
                             self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
                             self.results_dict[k]['n_frame'].append(n_frame)
                             self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][ind])
+                    
+                    logging.info('len(set([v[1] for v in hit_condi])) == len(on_keys) (%s)' % n_frame)
+                    
+                    assigned_keys = [k for k, ind in hit_condi]
+                    assigned_boxes = [ind for k, ind in hit_condi]
+                    not_assigned_boxes = set([i for i in range(len(boxes))]).difference(assigned_boxes)
+                    
+                    not_assigned_indices = []
+                    for ind in not_assigned_boxes:
+                        if not any([v['dist'][ind] <= THRES_NEAR_DIST for k, v in tmp_dist_record.items() if k in assigned_keys]):
+                            temp = 0
+                            fp_n = min(n_frame + THRES_NOT_ASSIGN_FORWARD_N_MAX, len(self.__yolo_results__))
+                            forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame, fp_n)]
+                            p_tmp = p
+                            for i, res in enumerate(forward_points):
+                                min_dist = 99999
+                                for b in res:
+                                    ymin, xmin, ymax, xmax, score = b
+                                    x_c = int((xmin+xmax) / 2 + 0.5)
+                                    y_c = int((ymin+ymax) / 2 + 0.5)
+                                    p_forward = (x_c, y_c)
+                                    dist = np.linalg.norm(np.array(p_forward) - np.array(p_tmp))
+                                    if dist <= min(THRES_NOT_ASSIGN_FORWARD_DIST, min_dist):
+                                        min_dist = dist
+                                        p_tmp = p_forward
+                                if min_dist < THRES_NOT_ASSIGN_FORWARD_DIST:
+                                    temp += 1
 
-                    if n_frame > 280 and n_frame < 290:
-                        logging.info('len(set([v[1] for v in hit_condi])) == len(on_keys) (%s)' % n_frame)
+                            if temp > THRES_NOT_ASSIGN_FORWARD_N:
+                                compare = False
+                                for fp in self.fp_pts:
+                                    fp_dist = np.linalg.norm(np.array(fp) - np.array(tmp_dist_record[on_keys[0]]['center'][ind]))
+                                    if fp_dist < THRES_NOT_ASSIGN_FP_DIST:
+                                        compare = True
+                                # stop the function and ask user only if this center is not near with false positive points
+                                if not compare:
+                                    undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind], n_frame))
+                                    self.is_calculate = False
+                                    not_assigned_indices.append(ind)
+                            # if this center of bounding box is not potentially connected in next 100 frames, just ignored it.
+                            else:
+                                print('Line 240: temp < THRES_NOT_ASSIGN_FORWARD_N')
+
+                    if not self.is_calculate:
+                        print('not assigned boxes')
+                        print('distance records %s' % tmp_dist_record)
+                        print('object and bbox match pairs %s' % hit_condi)
+                        print('index of not assigned bounding boxes: %s' % not_assigned_indices)
 
                 # the length of hit_condi is same as the number of nearest indexes
                 elif len(set([v for k, v in hit_condi])) == len(hit_condi):
-
-                    # pending, assessment
+                    logging.info('len(set([v for k, v in hit_condi])) == len(hit_condi) (%s)' % n_frame)
                     for k, ind in hit_condi:
                         if k not in label_ind:
                             self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
@@ -180,14 +223,12 @@ class YOLOReader(object):
                         not_assigned_boxes = set([i for i in range(len(boxes))]).difference(assigned_boxes)
                         not_assigned_keys = [k for k in on_keys if k not in assigned_keys]                        
 
+                        not_assigned_indices = []
                         for ind in not_assigned_boxes:
-
                             # if the not assigned boxes are too near with assigned keys, got thres
                             if any([v['dist'][ind] <= THRES_NEAR_DIST for k, v in tmp_dist_record.items() if k in assigned_keys]):
                                 print("Too near with existing bboxes", ind)
                             else:
-                                if n_frame > 280 and n_frame < 300:
-                                    logging.info('len(set([v for k, v in hit_condi])) == len(hit_condi) (%s)' % n_frame)
                                 # less strict distance condition for not assigned object
                                 min_dist = 9999
                                 min_key = None
@@ -204,7 +245,12 @@ class YOLOReader(object):
                                         self.results_dict[min_key]['n_frame'].append(n_frame)
                                         self.results_dict[min_key]['wh'].append(tmp_dist_record[min_key]['wh'][ind])
                                         not_assigned_keys.pop(not_assigned_keys.index(min_key))
-                                    logging.info('min key is not None (%s)' % n_frame)
+
+                                        hit_condi.append((min_key, ind))
+
+                                    if len(not_assigned_keys) == 0:
+                                        break
+                                    logging.info("%s hit 'min key is not None' (%s)" % (ind, n_frame))
                                 else:
                                     # forward next 100 points
                                     temp = 0
@@ -236,18 +282,20 @@ class YOLOReader(object):
                                         if not compare:
                                             undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind], n_frame))
 
-                                            print('not assigned boxes')
-                                            print('distance records %s' % tmp_dist_record)
-                                            print('object and bbox match pairs %s' % hit_condi)
-                                            print('index of not assigned bounding boxes: %s' % ind)
-                                            lost_box_key = [k for k in on_keys if k not in [j for j, _ in hit_condi]]
-                                            print('lost boxes key %s' % lost_box_key)
-                                            if (tmp_dist_record[lost_box_key[0]]['center'][ind], n_frame) not in undone_pts:
-                                                undone_pts.append((tmp_dist_record[lost_box_key[0]]['center'][ind], n_frame))
+                                            if (tmp_dist_record[not_assigned_keys[0]]['center'][ind], n_frame) not in undone_pts:
+                                                undone_pts.append((tmp_dist_record[not_assigned_keys[0]]['center'][ind], n_frame))
                                             self.is_calculate = False
+                                            not_assigned_indices.append(ind)
                                     # if this center of bounding box is not potentially connected in next 100 frames, just ignored it.
                                     else:
-                                        print('Line 240: temp < THRES_NOT_ASSIGN_FORWARD_N')
+                                        logging.info('Line 240: temp < THRES_NOT_ASSIGN_FORWARD_N')
+
+                        if not self.is_calculate:
+                            print('Case: not assigned boxes')
+                            print('distance records %s' % tmp_dist_record)
+                            print('object and bbox match pairs %s' % hit_condi)
+                            print('index of not assigned bounding boxes: %s' % not_assigned_indices)
+                            print('lost boxes key %s' % not_assigned_keys)
 
                 # there are boxes that hit condition with multi objects
                 else:
@@ -277,8 +325,8 @@ class YOLOReader(object):
                                 self.results_dict[k]['n_frame'].append(n_frame)
                                 self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][ind])
 
-                        logging.info('duplicate happened (%s)' % n_frame)
                         # pending, not assigned key
+                        logging.info('duplicate happened (%s)' % n_frame)
 
                     # if there is any condition that wasn't considered
                     else:
@@ -290,8 +338,34 @@ class YOLOReader(object):
             else:
                 on_keys = sorted([k for k, v in self.object_name.items() if v['on']])
 
+            SEPARATE_N_FRAME = 25
+            THRES_SEP_DIST = 15
             # check if there is a separation of bboxes after overlapping
-             
+            for k1, ind1 in hit_condi:
+                p1 = tmp_dist_record[k1]['center'][ind1]
+                other_keys = [k for k in self.results_dict.keys() if k is not k1]
+                nb_near = 0
+                for k2 in other_keys:
+                    pts = self.results_dict[k2]['path'][-SEPARATE_N_FRAME:]
+                    for p2 in pts:
+                        near_dist = np.linalg.norm(np.array(p1) - np.array(p2))
+                        if near_dist < THRES_SEP_DIST:
+                            nb_near += 1
+                    if nb_near > SEPARATE_N_FRAME/2:
+                        tmp_dist = np.linalg.norm(np.array(p1) - np.array(self.results_dict[k2]['path'][-1]))
+                        if tmp_dist > 45:
+                            undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind1], n_frame))
+                            self.is_calculate = False
+                            
+                            self.results_dict[k1]['center'].pop()
+                            self.results_dict[k1]['path'].pop()
+                            self.results_dict[k1]['wh'].pop()
+
+                            logging.info('separation happened (%s)' % n_frame)
+
+                            break
+
+
             # if is_separate:
             #     self.is_calculate = False
 
