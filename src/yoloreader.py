@@ -338,10 +338,12 @@ class YOLOReader(object):
             else:
                 on_keys = sorted([k for k, v in self.object_name.items() if v['on']])
 
-            SEPARATE_N_FRAME = 25
-            THRES_SEP_DIST = 15
+            SEPARATE_N_FRAME = 30
+            THRES_SEP_DIST = 14
             # check if there is a separation of bboxes after overlapping
+
             for k1, ind1 in hit_condi:
+                logging.info("k1: %s" % k1)
                 p1 = tmp_dist_record[k1]['center'][ind1]
                 other_keys = [k for k in self.results_dict.keys() if k is not k1]
                 nb_near = 0
@@ -353,18 +355,19 @@ class YOLOReader(object):
                             nb_near += 1
                     if nb_near > SEPARATE_N_FRAME/2:
                         tmp_dist = np.linalg.norm(np.array(p1) - np.array(self.results_dict[k2]['path'][-1]))
-                        if tmp_dist > 45:
+                        if tmp_dist > 55:
                             undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind1], n_frame))
+                            print(self.results_dict[k1]['n_frame'].pop())
+                            print(self.results_dict[k1]['path'].pop())
+                            print(self.results_dict[k1]['wh'].pop())
                             self.is_calculate = False
                             
-                            self.results_dict[k1]['center'].pop()
-                            self.results_dict[k1]['path'].pop()
-                            self.results_dict[k1]['wh'].pop()
+                            # print(self.results_dict[k2]['n_frame'].pop())
+                            # print(self.results_dict[k2]['path'].pop())
+                            # print(self.results_dict[k2]['wh'].pop())
 
-                            logging.info('separation happened (%s)' % n_frame)
-
+                            logging.info('separation happened (%s), k2: %s' % (n_frame, k2))
                             break
-
 
             # if is_separate:
             #     self.is_calculate = False
