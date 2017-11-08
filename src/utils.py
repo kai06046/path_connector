@@ -110,28 +110,35 @@ class Utils(object):
                     ymin, xmin, ymax, xmax, score = b
                     x_c = int((xmin+xmax) / 2 + 0.5)
                     y_c = int((ymin+ymax) / 2 + 0.5)
-
                     p1, p2 = (int(xmin), int(ymin)), (int(xmax), int(ymax))
-
                     color = None
-                    # find corresponding color of YOLO bounding boxes
-                    for k in sorted([k for k, v in self.object_name.items() if v['on']]):
-                        pts = results_dict[k]['path']
-                        flag = results_dict[k]['n_frame']
-                        ind = None                    
-                        try:
-                            ind = flag.index(self.n_frame)
-                        except:
-                            pass
+                    compare = False
+                    for fp in self.fp_pts:
+                        fp_dist = np.linalg.norm(np.array(fp) - np.array((x_c, y_c)))
+                        if fp_dist < 10:
+                            compare = True
+                            break
 
-                        if ind is not None:
-                            if pts[ind] == (x_c, y_c):
-                                color = self.color[self.object_name[k]['ind']]
-                                break
-                    if color:
-                        cv2.rectangle(self._frame, p1, p2, color, 1)
-                    else:
-                        cv2.rectangle(self._frame, p1, p2, (0, 255, 255), 1)
+                    if not compare:
+                        # find corresponding color of YOLO bounding boxes
+                        for k in sorted([k for k, v in self.object_name.items() if v['on']]):
+                            pts = results_dict[k]['path']
+                            flag = results_dict[k]['n_frame']
+                            ind = None                    
+                            try:
+                                ind = flag.index(self.n_frame)
+                            except:
+                                pass
+
+                            if ind is not None:
+                                if pts[ind] == (x_c, y_c):
+                                    color = self.color[self.object_name[k]['ind']]
+                                    break
+
+                        if color:
+                            cv2.rectangle(self._frame, p1, p2, color, 1)
+                        else:
+                            cv2.rectangle(self._frame, p1, p2, (0, 255, 255), 1)
 
             # remove drawing on specific region
             n = 60
@@ -170,48 +177,44 @@ class Utils(object):
 
             # adjust the frame aspect ratio if the window is maximized
             if self.root.state() == 'zoomed':
-                shape = self._frame.shape
-                self.root.update()
-                # r1 = (shape[1] / self.root.winfo_screenwidth())
-                # r2 = (shape[0] / self.root.winfo_screenheight())
-                # r1 = (shape[1] / self.root.winfo_width())
-                # r2 = (shape[0] / self.root.winfo_height())
+                try:
+                    shape = self._frame.shape
+                    self.root.update()
+                    r1 = (shape[1] / self.root.winfo_width())
+                    r2 = (shape[0] / self.root.winfo_height())
+                    shrink_r = max(r1, r2)
+                    # shrink_r = r1
+                    self._c_height = self._r_height/shrink_r
+                    self._c_width = self._r_width/shrink_r
 
-                r1 = (shape[1] / self.root.winfo_width())
-                r2 = (shape[0] / self.root.winfo_height())
-                shrink_r = max(r1, r2)
-                # shrink_r = r1
-                self._c_height = self._r_height/shrink_r
-                self._c_width = self._r_width/shrink_r
+                    if r1 == shrink_r:
+                        nw = int(shape[1] * self._c_width)
+                        nh = int(shape[0] * nw / shape[1])
+                        self._c_height = nw / shape[1]
+                    else:
+                        nh = int(shape[0] * self._c_height)
+                        nw = int(shape[1] * nh / shape[0])
+                        self._c_width = nh / shape[0]
+                    df_w = self.display_frame.winfo_width()
+                    if df_w == 1284:
+                        pass
+                    elif nw > df_w:
+                        nn_w = df_w - 4
+                        r = nn_w / nw
+                        self._c_width = r * self._c_width
 
-                if r1 == shrink_r:
-                    nw = int(shape[1] * self._c_width)
-                    nh = int(shape[0] * nw / shape[1])
-                    self._c_height = nw / shape[1]
-                else:
-                    nh = int(shape[0] * self._c_height)
-                    nw = int(shape[1] * nh / shape[0])
-                    self._c_width = nh / shape[0]
-                df_w = self.display_frame.winfo_width()
-                if df_w == 1284:
+                        nn_h = int(nh * r)
+                        self._c_height = nn_h / shape[0]
+                        nh = nn_h
+                        nw = nn_w
+                    else:
+                        print(df_w)
+
+                    newsize = (nw, nh)
+                    self._frame = cv2.resize(self._frame, newsize)
+                except:
                     pass
-                elif nw > df_w:
-                    nn_w = df_w - 4
-                    r = nn_w / nw
-                    self._c_width = r * self._c_width
-
-                    nn_h = int(nh * r)
-                    self._c_height = nn_h / shape[0]
-                    nh = nn_h
-                    nw = nn_w
-                else:
-                    print(df_w)
-
-                newsize = (nw, nh)
-
                 # print(newsize)
-
-                self._frame = cv2.resize(self._frame, newsize)
 
             # convert frame into rgb
             self._frame = cv2.cvtColor(self._frame, cv2.COLOR_BGR2RGB)

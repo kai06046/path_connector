@@ -172,10 +172,13 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.update_frame()
         self.update_info()
         self.draw(tup)
-        if not self.is_calculate:
-            self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
-        if not self.safe:
-            self.display_label.configure(image=self.image)
+        try:
+            if not self.is_calculate:
+                self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
+            if not self.safe:
+                self.display_label.configure(image=self.image)
+        except:
+            pass
 
         self.display_label.after(20, self.update_draw)
 
