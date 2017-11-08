@@ -36,6 +36,7 @@ class KeyHandler(Interface, Common):
             self.dist_records = dict()
             self.label_dict = dict()
             self.undo_records = []
+            self.fp_pts = []
             self.drag_flag = None
             if self.is_manual:
                 self.chg_mode()
@@ -598,13 +599,13 @@ class KeyHandler(Interface, Common):
             self.save_records()
             # root.grab_release()
             k = [k for k, v in self.object_name.items() if v['ind'] == i][0]
-            result = askyesno('確認', '確定要刪除 %s 嗎？' %k, icon='warning')
+            result = askyesno('確認', '刪除以後就無法復原, 確定要刪除 %s 嗎？' %k, icon='warning')
             if result:
                 button = self.all_buttons[i+2]
                 button['state'] = 'disabled'
                 button.grid_forget()
                 self.center_root(r=-35)
-                root.destroy()
+                # root.destroy()
                 top.destroy()
 
                 # delete all info
@@ -612,27 +613,32 @@ class KeyHandler(Interface, Common):
                 self.object_name[k]['on'] = False
 
                 del self.results_dict[k]
+                del self.object_name[k]
                 self.suggest_label.grid(row=0, column=1, sticky="nwes", padx=5, pady=5)
                 if k in self.dist_records.keys():
                     del self.dist_records[k]
+                self.all_buttons.pop(i+2)
+                self.undo_records = []
             else:
                 pass
         def close():
-            root.destroy()
+            # root.destroy()
+            top.destroy()
 
-        root = tk.Tk()
-        root.protocol('WM_DELETE_WINDOW', close)
-        root.withdraw()
+        # root = tk.Tk()
+        # root.protocol('WM_DELETE_WINDOW', close)
+        # root.withdraw()
         top = tk.Toplevel()
         top.grab_set()
+        top.protocol('WM_DELETE_WINDOW', close)
         ## Display the window and wait for it to close
-        root.title('Remove object')
+        top.title('Remove object')
         self.center(top)
         for k in sorted([k for k, v in self.object_name.items() if v['on']]):
             b = ttk.Button(top, text=k, command=lambda i = self.object_name[k]['ind']: destroy(i))
             b.pack(expand=True, fill=tk.BOTH)
         self.root.wait_window(top)
-        root.mainloop()
+        # root.mainloop()
 
     def on_show_boxes(self):
         self.is_show_boxes = not self.is_show_boxes
