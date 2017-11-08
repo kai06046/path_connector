@@ -6,23 +6,26 @@ from PIL import Image, ImageTk
 # from mahotas.features import haralick, zernike
 # from skimage.feature import hog, local_binary_pattern
 from skimage.measure import compare_ssim
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 # letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]
 letter = [str(i) for i in range(1, 20)]
 
-N_SHOW = 25
+N_SHOW = 25 # thres for update image frame
 
 # threshold
-THRES_FORWARD_DIST = 25
-THRES_FORWARD_N_MAX = 30
-THRES_FORWARD_N = 20
-THRES_NEAR_DIST = 80 # for pass false positive
+THRES_FORWARD_DIST = 30 # append 到 assigned key 的最小距離
+THRES_FORWARD_N_MAX = 50 # 往後看多少 frame 是不是有符合最小距離的條件
+THRES_FORWARD_N = 10 # 往後 N_MAX 裡有符合最小距離的最少數量, 如果有就當作新 key
+THRES_NEAR_DIST = 10 # 對於沒有被分配 key 的bbox, 距離多進就直接 pass
 
-THRES_NEAR_DIST_NOT_ASSIGN = 48 # for append if very near not assigned key
-THRES_NOT_ASSIGN_FORWARD_N_MAX = 100
-THRES_NOT_ASSIGN_FORWARD_DIST = 35
-THRES_NOT_ASSIGN_FORWARD_N = 10
-THRES_NOT_ASSIGN_FP_DIST = 25
+THRES_NEAR_DIST_NOT_ASSIGN = 50 # 對於沒有被分配 key 的 bbox, 和其他沒被分配到 bbox 的 key 可以符合 append 條件的距離
+THRES_NOT_ASSIGN_FORWARD_N_MAX = 100 # 沒有被分配 key 的 bbox, 往之後再看多少 frame 數
+THRES_NOT_ASSIGN_FORWARD_DIST = 50 # 沒有被分配 key 的 bbox, 符合停下來讓 user 判斷的最小距離
+THRES_NOT_ASSIGN_FORWARD_N = 12 # 往後 N_MAX 裡符合最小距離的最少數量
+THRES_NOT_ASSIGN_FP_DIST = 30 # 比較和已經是 false positive 的距離
 
 class YOLOReader(object):
 
@@ -80,7 +83,8 @@ class YOLOReader(object):
                     # if there is no keys, initiate
                     if (n_key_used == 0 or n_frame == 1) and not self.is_manual:
                         temp = 0
-                        forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame, n_frame + THRES_FORWARD_N_MAX)]
+                        fp_n = min(n_frame + THRES_FORWARD_N_MAX, len(self.__yolo_results__))
+                        forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame, fp_n)]
                         p_tmp = p
                         for i, res in enumerate(forward_points):
                             min_dist = 99999
@@ -139,9 +143,10 @@ class YOLOReader(object):
                 sorted_indexes = {k: sorted(range(len(v['dist'])), key=lambda k: v['dist'][k]) for k, v in tmp_dist_record.items()}
                 hit_condi = [(k, sorted_indexes[k][0]) for k in on_keys if tmp_dist_record[k]['below_tol'][sorted_indexes[k][0]]]
                 
-                # if n_frame > 450 and n_frame < 455:
-                #     print(n_frame)
-                #     print(tmp_dist_record)
+                if n_frame > 280 and n_frame < 290:
+                    print(n_frame)
+                    # print(tmp_dist_record)
+                    print(hit_condi)
 
                 # the easiest part: the length of hit_condi is same as the number of objects
                 if n_frame == 1:
@@ -154,6 +159,9 @@ class YOLOReader(object):
                             self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
                             self.results_dict[k]['n_frame'].append(n_frame)
                             self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][ind])
+
+                    if n_frame > 280 and n_frame < 290:
+                        logging.info('len(set([v[1] for v in hit_condi])) == len(on_keys) (%s)' % n_frame)
 
                 # the length of hit_condi is same as the number of nearest indexes
                 elif len(set([v for k, v in hit_condi])) == len(hit_condi):
@@ -176,8 +184,10 @@ class YOLOReader(object):
 
                             # if the not assigned boxes are too near with assigned keys, got thres
                             if any([v['dist'][ind] <= THRES_NEAR_DIST for k, v in tmp_dist_record.items() if k in assigned_keys]):
-                                pass
+                                print("Too near with existing bboxes", ind)
                             else:
+                                if n_frame > 280 and n_frame < 300:
+                                    logging.info('len(set([v for k, v in hit_condi])) == len(hit_condi) (%s)' % n_frame)
                                 # less strict distance condition for not assigned object
                                 min_dist = 9999
                                 min_key = None
@@ -186,17 +196,20 @@ class YOLOReader(object):
                                         min_dist = tmp_dist_record[k]['dist'][ind]
                                         if min_dist <= THRES_NEAR_DIST_NOT_ASSIGN:
                                             min_key = k
+
                                 # append the record if any object was found
                                 if min_key is not None:
                                     if min_key not in label_ind:
                                         self.results_dict[min_key]['path'].append(tmp_dist_record[min_key]['center'][ind])
                                         self.results_dict[min_key]['n_frame'].append(n_frame)
                                         self.results_dict[min_key]['wh'].append(tmp_dist_record[min_key]['wh'][ind])
-                                        not_assigned_keys.pop(-1)
+                                        not_assigned_keys.pop(not_assigned_keys.index(min_key))
+                                    logging.info('min key is not None (%s)' % n_frame)
                                 else:
                                     # forward next 100 points
                                     temp = 0
-                                    forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame - 1, n_frame + (THRES_NOT_ASSIGN_FORWARD_N_MAX - 1))]
+                                    fp_n = min(n_frame + (THRES_NOT_ASSIGN_FORWARD_N_MAX - 1), len(self.__yolo_results__))
+                                    forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame - 1, fp_n)]
                                     p = tmp_dist_record[on_keys[0]]['center'][ind]
                                     for i, res in enumerate(forward_points):
                                         min_dist = 99999
@@ -234,7 +247,8 @@ class YOLOReader(object):
                                             self.is_calculate = False
                                     # if this center of bounding box is not potentially connected in next 100 frames, just ignored it.
                                     else:
-                                        pass
+                                        print('Line 240: temp < THRES_NOT_ASSIGN_FORWARD_N')
+
                 # there are boxes that hit condition with multi objects
                 else:
                     hit_boxes = [v for k, v in hit_condi]
@@ -263,6 +277,7 @@ class YOLOReader(object):
                                 self.results_dict[k]['n_frame'].append(n_frame)
                                 self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][ind])
 
+                        logging.info('duplicate happened (%s)' % n_frame)
                         # pending, not assigned key
 
                     # if there is any condition that wasn't considered
