@@ -138,7 +138,7 @@ class Utils(object):
                         if color:
                             cv2.rectangle(self._frame, p1, p2, color, 1)
                         else:
-                            cv2.rectangle(self._frame, p1, p2, (0, 255, 255), 1)
+                            cv2.rectangle(self._frame, p1, p2, (255, 255, 255), 1)
 
             # remove drawing on specific region
             n = 60
