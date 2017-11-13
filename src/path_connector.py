@@ -14,8 +14,8 @@ from src.utils import Utils
 WIN_NAME = 'Path Connector'
 VIDEO_PATH = 'videos/[CH04] 2016-09-28 20.20.00_x264.avi'
 # COLOR_NAME = ['limegreen', 'deepskyblue', 'YELLOW2', 'ORANGE', 'PURPLE', 'PINK', 'CYAN', 'BLACK', 'RED', 'WHITE']
-COLOR_NAME = [('green', 'limegreen'), ('blue', 'deepskyblue'), ('yellow', 'gold'), ('orange', 'orange'), ('purple', 'purple'), ('pink', 'pink'), ('cyan', 'cyan'), ('black', 'black'), ('red', 'red'), ('white', 'white')]
-COLOR = [(50, 205, 50), (255, 191, 0), (0, 215, 255), (0, 165, 255), (211, 85, 186), (255, 102, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
+COLOR_NAME = [('green', 'limegreen'), ('blue', 'deepskyblue'), ('yellow', 'gold'), ('purple', 'blueviolet'), ('orange', 'orange'), ('pink', 'pink'), ('cyan', 'cyan'), ('black', 'black'), ('red', 'red'), ('white', 'white')]
+COLOR = [(50, 205, 50), (255, 191, 0), (0, 215, 255), (211, 85, 186), (0, 165, 255), (255, 102, 255), (255, 255, 0), (0, 0, 0), (100, 10, 255), (255, 255, 255)]
 
 # UI required variables
 # letter = [chr(i) for i in range(ord('A'), ord('Z')+1)]

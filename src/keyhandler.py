@@ -94,6 +94,7 @@ class KeyHandler(Interface, Common):
         self.label_dict = dict()
         self.undo_records = []
         self.drag_flag = None
+        self.fp_pts = []
         if self.is_manual:
             self.chg_mode()
         
@@ -509,12 +510,11 @@ class KeyHandler(Interface, Common):
         if not self.is_manual:
             if sym not in ['a', 'Delete', 'd', 'q', 'j', 'r']:
                 try:
-                    print("event char:", event.char)
                     i = int(event.char)
                     self.on_button([k for k, v in self.object_name.items() if v['ind'] == i - 1][0])
                 except Exception as e:
-                    print(event.char)
-                    print('on_key_error', e)
+                    print("event char: ", event.char)
+                    print('on_key error', e)
             elif sym == 'a':
                 self.on_button('新目標 (a)')
             elif sym in ['Delete', 'd']:
@@ -635,7 +635,7 @@ class KeyHandler(Interface, Common):
         top.title('Remove object')
         self.center(top)
         for k in sorted([k for k, v in self.object_name.items() if v['on']]):
-            b = ttk.Button(top, text=k, command=lambda i = self.object_name[k]['ind']: destroy(i))
+            b = ttk.Button(top, text=self.object_name[k]['display_name'], command=lambda i = self.object_name[k]['ind']: destroy(i))
             b.pack(expand=True, fill=tk.BOTH)
         self.root.wait_window(top)
         # root.mainloop()
@@ -775,7 +775,7 @@ class KeyHandler(Interface, Common):
     def undo(self, event=None, is_esc=False):
 
         if len(self.undo_records)  == 0:
-            self.msg('Nothing can undo.')
+            self.msg("沒有可復原的操作。")
         elif self.is_manual:
             self.undo_manual()
         else:

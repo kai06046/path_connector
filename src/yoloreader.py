@@ -19,7 +19,7 @@ N_SHOW = 25 # thres for update image frame
 THRES_FORWARD_DIST = 30 # append 到 assigned key 的最小距離
 THRES_FORWARD_N_MAX = 50 # 往後看多少 frame 是不是有符合最小距離的條件
 THRES_FORWARD_N = 10 # 往後 N_MAX 裡有符合最小距離的最少數量, 如果有就當作新 key
-THRES_NEAR_DIST = 100 # 對於沒有被分配 key 的bbox, 距離多進就直接 pass
+THRES_NEAR_DIST = 20 # 對於沒有被分配 key 的bbox, 距離多進就直接 pass
 
 THRES_NEAR_DIST_NOT_ASSIGN = 80 # 對於沒有被分配 key 的 bbox, 和其他沒被分配到 bbox 的 key 可以符合 append 條件的距離
 THRES_NOT_ASSIGN_FORWARD_N_MAX = 100 # 沒有被分配 key 的 bbox, 往之後再看多少 frame 數
@@ -143,10 +143,10 @@ class YOLOReader(object):
                 sorted_indexes = {k: sorted(range(len(v['dist'])), key=lambda k: v['dist'][k]) for k, v in tmp_dist_record.items()}
                 hit_condi = [(k, sorted_indexes[k][0]) for k in on_keys if tmp_dist_record[k]['below_tol'][sorted_indexes[k][0]]]
                 
-                # if n_frame > 280 and n_frame < 290:
-                #     print(n_frame)
-                #     print(tmp_dist_record)
-                #     print(hit_condi)
+                if n_frame > 480 and n_frame < 485:
+                    print(n_frame)
+                    print(tmp_dist_record)
+                    print(hit_condi)
 
                 # the easiest part: the length of hit_condi is same as the number of objects
                 if n_frame == 1:
@@ -226,8 +226,43 @@ class YOLOReader(object):
                         not_assigned_indices = []
                         for ind in not_assigned_boxes:
                             # if the not assigned boxes are too near with assigned keys, got thres
-                            if any([v['dist'][ind] <= THRES_NEAR_DIST for k, v in tmp_dist_record.items() if k in assigned_keys]):
+                            if sum([v['dist'][ind] <= THRES_NEAR_DIST for k, v in tmp_dist_record.items() if k in assigned_keys]) > 1:
+                                # 如果往後好幾個 frame 可以連起來就停下來
                                 print("Too near with existing bboxes", ind)
+                                temp = 0
+                                fp_n = min(n_frame + int(THRES_NOT_ASSIGN_FORWARD_N_MAX/2 - 1), len(self.__yolo_results__))
+                                forward_points = [eval(self.__yolo_results__[i])[1] for i in range(n_frame - 1, fp_n)]
+                                p = tmp_dist_record[on_keys[0]]['center'][ind]
+                                for i, res in enumerate(forward_points):
+                                    min_dist = 99999
+                                    for b in res:
+                                        ymin, xmin, ymax, xmax, score = b
+                                        x_c = int((xmin+xmax) / 2 + 0.5)
+                                        y_c = int((ymin+ymax) / 2 + 0.5)
+                                        p_forward = (x_c, y_c)
+                                        dist = np.linalg.norm(np.array(p_forward) - np.array(p))
+                                        if dist <= min(THRES_NOT_ASSIGN_FORWARD_DIST, min_dist):
+                                            min_dist = dist
+                                            p = p_forward
+                                    if min_dist < THRES_NOT_ASSIGN_FORWARD_DIST:
+                                        temp += 1
+
+                                # if this center is potential, compare it with false positive point.
+                                if temp > int(THRES_NOT_ASSIGN_FORWARD_N/2):
+                                    compare = False
+                                    for fp in self.fp_pts:
+                                        fp_dist = np.linalg.norm(np.array(fp) - np.array(tmp_dist_record[on_keys[0]]['center'][ind]))
+                                        if fp_dist < THRES_NOT_ASSIGN_FP_DIST:
+                                            compare = True
+                                    # stop the function and ask user only if this center is not near with false positive points
+                                    if not compare:
+                                        undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind], n_frame))
+
+                                        if (tmp_dist_record[not_assigned_keys[0]]['center'][ind], n_frame) not in undone_pts:
+                                            undone_pts.append((tmp_dist_record[not_assigned_keys[0]]['center'][ind], n_frame))
+                                        self.is_calculate = False
+                                        not_assigned_indices.append(ind)
+
                             else:
                                 # less strict distance condition for not assigned object
                                 min_dist = 9999
@@ -304,6 +339,7 @@ class YOLOReader(object):
                     duplicate_ind = set([x for x in hit_boxes if hit_boxes.count(x) > 1]) # boxes indexes with multi objects
                     duplicate_key = [k for k, v in hit_condi if hit_boxes.count(v) > 1] # boxes indexes with multi objects
 
+                    logging.info('duplicate key: %s duplicate ind: %s' % (duplicate_key, duplicate_ind))
                     # if this is duplicate indexes case, assign the nearest one
                     if len(duplicate_ind) > 0 :
                         """
@@ -328,6 +364,23 @@ class YOLOReader(object):
                         # pending, not assigned key
                         logging.info('duplicate happened (%s)' % n_frame)
 
+                        # for not assigned key
+                        for k in set(duplicate_key).difference(min_key):
+                            assert len([v for key, v in hit_condi if key == k]) == 1
+                            duplicated_ind = [v for key, v in hit_condi if key == k][0]
+                            min_tmp_dist = 99999
+                            min_ind = None
+                            for ind, tmp_dist in enumerate(tmp_dist_record[k]["dist"]):
+                                tmp_dist = tmp_dist
+                                if ind != duplicated_ind and tmp_dist < min_tmp_dist:
+                                    min_tmp_dist = tmp_dist
+                                    min_ind = ind
+
+                            if min_tmp_dist < THRES_NOT_ASSIGN_FORWARD_DIST:
+                                self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][min_ind])
+                                self.results_dict[k]['n_frame'].append(n_frame)
+                                self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][min_ind])
+
                     # if there is any condition that wasn't considered
                     else:
                         self.is_calculate = False
@@ -339,11 +392,9 @@ class YOLOReader(object):
                 on_keys = sorted([k for k, v in self.object_name.items() if v['on']])
 
             SEPARATE_N_FRAME = 30
-            THRES_SEP_DIST = 14
+            THRES_SEP_DIST = 15
             # check if there is a separation of bboxes after overlapping
-
             for k1, ind1 in hit_condi:
-                logging.info("k1: %s" % k1)
                 p1 = tmp_dist_record[k1]['center'][ind1]
                 other_keys = [k for k in self.results_dict.keys() if k is not k1]
                 nb_near = 0
@@ -355,7 +406,7 @@ class YOLOReader(object):
                             nb_near += 1
                     if nb_near > SEPARATE_N_FRAME/2:
                         tmp_dist = np.linalg.norm(np.array(p1) - np.array(self.results_dict[k2]['path'][-1]))
-                        if tmp_dist > 55:
+                        if tmp_dist > 30 and tmp_dist < 45:
                             undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind1], n_frame))
                             print(self.results_dict[k1]['n_frame'].pop())
                             print(self.results_dict[k1]['path'].pop())
@@ -366,11 +417,8 @@ class YOLOReader(object):
                             # print(self.results_dict[k2]['path'].pop())
                             # print(self.results_dict[k2]['wh'].pop())
 
-                            logging.info('separation happened (%s), k2: %s' % (n_frame, k2))
+                            logging.info('separation happened (%s), k1: %s k2: %s' % (n_frame, k1, k2))
                             break
-
-            # if is_separate:
-            #     self.is_calculate = False
 
             if self.is_calculate:
                 n_frame += 1

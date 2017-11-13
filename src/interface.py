@@ -46,7 +46,7 @@ class Interface(object):
 
     # confirm for replacement
     def ask_yes_no(self, clr, title='確認', icontype='warning'):
-        string = '%s 在本幀已經有被分配的 bounding box 咯!\n你確定要取代原本的嗎？' % clr
+        string = '%s 在本幀已經有被分配的 bounding box 咯!\n你確定要取代原本的嗎？' % self.object_name[clr]['display_name']
         result = askyesno(title, string, icon=icontype)
 
         return result

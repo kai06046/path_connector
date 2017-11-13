@@ -1,6 +1,9 @@
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 LENGTH_ARROW = 20
 
@@ -24,7 +27,10 @@ class Utils(object):
                 if ind is not None:
                     if self.check_show_drawing is None or self.check_show_drawing.get() == 1 and not self.is_calculate:
                         # show until current if ind is not None
-                        pts = pts[-self.maximum:(ind + 1) if ind is not None else None]
+                        lb = (ind+1-self.maximum)
+                        ub = (ind + 1) if ind is not None else None
+                        pts = pts[(lb if lb > 0 else 0):ub]
+                        
                         if len(pts) > 0:
                             # start point
                             cv2.circle(self._frame, tuple(pts[0]), 10, color, 1)
@@ -112,10 +118,12 @@ class Utils(object):
                     y_c = int((ymin+ymax) / 2 + 0.5)
                     p1, p2 = (int(xmin), int(ymin)), (int(xmax), int(ymax))
                     color = None
+                    
+                    # for not showing history false positive points
                     compare = False
                     for fp in self.fp_pts:
                         fp_dist = np.linalg.norm(np.array(fp) - np.array((x_c, y_c)))
-                        if fp_dist < 10:
+                        if fp_dist < 3:
                             compare = True
                             break
 
