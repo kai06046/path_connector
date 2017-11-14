@@ -265,6 +265,7 @@ class KeyHandler(Interface, Common):
         if self.is_manual and self.drag_flag not in [None, 'new']:
             flags = self.tmp_results_dict[self.drag_flag]['n_frame']
             path = self.tmp_results_dict[self.drag_flag]['path']
+            wh = self.tmp_results_dict[self.drag_flag]['wh']
             # get index of path if existed and then update with new coordinate
             try:
                 ind = flags.index(self.n_frame)
@@ -279,30 +280,37 @@ class KeyHandler(Interface, Common):
                     ind = min(tmp)
                     self.tmp_results_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
                     self.tmp_results_dict[self.drag_flag]['path'] = path[:ind] + [p] + path[ind:]
+                    self.tmp_results_dict[self.drag_flag]['wh'] = wh[:ind] + [wh[ind]] + wh[ind:]
                     self.min_label_ind = self.n_frame if self.min_label_ind is None else min(self.min_label_ind, self.n_frame)
                 # otherwise, append the coordinate on the end of the path
                 else:
                     self.tmp_results_dict[self.drag_flag]['n_frame'].append(self.n_frame)
                     self.tmp_results_dict[self.drag_flag]['path'].append(p)
+                    self.tmp_results_dict[self.drag_flag]['wh'].append(wh[ind])
 
             # record for label
             if self.drag_flag not in self.label_dict.keys():
-                self.label_dict[self.drag_flag] = {'path': [], 'n_frame': []}
+                self.label_dict[self.drag_flag] = {'path': [], 'n_frame': [], 'wh': []}
             flags = self.label_dict[self.drag_flag]['n_frame']
             path = self.label_dict[self.drag_flag]['path']
+            wh = self.label_dict[self.drag_flag]['wh']
+
             try:
                 ind = flags.index(self.n_frame)
                 self.label_dict[self.drag_flag]['path'][ind] = p
+                self.label_dict[self.drag_flag]['wh'][ind] = wh[ind]
             except:
                 tmp = [flags.index(v) for v in flags if v >= self.n_frame]
                 if len(tmp) > 0:
                     ind = min(tmp)
                     self.label_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
                     self.label_dict[self.drag_flag]['path'] = path[:ind] + [p] + path[ind:]
+                    self.label_dict[self.drag_flag]['wh'] = wh[:ind] + [wh[ind]] + wh[ind:]
                 # otherwise, append the coordinate on the end of the path
                 else:
                     self.label_dict[self.drag_flag]['n_frame'].append(self.n_frame)
                     self.label_dict[self.drag_flag]['path'].append(p)
+                    self.label_dict[self.drag_flag]['wh'].append(wh[ind])
 
     # left click append label record; not used anymore
     # def on_mouse_manual_label(self, event):
@@ -579,6 +587,7 @@ class KeyHandler(Interface, Common):
                                 flag = min([v['n_frame'].index(f) for f in v['n_frame'] if f >= self.min_label_ind])
                                 v['path'] = v['path'][:(flag + 1)]
                                 v['n_frame'] = v['n_frame'][:(flag + 1)]
+                                v['wh'] = v['wh'][:(flag + 1)]
                             except:
                                 pass
 

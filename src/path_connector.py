@@ -8,7 +8,7 @@ import threading
 
 from src.yoloreader import YOLOReader
 from src.keyhandler import KeyHandler
-from src.utils import Utils
+from src.utils import Utils, catchtime
 
 # basic setup variables
 WIN_NAME = 'Path Connector'
@@ -58,6 +58,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self._frame = None
         self._orig_frame = None
         self.n_frame = None
+        self.last_n_frame = None
         self.stop_n_frame = None
         self.mv_x = 0
         self.mv_y = 0
@@ -155,32 +156,38 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
     def update_label(self):
         # text_nframe = 'Current Frame: '
-        text_video_name = self.video_path.split('/')[-1]
-        sec = round(self.n_frame / self.fps, 2)
-        m, s = divmod(sec, 60)
-        h, m = divmod(m, 60)
-        text_time = "%d:%02d:%02d" % (h, m, s)
-        
-        self.label_video_name.configure(text='影像檔名: %s' % text_video_name)
-        self.label_nframe_v.configure(text="當前幀數: %s/%s" % (self.n_frame, self.total_frame))
-        self.label_time.configure(text='影像時間: %s' % text_time)
-        self.scale_nframe.set(self.n_frame)
+        if self.is_root_exist:
+            text_video_name = self.video_path.split('/')[-1]
+            sec = round(self.n_frame / self.fps, 2)
+            m, s = divmod(sec, 60)
+            h, m = divmod(m, 60)
+            text_time = "%d:%02d:%02d" % (h, m, s)
+            
+            self.label_video_name.configure(text='影像檔名: %s' % text_video_name)
+            self.label_nframe_v.configure(text="當前幀數: %s/%s" % (self.n_frame, self.total_frame))
+            self.label_time.configure(text='影像時間: %s' % text_time)
+            self.scale_nframe.set(self.n_frame)
 
-        self.root.after(200, self.update_label)
+            self.display_label.after(200, self.update_label)
 
     def update_draw(self, tup=None):
-        self.update_frame()
-        self.update_info()
-        self.draw(tup)
-        try:
-            if not self.is_calculate:
-                self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
-            if not self.safe:
-                self.display_label.configure(image=self.image)
-        except:
-            pass
+        if self.is_root_exist:
+            if self.last_n_frame != self.n_frame:
+                self.update_frame()
+                self.last_n_frame = self.n_frame
+            else:
+                self._frame = self._orig_frame.copy()
+            self.update_info()
+            self.draw(tup)
+            try:
+                if not self.is_calculate:
+                    self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
+                if not self.safe:
+                    self.display_label.configure(image=self.image)
+            except:
+                pass
 
-        self.display_label.after(20, self.update_draw)
+            self.display_label.after(20, self.update_draw)
 
     def update_track(self, ind):
         if len(self.tracked_frames) > 0 and ind < (len(self.tracked_frames) - 1) and self.safe: #  and self.safe:
@@ -249,6 +256,9 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
                 self.undo_records.append(records)
         else:
             self.undo_records.append(records)
+        # remove undo record if it is too long
+        if len(self.undo_records) >= 10:
+            self.undo_records = self.undo_records[-10:]
 
     def center_root(self, r=0):
         # self.root.update()
@@ -267,6 +277,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
     def run(self):
         
         self.n_frame = 1
+        self.last_n_frame = self.n_frame
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.n_frame - 1)
         ok, self._frame = self.video.read()
         self._orig_frame = self._frame.copy()
