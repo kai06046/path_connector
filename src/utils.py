@@ -1,14 +1,30 @@
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
-import logging
+import logging, time
+from functools import wraps
 
-logging.basicConfig(level=logging.INFO)
+LOGGER = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
+def func_profiling(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        time_spent = time.time() - start_time
+        fullname = '{}.{}'.format(func.__module__, func.__name__)
+        LOGGER.debug('{} completed in {}'.format(
+            fullname, time_spent
+        ))
+        return result
+    return wrapped
+
 
 LENGTH_ARROW = 20
 
 class Utils(object):
-
+    @func_profiling
     def draw(self, tup=None):
         if self.is_root_exist:
             results_dict = self.results_dict if not self.is_manual else self.tmp_results_dict
@@ -123,7 +139,7 @@ class Utils(object):
                     compare = False
                     for fp in self.fp_pts:
                         fp_dist = np.linalg.norm(np.array(fp) - np.array((x_c, y_c)))
-                        if fp_dist < 3:
+                        if fp_dist < 1:
                             compare = True
                             break
 

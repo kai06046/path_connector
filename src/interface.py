@@ -9,11 +9,7 @@ class Interface(object):
 
     # show warning
     def msg(self, string):
-        self.temp_root = tk.Tk()
-        self.temp_root.withdraw()
         showinfo('Info', string)
-        self.temp_root.destroy()
-        self.temp_root.mainloop()
 
     # confirm leave
     def on_close(self, event=None):
