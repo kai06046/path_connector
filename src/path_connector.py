@@ -76,7 +76,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.results_dict = dict()
         self.dist_records = dict()
         self.label_dict = dict()
-        self.tmp_results_dict = None
+        self.tmp_results_dict = dict()
         self.min_label_ind = None
         self.undone_pts = None
         self.fp_pts = []
@@ -252,7 +252,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
     def save_records(self):
         
-        records = (copy.deepcopy(self.results_dict), copy.deepcopy(self.tmp_results_dict), copy.deepcopy(self.dist_records), copy.deepcopy(self.hit_condi), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
+        records = ({**self.results_dict}, copy.deepcopy(self.tmp_results_dict), {**self.dist_records}, copy.deepcopy(self.hit_condi), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
+    
         if len(self.undo_records) > 0:
             if self.stop_n_frame != self.undo_records[-1][1]:
                 self.undo_records.append(records)
@@ -493,7 +494,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
             else:
                 bg = self.color_name[self.object_name[k]['ind']][1].lower()
-                b = tk.Button(self.BUTTON_FRAME, text=k, command=lambda clr=k: self.on_button(clr), bg=bg)
+                b = tk.Button(self.BUTTON_FRAME, text=self.object_name[k]['display_name'], command=lambda clr=k: self.on_button(clr), bg=bg)
                 b.grid(row=i, column=0, sticky="news", padx=10, pady=2)
             b.config(cursor='hand2')
 

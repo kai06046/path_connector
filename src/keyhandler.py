@@ -32,7 +32,7 @@ class KeyHandler(Interface, Common):
             self.init_video()
             self.object_name = dict()
             self.results_dict = dict()
-            self.tmp_results_dict = None
+            self.tmp_results_dict = dict()
             self.dist_records = dict()
             self.label_dict = dict()
             self.undo_records = []
@@ -45,6 +45,8 @@ class KeyHandler(Interface, Common):
             if os.path.isfile(filename):
                 with open(filename, "rb") as f:
                     self.results_dict, self.tmp_results_dict, self.dist_records, self.hit_condi, self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, self.suggest_ind, self.object_name = pickle.load(f)
+                if self.tmp_results_dict is None:
+                    self.tmp_results_dict = dict()
                 self.n_frame = self.stop_n_frame
                 tmp_diff = len(self.object_name) - old_len
                 self.center_root(r=35*tmp_diff)
@@ -89,7 +91,7 @@ class KeyHandler(Interface, Common):
         self.init_video()
         self.object_name = dict()
         self.results_dict = dict()
-        self.tmp_results_dict = None
+        self.tmp_results_dict = dict()
         self.dist_records = dict()
         self.label_dict = dict()
         self.undo_records = []

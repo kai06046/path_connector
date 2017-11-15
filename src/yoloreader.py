@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 # from mahotas.features import haralick, zernike
 # from skimage.feature import hog, local_binary_pattern
 from skimage.measure import compare_ssim
+from src.utils import catchtime
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -58,7 +59,8 @@ class YOLOReader(object):
             nframe, boxes = eval(self.__yolo_results__[n_frame - 1])
             assert nframe == n_frame
             boxes = np.array(boxes)
-            boxes = boxes[np.where(boxes[:, 4] > 0.75)]
+            if len(boxes) > 0:
+                boxes = boxes[np.where(boxes[:, 4] > 0.75)]
 
             # append history manual label result
             label_ind = [k for k, v in self.label_dict.items() if n_frame in v['n_frame']]
@@ -444,7 +446,7 @@ class YOLOReader(object):
             # record animation
             if n_frame % n_show == 0 and self.display_label is not None:
 
-                cv2.putText(self._frame, '計算中...', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+                cv2.putText(self._frame, 'Calculating...', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
                 for k in on_keys:
                     color = self.color[self.object_name[k]['ind']]
                     flag = self.results_dict[k]['n_frame']
@@ -516,9 +518,10 @@ class YOLOReader(object):
             self.undone_pts = undone_pts
             
             # record value for undoing
-            self.save_records()
+            with catchtime("saving record took time", "info") as f:
+                self.save_records()
 
-            # ensure don't enter manual mode and reset relevent variables
+            # ensure don't enter manual mode and reset relevant variables
             self.min_label_ind = None
             self.cancel_id = None
 

@@ -9,15 +9,19 @@ LENGTH_ARROW = 20
 logging.basicConfig(level=logging.INFO)
 
 class catchtime(object):
-    def __init__(self, name):
+    def __init__(self, name, log_type="debug"):
         self.name = name
+        self.lt = log_type
     def __enter__(self):
         self.t = time.clock()
         return self
 
     def __exit__(self, type, value, traceback):
         self.t = time.clock() - self.t
-        logging.debug("{} - {:.4f}".format(self.name, self.t))
+        if self.lt == "info":
+            logging.info("{} - {:.4f}".format(self.name, self.t))
+        elif self.lt == "debug":
+            logging.debug("{} - {:.4f}".format(self.name, self.t))
 
 class Utils(object):
 
