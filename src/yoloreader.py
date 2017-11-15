@@ -55,8 +55,12 @@ class YOLOReader(object):
         self.suggest_ind = []
 
         while self.is_calculate:
-            # self.root.update_idletasks()
-            nframe, boxes = eval(self.__yolo_results__[n_frame - 1])
+            if n_frame < self.__total_n_frame__:
+                nframe, boxes = eval(self.__yolo_results__[n_frame - 1])
+            else:
+                self.is_calculate = False
+                self.is_finish = True
+                break
             assert nframe == n_frame
             boxes = np.array(boxes)
             if len(boxes) > 0:
@@ -507,23 +511,30 @@ class YOLOReader(object):
         if self.is_calculate:
             self.cancel_id = self.display_label.after(0, self.calculate_path, n_frame)
         else:
-            undone_pts = list(set(undone_pts))
-            self.hit_condi = hit_condi
-            self.suggest_options(undone_pts, nframe)
+            # if the labeling process is not finish
+            if not self.is_finish:
+                undone_pts = list(set(undone_pts))
+                self.hit_condi = hit_condi
+                self.suggest_options(undone_pts, nframe)
 
-            # update new value
-            self.n_frame = n_frame
-            self.stop_n_frame = n_frame
-            self.current_pts, self.current_pts_n = undone_pts.pop(0)
-            self.undone_pts = undone_pts
-            
-            # record value for undoing
-            with catchtime("saving record took time", "info") as f:
-                self.save_records()
+                # update new value
+                self.n_frame = n_frame
+                self.stop_n_frame = n_frame
+                self.current_pts, self.current_pts_n = undone_pts.pop(0)
+                self.undone_pts = undone_pts
+                
+                # record value for undoing
+                with catchtime("saving record took time", "info") as f:
+                    self.save_records()
 
-            # ensure don't enter manual mode and reset relevant variables
-            self.min_label_ind = None
-            self.cancel_id = None
+                # ensure don't enter manual mode and reset relevant variables
+                self.min_label_ind = None
+                self.cancel_id = None
+            else:
+                self.n_frame = n_frame
+                self.current_pts = None
+                self.msg("你已完成本影片的所有軌跡標註, 辛苦了!")
+                self.export()
 
     # algorithm for suggesting a reasonable option
     def suggest_options(self, undone_pts, nframe):

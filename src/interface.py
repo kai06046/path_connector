@@ -4,6 +4,8 @@ from tkinter.messagebox import askyesno, askokcancel, showerror, showwarning, sh
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 import pickle, os, json
 from src.listbox import Tk_Table
+import numpy as np
+import pandas as pd
 
 class Interface(object):
 
@@ -104,15 +106,35 @@ class Interface(object):
     def export(self):
         root = '/'.join(self.video_path.split('/')[:-1])
         filename = self.video_path.split('/')[-1]
-        filename = "%s.json" % filename.split('.avi')[0]
+        filename = "%s" % filename.split('.avi')[0]
         filename = asksaveasfilename(initialdir='%s' % (root), 
-                                     defaultextension=".json", 
-                                     filetypes=(("JSON", "*.json"),("All Files", "*.*")), 
+                                     defaultextension=".csv", 
+                                     filetypes=(("CSV", "*.csv"),("All Files", "*.*")), 
                                      initialfile=filename, 
                                      title='匯出路徑')
+
         if filename not in ["", None]:
-            with open(filename, 'w+') as f:
-                json.dump(self.results_dict, f)
+            with open(filename.split(".csv")[0]+".json", 'w+') as f:
+                json.dump({"res": self.results_dict, "name": self.object_name}, f)
+            df = {'name': [], 'nframe': [], 'x_center': [], 'y_center': [], 'width': [], 'height': []}
+            data = self.results_dict
+            for k in sorted(data.keys()):
+                frame = data[k]['n_frame']
+                paths = np.array(data[k]['path'])
+                wh = np.array(data[k]['wh'])
+                x, y = paths[:, 0].tolist(), paths[:, 1].tolist()
+                w, h = wh[:, 0].tolist(), wh[:, 1].tolist()
+                df['name'].extend([self.object_name[k]['display_name']]*len(frame))
+                df['nframe'].extend(frame)
+                df['x_center'].extend(x)
+                df['y_center'].extend(y)
+                df['width'].extend(w)
+                df['height'].extend(h)
+            df = pd.DataFrame(df)
+            df = df.reindex_axis(['name', 'nframe', 'x_center', 'y_center', 'width', 'height'], axis=1)
+            df.to_csv(filename, index=False)
+
+            self.msg("標註軌跡已存檔於 %s" % filename)
         # filename = "%s_rat_contour.json" % self.video_path.split('.avi')[0]
         # save rat contour
         # with open(filename, 'a') as f:

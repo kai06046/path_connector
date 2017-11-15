@@ -45,7 +45,9 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.resolution = None
         self.total_frame = None
         self.__yolo_results__ = None
+        self.__total_n_frame__ = None
         self.is_root_exist = True
+        self.is_finish = False
 
         # basic variables
         self.color = COLOR
@@ -232,6 +234,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.resolution = (self.width, self.height)
         self.total_frame = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
         self.__yolo_results__ = self.read_yolo_result()
+        self.__total_n_frame__ = len(self.__yolo_results__)
 
     def ready(self, r):
         if self.video_path is not None:
