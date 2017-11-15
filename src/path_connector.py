@@ -235,6 +235,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.total_frame = int(self.video.get(cv2.CAP_PROP_FRAME_COUNT))
         self.__yolo_results__ = self.read_yolo_result()
         self.__total_n_frame__ = len(self.__yolo_results__)
+        self.is_finish = False
 
     def ready(self, r):
         if self.video_path is not None:
@@ -255,7 +256,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
 
     def save_records(self):
         
-        records = ({**self.results_dict}, copy.deepcopy(self.tmp_results_dict), {**self.dist_records}, copy.deepcopy(self.hit_condi), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
+        records = (copy.deepcopy(self.results_dict), copy.deepcopy(self.tmp_results_dict), {**self.dist_records}, copy.deepcopy(self.hit_condi), self.stop_n_frame, self.undone_pts, self.current_pts, self.current_pts_n, copy.deepcopy(self.suggest_ind), copy.deepcopy(self.object_name))
     
         if len(self.undo_records) > 0:
             if self.stop_n_frame != self.undo_records[-1][1]:
@@ -263,8 +264,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         else:
             self.undo_records.append(records)
         # remove undo record if it is too long
-        if len(self.undo_records) >= 5:
-            self.undo_records = self.undo_records[-5:]
+        if len(self.undo_records) >= 15:
+            self.undo_records = self.undo_records[-15:]
 
     def center_root(self, r=0):
         # self.root.update()
