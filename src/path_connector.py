@@ -184,6 +184,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
                     self.image = ImageTk.PhotoImage(Image.fromarray(self._frame))
                 if not self.safe:
                     self.display_label.configure(image=self.image)
+                    self.display_label.image = self.image
             except:
                 pass
 
@@ -257,8 +258,8 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         else:
             self.undo_records.append(records)
         # remove undo record if it is too long
-        if len(self.undo_records) >= 10:
-            self.undo_records = self.undo_records[-10:]
+        if len(self.undo_records) >= 5:
+            self.undo_records = self.undo_records[-5:]
 
     def center_root(self, r=0):
         # self.root.update()
@@ -589,6 +590,7 @@ class PathConnector(YOLOReader, KeyHandler, Utils):
         self.root.bind('<r>', self.on_key)
         self.root.bind('<j>', self.on_key)
         self.root.bind('<q>', self.on_key)
+        self.root.bind('<Control-s>', self.ask_save)
         # self.root.bind('s', self.break_loop)
         self.root.state('zoomed')
         self.root.mainloop()

@@ -286,31 +286,31 @@ class KeyHandler(Interface, Common):
                 else:
                     self.tmp_results_dict[self.drag_flag]['n_frame'].append(self.n_frame)
                     self.tmp_results_dict[self.drag_flag]['path'].append(p)
-                    self.tmp_results_dict[self.drag_flag]['wh'].append(wh[ind])
+                    self.tmp_results_dict[self.drag_flag]['wh'].append((0, 0))
 
             # record for label
             if self.drag_flag not in self.label_dict.keys():
                 self.label_dict[self.drag_flag] = {'path': [], 'n_frame': [], 'wh': []}
             flags = self.label_dict[self.drag_flag]['n_frame']
             path = self.label_dict[self.drag_flag]['path']
-            wh = self.label_dict[self.drag_flag]['wh']
+            # wh = self.label_dict[self.drag_flag]['wh']
 
             try:
                 ind = flags.index(self.n_frame)
                 self.label_dict[self.drag_flag]['path'][ind] = p
-                self.label_dict[self.drag_flag]['wh'][ind] = wh[ind]
+                # self.label_dict[self.drag_flag]['wh'][ind] = wh[ind]
             except:
                 tmp = [flags.index(v) for v in flags if v >= self.n_frame]
                 if len(tmp) > 0:
                     ind = min(tmp)
                     self.label_dict[self.drag_flag]['n_frame'] = flags[:ind] + [self.n_frame] + flags[ind:]
                     self.label_dict[self.drag_flag]['path'] = path[:ind] + [p] + path[ind:]
-                    self.label_dict[self.drag_flag]['wh'] = wh[:ind] + [wh[ind]] + wh[ind:]
+                    # self.label_dict[self.drag_flag]['wh'] = wh[:ind] + [wh[ind]] + wh[ind:]
                 # otherwise, append the coordinate on the end of the path
                 else:
                     self.label_dict[self.drag_flag]['n_frame'].append(self.n_frame)
                     self.label_dict[self.drag_flag]['path'].append(p)
-                    self.label_dict[self.drag_flag]['wh'].append(wh[ind])
+                    # self.label_dict[self.drag_flag]['wh'].append(wh[ind])
 
     # left click append label record; not used anymore
     # def on_mouse_manual_label(self, event):

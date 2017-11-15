@@ -21,7 +21,7 @@ THRES_FORWARD_N_MAX = 50 # 往後看多少 frame 是不是有符合最小距離�
 THRES_FORWARD_N = 10 # 往後 N_MAX 裡有符合最小距離的最少數量, 如果有就當作新 key
 THRES_NEAR_DIST = 20 # 對於沒有被分配 key 的bbox, 距離多進就直接 pass
 
-THRES_NEAR_DIST_NOT_ASSIGN = 80 # 對於沒有被分配 key 的 bbox, 和其他沒被分配到 bbox 的 key 可以符合 append 條件的距離
+THRES_NEAR_DIST_NOT_ASSIGN = 70 # 對於沒有被分配 key 的 bbox, 和其他沒被分配到 bbox 的 key 可以符合 append 條件的距離
 THRES_NOT_ASSIGN_FORWARD_N_MAX = 100 # 沒有被分配 key 的 bbox, 往之後再看多少 frame 數
 THRES_NOT_ASSIGN_FORWARD_DIST = 50 # 沒有被分配 key 的 bbox, 符合停下來讓 user 判斷的最小距離
 THRES_NOT_ASSIGN_FORWARD_N = 15 # 往後 N_MAX 裡符合最小距離的最少數量
@@ -58,6 +58,7 @@ class YOLOReader(object):
             nframe, boxes = eval(self.__yolo_results__[n_frame - 1])
             assert nframe == n_frame
             boxes = np.array(boxes)
+            boxes = boxes[np.where(boxes[:, 4] > 0.75)]
 
             # append history manual label result
             label_ind = [k for k, v in self.label_dict.items() if n_frame in v['n_frame']]
@@ -66,7 +67,7 @@ class YOLOReader(object):
                 print(self.results_dict[k])
                 self.results_dict[k]['n_frame'].append(n_frame)
                 self.results_dict[k]['path'].append(self.label_dict[k]['path'][i])
-                self.results_dict[k]['wh'].append(self.label_dict[k]['wh'][i])
+                self.results_dict[k]['wh'].append(self.results_dict[k]['wh'][-1])
 
             # initiate frame for recording animation
             if n_frame % n_show == 0:
@@ -213,6 +214,8 @@ class YOLOReader(object):
                 # the length of hit_condi is same as the number of nearest indexes
                 elif len(set([v for k, v in hit_condi])) == len(hit_condi):
                     logging.info('len(set([v for k, v in hit_condi])) == len(hit_condi) (%s)' % n_frame)
+                    if n_frame > 12110 and n_frame < 12116:
+                        logging.info("%s - %s (%s)" % (hit_condi, tmp_dist_record, n_frame))
                     for k, ind in hit_condi:
                         if k not in label_ind:
                             self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
@@ -289,6 +292,8 @@ class YOLOReader(object):
                                     if len(not_assigned_keys) == 0:
                                         break
                                     logging.info("%s hit 'min key is not None' (%s)" % (ind, n_frame))
+                                    if n_frame == 12112:
+                                        logging.info("%s - %s" % (hit_condi, tmp_dist_record))
                                 else:
                                     # forward next 100 points
                                     temp = 0
@@ -340,49 +345,52 @@ class YOLOReader(object):
                     hit_boxes = [v for k, v in hit_condi]
                     non_duplicate_key = [k for k, v in hit_condi if hit_boxes.count(v) == 1]
                     duplicate_ind = set([x for x in hit_boxes if hit_boxes.count(x) > 1]) # boxes indexes with multi objects
-                    duplicate_key = [k for k, v in hit_condi if hit_boxes.count(v) > 1] # boxes indexes with multi objects
+                    duplicate_key = [k for k, v in hit_condi if hit_boxes.count(v) > 1] # key has multi boxes that hit condition
 
                     logging.info('duplicate key: %s duplicate ind: %s' % (duplicate_key, duplicate_ind))
                     # if this is duplicate indexes case, assign the nearest one
                     if len(duplicate_ind) > 0 :
-                        """
-                        Try compare difference.
-                        """
                         min_key = []
-
                         # just use nearest distance
                         for ind in duplicate_ind:
                             duplicate_key = [k for k, v in hit_condi if v == ind]
                             sorted_keys_by_dist = sorted(range(len(duplicate_key)), key=lambda k: tmp_dist_record[duplicate_key[k]]['dist'][ind])
-                            min_dist_key = sorted_keys_by_dist[0]
-                            min_key.append(duplicate_key[min_dist_key])
+                            min_dist_key = duplicate_key[sorted_keys_by_dist[0]] # the nearest one
+                            if len(sorted_keys_by_dist) > 1 and (n_frame - self.results_dict[min_dist_key]['n_frame'][-1]) > 10:
+                                undone_pts.append((tmp_dist_record[on_keys[0]]['center'][ind], n_frame))
+                                self.is_calculate = False
+                                # if n_frame - self.results_dict[duplicate_key[sorted_keys_by_dist[1]]]['n_frame'][-1] < 5:
+                                #     logging.info("Current: %s, choose second nearest %s" % (min_dist_key, duplicate_key[sorted_keys_by_dist[1]]))
+                                #     min_dist_key = duplicate_key[sorted_keys_by_dist[1]]
+                                # else:
+                            min_key.append(min_dist_key)
+                        if self.is_calculate:
+                            hit_condi_reduced = [(k, v) for k, v in hit_condi if k in non_duplicate_key + min_key]
+                            for k, ind in hit_condi_reduced:
+                                if k not in label_ind:
+                                    self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
+                                    self.results_dict[k]['n_frame'].append(n_frame)
+                                    self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][ind])
 
-                        hit_condi_reduced = [(k, v) for k, v in hit_condi if k in non_duplicate_key + min_key]
-                        for k, ind in hit_condi_reduced:
-                            if k not in label_ind:
-                                self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][ind])
-                                self.results_dict[k]['n_frame'].append(n_frame)
-                                self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][ind])
+                            # pending, not assigned key
+                            logging.info('duplicate happened (%s)' % n_frame)
 
-                        # pending, not assigned key
-                        logging.info('duplicate happened (%s)' % n_frame)
+                            # for not assigned key
+                            for k in set(duplicate_key).difference(min_key):
+                                assert len([v for key, v in hit_condi if key == k]) == 1
+                                duplicated_ind = [v for key, v in hit_condi if key == k][0]
+                                min_tmp_dist = 99999
+                                min_ind = None
+                                for ind, tmp_dist in enumerate(tmp_dist_record[k]["dist"]):
+                                    tmp_dist = tmp_dist
+                                    if ind != duplicated_ind and tmp_dist < min_tmp_dist:
+                                        min_tmp_dist = tmp_dist
+                                        min_ind = ind
 
-                        # for not assigned key
-                        for k in set(duplicate_key).difference(min_key):
-                            assert len([v for key, v in hit_condi if key == k]) == 1
-                            duplicated_ind = [v for key, v in hit_condi if key == k][0]
-                            min_tmp_dist = 99999
-                            min_ind = None
-                            for ind, tmp_dist in enumerate(tmp_dist_record[k]["dist"]):
-                                tmp_dist = tmp_dist
-                                if ind != duplicated_ind and tmp_dist < min_tmp_dist:
-                                    min_tmp_dist = tmp_dist
-                                    min_ind = ind
-
-                            if min_tmp_dist < THRES_NOT_ASSIGN_FORWARD_DIST:
-                                self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][min_ind])
-                                self.results_dict[k]['n_frame'].append(n_frame)
-                                self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][min_ind])
+                                if min_tmp_dist < THRES_NOT_ASSIGN_FORWARD_DIST:
+                                    self.results_dict[k]['path'].append(tmp_dist_record[k]['center'][min_ind])
+                                    self.results_dict[k]['n_frame'].append(n_frame)
+                                    self.results_dict[k]['wh'].append(tmp_dist_record[k]['wh'][min_ind])
 
                     # if there is any condition that wasn't considered
                     else:
@@ -436,7 +444,7 @@ class YOLOReader(object):
             # record animation
             if n_frame % n_show == 0 and self.display_label is not None:
 
-                cv2.putText(self._frame, 'Calculating...', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
+                cv2.putText(self._frame, '計算中...', (30, 30), cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 255, 255), 1)
                 for k in on_keys:
                     color = self.color[self.object_name[k]['ind']]
                     flag = self.results_dict[k]['n_frame']
