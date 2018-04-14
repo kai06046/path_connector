@@ -54,6 +54,9 @@ Usage: python main.py
 	- ```100```
 
 - self.undone_pts, # 沒被分配的的框框
+	- 未分配到蟲的框框中心和 stop n frame
+	- ```[((100, 100), 100)]```
+	 
 
 - self.current_pts
 	- 當下問號框框的中心
