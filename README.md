@@ -1,5 +1,3 @@
-# QA for interview
-
 # Path Connector
 
 ```
