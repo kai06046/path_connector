@@ -53,7 +53,7 @@ Usage: python main.py
 	- 記錄出現問號 (邏輯判斷停下來) 的 frame
 	- ```100```
 
-- self.undone_pts, # 沒被分配的的框框
+- self.undone_pts
 	- 未分配到蟲的框框中心和 stop n frame
 	- ```[((100, 100), 100)]```
 	 
